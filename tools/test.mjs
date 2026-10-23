@@ -1,5 +1,7 @@
 // Runs every tests/**/*.test.mjs with node:test. A directory argument to `node --test` is not portable across
 // Node versions (22 treats it as a file), so the files are listed explicitly. Extra arguments go to node --test.
+// The files run one after another unless --test-concurrency is given: several Chrome tests at once starve a small
+// machine and Chrome then misses its start-up window (seen on a CI runner).
 import { spawnSync } from 'node:child_process';
 import { readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -19,5 +21,7 @@ function collect(dir) {
 
 const files = collect(join(root, 'tests'));
 if (!files.length) { console.error('No tests found under tests/'); process.exit(1); }
-const res = spawnSync(process.execPath, ['--test', ...process.argv.slice(2), ...files], { stdio: 'inherit', cwd: root });
+const extra = process.argv.slice(2);
+if (!extra.some((a) => a.startsWith('--test-concurrency'))) extra.unshift('--test-concurrency=1');
+const res = spawnSync(process.execPath, ['--test', ...extra, ...files], { stdio: 'inherit', cwd: root });
 process.exit(res.status ?? 1);
