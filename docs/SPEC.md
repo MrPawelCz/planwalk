@@ -1,6 +1,6 @@
 # planwalk specification (v1 draft)
 
-planwalk turns a floor plan into a walkable 3D model. The pipeline is: an image or PDF of a plan, read by an AI with vision (an agent, or any chat), becomes a small JSON file (this spec); the validator checks it; the viewer builds a dollhouse, an exploded multi-level view and a first-person walkthrough from it, and exports GLB. Everything runs locally and offline (the only thing that can fetch anything is the viewer's optional `?plan=<url>` parameter, see the plan sources below). No API keys, no server.
+planwalk turns a floor plan into a walkable 3D model. The pipeline is: an image or PDF of a plan, read by an AI that can read images (a chat or an agent), becomes a small JSON file (this spec); the validator checks it; the viewer builds a dollhouse, an exploded multi-level view and a first-person walkthrough from it, and exports GLB. Everything runs locally and offline (the only thing that can fetch anything is the viewer's optional `?plan=<url>` parameter, see the plan sources below). No API keys, no server.
 
 ## 1. Coordinate system and units
 

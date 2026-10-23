@@ -10,19 +10,21 @@
 
 <p align="center"><a href="https://mrpawelcz.github.io/planwalk/">Open the viewer</a> · <a href="docs/PROMPT.md">Use it in a chat</a> · <a href="skill/planwalk/SKILL.md">Agent skill</a> · <a href="docs/SPEC.md">Format</a></p>
 
+<p align="center">Po polsku: <a href="README.pl.md">README.pl.md</a></p>
+
 ---
 
 ## Try it in 60 seconds
 
-**With any chat that can see images (nothing to install)**
+**With a chat that can read images (nothing to install)**
 
 1. Open the [live viewer](https://mrpawelcz.github.io/planwalk/), or download `planwalk.html` from the [latest release](https://github.com/MrPawelCz/planwalk/releases/latest) and double click it (it works offline, straight from the file). From a clone, `npm start` serves it at http://127.0.0.1:8080/planwalk.html.
-2. Give your floor plan image and the prompt from [`docs/PROMPT.md`](docs/PROMPT.md) to a chat that can see images (so far only Claude Sonnet 5.5 has been benchmarked, results from other models are welcome).
+2. Give your floor plan image and the prompt from [`docs/PROMPT.md`](docs/PROMPT.md) ([`docs/PROMPT.pl.md`](docs/PROMPT.pl.md) for Polish drawings) to a chat that can read images. Cover names, addresses and phone numbers on the drawing first. The prompt is designed for chats that can read images; it has been measured on Claude Sonnet 5.5 only, other models are not measured yet and will be listed in [`docs/BENCHMARK.md`](docs/BENCHMARK.md) when they are (results are welcome).
 3. Paste the JSON it returns into the viewer ("Paste JSON"). If the viewer lists problems, press "Copy fix request", paste that back into the same chat, repeat.
 
-**With an agent (Claude Code, Codex, OpenClaw and similar)**
+**With an agent that loads skill folders**
 
-Give the agent the folder [`skill/planwalk`](skill/planwalk) (copy it into your agent's skills directory, for Claude Code that is `~/.claude/skills/`, or just point the agent at it) and say: "Turn this floor plan into a 3D walkthrough." The skill reads the plan, validates it, renders it, compares the render with your drawing, and hands you one HTML file. The folder is self-contained: the validator, the screenshot tool and the viewer are inside it, so no clone of this repository is needed. It needs Node 18 or newer; the render check also needs Node 22 and Chrome or Chromium.
+Give the agent the folder [`skill/planwalk`](skill/planwalk) (copy it into your agent's skills directory, for Claude Code that is `~/.claude/skills/`, or just point the agent at it) and say: "Turn this floor plan into a 3D walkthrough." The skill reads the plan, validates it, renders it, compares the render with your drawing, and hands you one HTML file. The folder is self-contained: the validator, the screenshot tool and the viewer are inside it, so no clone of this repository is needed. It needs Node 18 or newer; the render check also needs Node 22 and Chrome or Chromium. The skill is a standard `SKILL.md` folder, but this route has not been benchmarked: the numbers below measure the plain prompt route.
 
 **Just look around**
 
@@ -40,7 +42,7 @@ Pick an example from the menu: a one-bedroom flat and a two-level house with a s
 
 ```text
 floor plan image / PDF / sketch
-          |   any AI with vision (chat or agent), with the prompt or the skill
+          |   an AI that reads images (chat or agent), with the prompt or the skill
           v
       plan.json   <-- validator: geometry checks, scale cross-check, readable fixes
           v
