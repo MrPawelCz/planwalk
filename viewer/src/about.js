@@ -73,8 +73,8 @@ const STRONG = [
 const WEAK = new RegExp([
   '\\bno\\s+(?:\\w+\\s+){0,2}(?:scale|dimensions?)\\b',
   '\\bscale\\s+(?:is\\s+)?not\\s+(?:printed|given|stated|known|visible|shown)\\b',
-  '\\b(?:from|on|using|via|by)\\s+(?:(?:the|a|typical|standard|average)\\s+)*doors?\\b',
-  `\\b(?:brak|bez)\\s+(?:${PL}{1,15}\\s+){0,2}(?:skal|wymiar)${PL}*`,
+  '\\b(?:from|on|using|via|by)\\s+(?:(?:the|a|typical|standard|average)\\s+){0,4}doors?\\b',
+  `\\b(?:brak|bez)\\s+(?:${PL}{1,15}\\s+){0,2}(?:skal|wymiar)`,
   `\\bskal${PL}{0,4}\\s+nie\\s+(?:jest\\s+)?(?:podana|podano|wydrukowana|znana)`,
   '\\bz\\s+(?:(?:szerokości|wymiaru|typowych)\\s+)?drzwi',
   'na oko',
