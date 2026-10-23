@@ -56,8 +56,8 @@ test('release runs on v* tags, tests, attaches planwalk.html with its sha256 and
   assert.match(release, /attestations: write/);
 });
 
-test('every action in ci and release is pinned to a full commit sha with its version in a comment', () => {
-  for (const [name, text] of Object.entries({ ci, release })) {
+test('every action in ci, release and pages is pinned to a full commit sha with its version in a comment', () => {
+  for (const [name, text] of Object.entries({ ci, release, pages: read('.github/workflows/pages.yml') })) {
     const uses = [...text.matchAll(/^\s*-?\s*uses: (\S+)(.*)$/gm)];
     assert.ok(uses.length >= 2, `${name}: no actions found`);
     for (const [, ref, rest] of uses) {
