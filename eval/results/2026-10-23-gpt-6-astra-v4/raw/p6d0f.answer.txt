@@ -1,0 +1,189 @@
+```json
+{
+  "version": 1,
+  "name": "Studio with hall and bathroom",
+  "units": "m",
+  "meta": {
+    "source": "image",
+    "scale_note": "No printed dimensions or room areas are visible. Scale is estimated using the entrance door in the bottom wall: its approximately 72-pixel straight opening is assumed to be 0.85 m wide, giving approximately 0.01181 m per pixel. Confidence is low because this is a hand-drawn plan and the door width is assumed.",
+    "notes": "Wall centerlines have been straightened to approximate the slightly irregular hand-drawn strips. The origin is the top-left corner of the traced exterior wall envelope. The central gap between Studio and Hall is interpreted as an open passage. Triple-line exterior gaps are interpreted as windows, including the two small windows in the bottom wall. No furniture, stairs, printed areas or heights are shown."
+  },
+  "levels": [
+    {
+      "id": "L0",
+      "walls": [
+        {
+          "id": "w_top",
+          "from": [0.142, 0.165],
+          "to": [6.139, 0.165],
+          "kind": "exterior",
+          "thickness": 0.283
+        },
+        {
+          "id": "w_left_studio",
+          "from": [0.142, 0.165],
+          "to": [0.142, 2.526],
+          "kind": "exterior",
+          "thickness": 0.283
+        },
+        {
+          "id": "w_left_hall",
+          "from": [0.142, 2.526],
+          "to": [0.142, 4.604],
+          "kind": "exterior",
+          "thickness": 0.283
+        },
+        {
+          "id": "w_right_studio",
+          "from": [6.139, 0.165],
+          "to": [6.139, 2.526],
+          "kind": "exterior",
+          "thickness": 0.283
+        },
+        {
+          "id": "w_right_bathroom",
+          "from": [6.139, 2.526],
+          "to": [6.139, 4.604],
+          "kind": "exterior",
+          "thickness": 0.283
+        },
+        {
+          "id": "w_bottom_hall",
+          "from": [0.142, 4.604],
+          "to": [4.073, 4.604],
+          "kind": "exterior",
+          "thickness": 0.283
+        },
+        {
+          "id": "w_bottom_bathroom",
+          "from": [4.073, 4.604],
+          "to": [6.139, 4.604],
+          "kind": "exterior",
+          "thickness": 0.283
+        },
+        {
+          "id": "w_studio_hall",
+          "from": [0.142, 2.526],
+          "to": [4.073, 2.526],
+          "kind": "interior",
+          "thickness": 0.118
+        },
+        {
+          "id": "w_studio_bathroom",
+          "from": [4.073, 2.526],
+          "to": [6.139, 2.526],
+          "kind": "interior",
+          "thickness": 0.118
+        },
+        {
+          "id": "w_hall_bathroom",
+          "from": [4.073, 2.526],
+          "to": [4.073, 4.604],
+          "kind": "interior",
+          "thickness": 0.118
+        }
+      ],
+      "openings": [
+        {
+          "id": "d_entrance",
+          "wall": "w_bottom_hall",
+          "type": "door",
+          "offset": 1.062,
+          "width": 0.85
+        },
+        {
+          "id": "d_bathroom",
+          "wall": "w_hall_bathroom",
+          "type": "door",
+          "offset": 0.815,
+          "width": 0.732
+        },
+        {
+          "id": "p_studio_hall",
+          "wall": "w_studio_hall",
+          "type": "passage",
+          "offset": 1.747,
+          "width": 1.299
+        },
+        {
+          "id": "win_top_left",
+          "wall": "w_top",
+          "type": "window",
+          "offset": 0.673,
+          "width": 1.688
+        },
+        {
+          "id": "win_top_right",
+          "wall": "w_top",
+          "type": "window",
+          "offset": 3.884,
+          "width": 1.287
+        },
+        {
+          "id": "win_left",
+          "wall": "w_left_studio",
+          "type": "window",
+          "offset": 0.626,
+          "width": 1.121
+        },
+        {
+          "id": "win_right",
+          "wall": "w_right_studio",
+          "type": "window",
+          "offset": 0.437,
+          "width": 1.487
+        },
+        {
+          "id": "win_bottom_hall",
+          "wall": "w_bottom_hall",
+          "type": "window",
+          "offset": 2.361,
+          "width": 0.578
+        },
+        {
+          "id": "win_bottom_bathroom",
+          "wall": "w_bottom_bathroom",
+          "type": "window",
+          "offset": 0.767,
+          "width": 0.578
+        }
+      ],
+      "rooms": [
+        {
+          "id": "r_studio",
+          "name": "Studio",
+          "polygon": [
+            [0.142, 0.165],
+            [6.139, 0.165],
+            [6.139, 2.526],
+            [4.073, 2.526],
+            [0.142, 2.526]
+          ]
+        },
+        {
+          "id": "r_hall",
+          "name": "Hall",
+          "polygon": [
+            [0.142, 2.526],
+            [4.073, 2.526],
+            [4.073, 4.604],
+            [0.142, 4.604]
+          ]
+        },
+        {
+          "id": "r_bathroom",
+          "name": "Bathroom",
+          "polygon": [
+            [4.073, 2.526],
+            [6.139, 2.526],
+            [6.139, 4.604],
+            [4.073, 4.604]
+          ]
+        }
+      ],
+      "furniture": [],
+      "stairs": []
+    }
+  ]
+}
+```

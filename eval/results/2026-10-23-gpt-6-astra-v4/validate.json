@@ -1,0 +1,44 @@
+{
+  "p6530": {
+    "ok": true,
+    "errors": 0,
+    "warnings": 0,
+    "errorCodes": []
+  },
+  "p66c3": {
+    "ok": true,
+    "errors": 0,
+    "warnings": 0,
+    "errorCodes": []
+  },
+  "p69e9": {
+    "ok": true,
+    "errors": 0,
+    "warnings": 0,
+    "errorCodes": []
+  },
+  "p6b7c": {
+    "ok": true,
+    "errors": 0,
+    "warnings": 0,
+    "errorCodes": []
+  },
+  "p6d0f": {
+    "ok": true,
+    "errors": 0,
+    "warnings": 0,
+    "errorCodes": []
+  },
+  "p6ea2": {
+    "ok": true,
+    "errors": 0,
+    "warnings": 1,
+    "errorCodes": []
+  },
+  "p7035": {
+    "ok": true,
+    "errors": 0,
+    "warnings": 0,
+    "errorCodes": []
+  }
+}

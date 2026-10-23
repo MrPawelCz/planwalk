@@ -1,0 +1,55 @@
+```json
+{
+  "version": 1,
+  "name": "Small flat: living room, bedroom, hall, bathroom, kitchen",
+  "units": "m",
+  "meta": {
+    "source": "image",
+    "scale_note": "Scale comes from the printed 8.90 m dimension line. It spans 712 px, which is 80 px/m. It matches the centerline distance between the outer walls (outer 736 px minus one 24 px wall thickness), so the wall thickness is about 0.3 m. I am fairly sure of this. The printed room areas are roughly consistent with it.",
+    "notes": "Origin is the top-left outer corner, so the wall centerlines start at 0.15. No furniture or stairs are drawn. Door hinge and swing sides were left out. Opening positions were measured from pixels and are accurate to about 5 cm."
+  },
+  "levels": [
+    {
+      "id": "L0",
+      "walls": [
+        { "id": "w_top", "from": [0.15, 0.15], "to": [9.05, 0.15], "kind": "exterior", "thickness": 0.3 },
+        { "id": "w_right", "from": [9.05, 0.15], "to": [9.05, 6.5], "kind": "exterior", "thickness": 0.3 },
+        { "id": "w_bottom", "from": [0.15, 6.5], "to": [9.05, 6.5], "kind": "exterior", "thickness": 0.3 },
+        { "id": "w_left", "from": [0.15, 0.15], "to": [0.15, 6.5], "kind": "exterior", "thickness": 0.3 },
+        { "id": "w_mid", "from": [0.15, 3.35], "to": [9.05, 3.35], "kind": "interior", "thickness": 0.15 },
+        { "id": "w_bed", "from": [5.9, 0.15], "to": [5.9, 3.35], "kind": "interior", "thickness": 0.15 },
+        { "id": "w_bath", "from": [2.15, 3.35], "to": [2.15, 6.5], "kind": "interior", "thickness": 0.15 },
+        { "id": "w_kit", "from": [3.55, 3.35], "to": [3.55, 6.5], "kind": "interior", "thickness": 0.15 }
+      ],
+      "openings": [
+        { "id": "win_t1", "wall": "w_top", "type": "window", "offset": 0.66, "width": 1.69 },
+        { "id": "win_t2", "wall": "w_top", "type": "window", "offset": 3.56, "width": 1.74 },
+        { "id": "win_t3", "wall": "w_top", "type": "window", "offset": 6.73, "width": 1.43 },
+        { "id": "win_r1", "wall": "w_right", "type": "window", "offset": 1.0, "width": 1.19 },
+        { "id": "win_r2", "wall": "w_right", "type": "window", "offset": 4.2, "width": 1.2 },
+        { "id": "door_front", "wall": "w_bottom", "type": "door", "offset": 0.45, "width": 0.9 },
+        { "id": "win_b1", "wall": "w_bottom", "type": "window", "offset": 2.71, "width": 0.6 },
+        { "id": "win_b2", "wall": "w_bottom", "type": "window", "offset": 4.55, "width": 1.3 },
+        { "id": "win_b3", "wall": "w_bottom", "type": "window", "offset": 6.95, "width": 1.44 },
+        { "id": "win_l1", "wall": "w_left", "type": "window", "offset": 1.0, "width": 1.25 },
+        { "id": "win_l2", "wall": "w_left", "type": "window", "offset": 4.5, "width": 0.6 },
+        { "id": "door_hall", "wall": "w_mid", "type": "door", "offset": 0.66, "width": 0.9 },
+        { "id": "door_kit", "wall": "w_mid", "type": "door", "offset": 4.54, "width": 0.88 },
+        { "id": "door_bed", "wall": "w_bed", "type": "door", "offset": 1.125, "width": 0.9 },
+        { "id": "door_bath", "wall": "w_bath", "type": "door", "offset": 1.275, "width": 0.75 }
+      ],
+      "rooms": [
+        { "id": "r_living", "name": "Living room", "polygon": [[0.15, 0.15], [5.9, 0.15], [5.9, 3.35], [0.15, 3.35]], "area": 18.9 },
+        { "id": "r_bedroom", "name": "Bedroom", "polygon": [[5.9, 0.15], [9.05, 0.15], [9.05, 3.35], [5.9, 3.35]], "area": 9.6 },
+        { "id": "r_hall", "name": "Hall", "polygon": [[0.15, 3.35], [2.15, 3.35], [2.15, 6.5], [0.15, 6.5]], "area": 6.3 },
+        { "id": "r_bath", "name": "Bathroom", "polygon": [[2.15, 3.35], [3.55, 3.35], [3.55, 6.5], [2.15, 6.5]], "area": 6.3 },
+        { "id": "r_kitchen", "name": "Kitchen", "polygon": [[3.55, 3.35], [9.05, 3.35], [9.05, 6.5], [3.55, 6.5]], "area": 15.4 }
+      ]
+    }
+  ]
+}
+```
+
+- The scale comes from the printed 8.90 m dimension, which I read as the distance between the outer wall centerlines.
+- Interior wall thickness (0.15 m) is estimated from the image.
+- I left out door hinge and swing direction.

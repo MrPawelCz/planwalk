@@ -1,0 +1,45 @@
+```json
+{
+  "version": 1,
+  "name": "Studio with hall and bathroom",
+  "units": "m",
+  "meta": {
+    "source": "image",
+    "scale_note": "The plan has no printed dimensions or areas. I used the standard 0.85 m door as the last resort: the entrance door gap in the bottom wall is about 71 px wide, which gives about 0.012 m per px. The scale is uncertain, perhaps ±20%.",
+    "notes": "Wall thickness is estimated. Door hinge sides and swing directions are guessed from the arcs. The bathroom door is a guess: I put it in the gap in the bathroom wall, with its arc into the bathroom. Window positions are approximate. No furniture is drawn. Studio and Hall are open to each other through the gap in the interior wall, so they share an edge."
+  },
+  "levels": [
+    {
+      "id": "L0",
+      "walls": [
+        { "id": "w1", "from": [0.12, 0.15], "to": [6.24, 0.15], "kind": "exterior", "thickness": 0.25 },
+        { "id": "w2", "from": [6.24, 0.15], "to": [6.24, 4.68], "kind": "exterior", "thickness": 0.25 },
+        { "id": "w3", "from": [0.12, 4.68], "to": [6.24, 4.68], "kind": "exterior", "thickness": 0.25 },
+        { "id": "w4", "from": [0.12, 0.15], "to": [0.12, 4.68], "kind": "exterior", "thickness": 0.25 },
+        { "id": "w5", "from": [0.12, 2.56], "to": [1.92, 2.56], "kind": "interior", "thickness": 0.12 },
+        { "id": "w6", "from": [3.24, 2.56], "to": [6.24, 2.56], "kind": "interior", "thickness": 0.12 },
+        { "id": "w7", "from": [4.14, 2.56], "to": [4.14, 4.68], "kind": "interior", "thickness": 0.12 }
+      ],
+      "openings": [
+        { "id": "win1", "wall": "w1", "type": "window", "offset": 0.7, "width": 1.18 },
+        { "id": "win2", "wall": "w1", "type": "window", "offset": 3.38, "width": 1.3 },
+        { "id": "win3", "wall": "w2", "type": "window", "offset": 0.15, "width": 1.8 },
+        { "id": "win4", "wall": "w4", "type": "window", "offset": 0.15, "width": 1.6 },
+        { "id": "d1", "wall": "w3", "type": "door", "offset": 1.1, "width": 0.85, "hinge": "start" },
+        { "id": "win5", "wall": "w3", "type": "window", "offset": 2.42, "width": 0.58 },
+        { "id": "win6", "wall": "w3", "type": "window", "offset": 4.78, "width": 0.6 },
+        { "id": "d2", "wall": "w7", "type": "door", "offset": 0.81, "width": 0.8, "hinge": "start" }
+      ],
+      "rooms": [
+        { "id": "r1", "name": "Studio", "polygon": [[0.12, 0.15], [6.24, 0.15], [6.24, 2.56], [0.12, 2.56]] },
+        { "id": "r2", "name": "Hall", "polygon": [[0.12, 2.56], [4.14, 2.56], [4.14, 4.68], [0.12, 4.68]] },
+        { "id": "r3", "name": "Bathroom", "polygon": [[4.14, 2.56], [6.24, 2.56], [6.24, 4.68], [4.14, 4.68]] }
+      ]
+    }
+  ]
+}
+```
+
+- Scale: I took it from the standard 0.85 m door because the plan gives no dimensions or areas. Treat it as approximate.
+- Doubts: the bathroom door position and the swing sides of both doors are guesses.
+- Left out: no furniture is clearly drawn, so I added none.

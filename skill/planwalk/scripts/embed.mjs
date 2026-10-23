@@ -15,7 +15,7 @@ var OTHER_SPACE = /[\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]/;
 var TYPO_QUOTES = "\u201C\u201D\u201E\u201F\xAB\xBB\u2033\uFF02";
 var HAS_TYPO_QUOTE = new RegExp(`[${TYPO_QUOTES}]`);
 var STARTS_LIKE_PLAN = new RegExp(`^\\{\\s*["${TYPO_QUOTES}]\\s*[A-Za-z_]`);
-var FENCE = /(?:^|\n)[ \t]*(`{3,}|~{3,})[^\n]*\n([\s\S]*?)(?:\n[ \t]*\1[`~]*[ \t]*(?=\n|$)|$)/g;
+var FENCE = /(?:^|\n)[ \t]*(`{3,}(?!`)|~{3,}(?!~))[^\n]*\n([\s\S]*?)(?:\n[ \t]*\1[`~]*[ \t]*(?=\n|$)|$)/g;
 var JSON_LINE = /^\s*json[ \t]*:?[ \t]*\r?\n/i;
 var MAX_FENCES = 200;
 var MAX_TRIES = 3;

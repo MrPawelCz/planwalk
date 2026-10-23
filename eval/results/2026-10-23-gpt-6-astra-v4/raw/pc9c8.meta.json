@@ -1,0 +1,11 @@
+{
+  "code": "pc9c8",
+  "model": "openai/gpt-6-astra",
+  "status": "failed",
+  "attempts": [
+    {
+      "n": 1,
+      "error": "stopped at the cap of 30 OpenAI attempts"
+    }
+  ]
+}

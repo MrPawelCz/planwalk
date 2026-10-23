@@ -1,0 +1,102 @@
+{
+  "run": "2026-10-23-gpt-6-astra-v3",
+  "model": "openai/gpt-6-astra",
+  "label": "OpenAI gpt-6-astra",
+  "prompt": "v3",
+  "promptFileCommit": "60627d9",
+  "promptBranchTip": "0c29f88cc617",
+  "route": "openclaw infer model run (picture attached)",
+  "plans": 12,
+  "plansRead": 12,
+  "plansExtracted": 12,
+  "plansLoadingWithoutErrors": 12,
+  "meanComposite": 98.3,
+  "lowest": 91.7,
+  "lowestCode": "p7035",
+  "highest": 100,
+  "bareJson": 0,
+  "cleanPaste": 12,
+  "extractionRepairs": {
+    "took the code block": 12
+  },
+  "fenceBlocksTotal": 12,
+  "answersWithTextBeforeBlock": 0,
+  "meanSeconds": 64,
+  "listCostUsd": null,
+  "validatorWarningsTotal": 1,
+  "validatorErrorsTotal": 0,
+  "perCode": [
+    {
+      "code": "p69e9",
+      "style": "cad",
+      "composite": 100,
+      "present": true
+    },
+    {
+      "code": "p6530",
+      "style": "hatched",
+      "composite": 99.7,
+      "present": true
+    },
+    {
+      "code": "p66c3",
+      "style": "sketch",
+      "composite": 99.5,
+      "present": true
+    },
+    {
+      "code": "p6ea2",
+      "style": "scan",
+      "composite": 98.2,
+      "present": true
+    },
+    {
+      "code": "p7035",
+      "style": "cad",
+      "composite": 91.7,
+      "present": true
+    },
+    {
+      "code": "p6b7c",
+      "style": "hatched",
+      "composite": 100,
+      "present": true
+    },
+    {
+      "code": "p6d0f",
+      "style": "sketch",
+      "composite": 99.8,
+      "present": true
+    },
+    {
+      "code": "p74ee",
+      "style": "scan",
+      "composite": 99.4,
+      "present": true
+    },
+    {
+      "code": "pccee",
+      "style": "sketch",
+      "composite": 99.7,
+      "present": true
+    },
+    {
+      "code": "pcb5b",
+      "style": "sketch",
+      "composite": 99.9,
+      "present": true
+    },
+    {
+      "code": "pc9c8",
+      "style": "sketch",
+      "composite": 92,
+      "present": true
+    },
+    {
+      "code": "pd4cd",
+      "style": "sketch",
+      "composite": 99.9,
+      "present": true
+    }
+  ]
+}

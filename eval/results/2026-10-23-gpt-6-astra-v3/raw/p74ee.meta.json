@@ -1,0 +1,26 @@
+{
+  "code": "p74ee",
+  "model": "openai/gpt-6-astra",
+  "status": "ok",
+  "finishedAt": "2026-10-23 23:40:10",
+  "ms": 53768,
+  "answerChars": 6948,
+  "bare": false,
+  "fenceBlocks": 1,
+  "charsBeforeBlock": 0,
+  "charsAfterBlock": 0,
+  "extractOk": true,
+  "repairs": [
+    "took the code block"
+  ],
+  "planFile": "readings/p74ee.plan.json",
+  "call": {},
+  "attempts": [
+    {
+      "n": 1,
+      "at": "2026-10-23 23:40:10",
+      "ms": 53768,
+      "ok": true
+    }
+  ]
+}

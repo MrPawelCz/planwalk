@@ -1,0 +1,102 @@
+{
+  "run": "2026-10-23-gpt-6-astra-v4",
+  "model": "openai/gpt-6-astra",
+  "label": "OpenAI gpt-6-astra",
+  "prompt": "v4",
+  "promptFileCommit": "3027ceb",
+  "promptBranchTip": "d6db471fe6f1",
+  "route": "openclaw infer model run (picture attached)",
+  "plans": 12,
+  "plansRead": 7,
+  "plansExtracted": 7,
+  "plansLoadingWithoutErrors": 7,
+  "meanComposite": 57.4,
+  "lowest": 0,
+  "lowestCode": "p74ee",
+  "highest": 100,
+  "bareJson": 0,
+  "cleanPaste": 7,
+  "extractionRepairs": {
+    "took the code block": 7
+  },
+  "fenceBlocksTotal": 7,
+  "answersWithTextBeforeBlock": 0,
+  "meanSeconds": 56,
+  "listCostUsd": null,
+  "validatorWarningsTotal": 1,
+  "validatorErrorsTotal": 0,
+  "perCode": [
+    {
+      "code": "p69e9",
+      "style": "cad",
+      "composite": 100,
+      "present": true
+    },
+    {
+      "code": "p6530",
+      "style": "hatched",
+      "composite": 99.7,
+      "present": true
+    },
+    {
+      "code": "p66c3",
+      "style": "sketch",
+      "composite": 99.9,
+      "present": true
+    },
+    {
+      "code": "p6ea2",
+      "style": "scan",
+      "composite": 97.8,
+      "present": true
+    },
+    {
+      "code": "p7035",
+      "style": "cad",
+      "composite": 91.7,
+      "present": true
+    },
+    {
+      "code": "p6b7c",
+      "style": "hatched",
+      "composite": 100,
+      "present": true
+    },
+    {
+      "code": "p6d0f",
+      "style": "sketch",
+      "composite": 99.4,
+      "present": true
+    },
+    {
+      "code": "p74ee",
+      "style": "scan",
+      "composite": 0,
+      "present": false
+    },
+    {
+      "code": "pccee",
+      "style": "sketch",
+      "composite": 0,
+      "present": false
+    },
+    {
+      "code": "pcb5b",
+      "style": "sketch",
+      "composite": 0,
+      "present": false
+    },
+    {
+      "code": "pc9c8",
+      "style": "sketch",
+      "composite": 0,
+      "present": false
+    },
+    {
+      "code": "pd4cd",
+      "style": "sketch",
+      "composite": 0,
+      "present": false
+    }
+  ]
+}
