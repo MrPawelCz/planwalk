@@ -22,7 +22,7 @@ const metaRe = (key, name) => new RegExp(`^<meta ${key}="${escapeRe(name)}" cont
 // Replaces the one line that matches; a head that changed shape fails loudly instead of shipping a half Polish page.
 function one(html, re, to) {
   const n = (html.match(re) || []).length;
-  if (n !== 1) throw new Error(`localize-page: expected exactly one line matching ${re}, found ${n}`);
+  if (n !== 1) throw new Error(`localize-page: expected exactly one line matching ${re}, found ${n} (was the input built by the current tools/build.mjs? run npm run build)`);
   return html.replace(re, () => to);
 }
 
