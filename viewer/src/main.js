@@ -16,7 +16,8 @@ import { createFirstVisit } from './first-visit.js';
 import { createHelp } from './help.js';
 import { createCompact } from './compact.js';
 import { boxCorners, fitView, ndcRect, projectedBox, marginsOf } from './framing.js';
-import { refreshLangSwitches } from './lang-switch.js';
+import { createLangSwitch, refreshLangSwitches } from './lang-switch.js';
+import { panTop, pinchTop } from './gesture.js';
 import { openDialog, closeDialog } from './dialogs.js';
 import { fileSlug } from './slug.js';
 import { T, issuesHeading, fixRequestText } from './strings.js'; // every caption of this window, English and Polish
@@ -176,6 +177,8 @@ function start() {
   const chooseFile = notes.openFileButton(openPicked); // kept out of the page: window.planwalk.openFile() and the phone Menu press it
   // Phone layout: moves the toolbar controls into a Menu sheet (compact.js). onLayout runs when the window changes kind.
   const compact = createCompact({ h, root, bar, nameEl, badge: about.badge, tag: visit.tag, issuesEl, hint, mini, visit, actionSelects: [sampleSel], openFile: () => chooseFile.click(), onLayout: () => { size(); refreshFrame(); render(); } });
+  compact.registerMenuHead(createLangSwitch({ h, onPick: (l) => applyLang(l) }).el); // the page language, one tap from the phone Menu
+  share.controls.slice(0, 2).forEach((b) => b.setAttribute('data-keep-menu', '')); // Copy link and Copy long link show "Copied" on themselves
 
   // ---------- three.js ----------
   const scene = new THREE.Scene();
@@ -794,10 +797,12 @@ function start() {
   });
   canvas.addEventListener('click', () => { if (mode === 'walk' && model) canvas.requestPointerLock?.(); });
 
-  // top view: drag pans, wheel zooms
-  let drag = null;
+  // top view: one finger or the mouse pans, two fingers pinch (zoom and pan), the wheel zooms
+  const topPtr = new Map(); // pointers held on the Top view: id -> { x, y }
+  let topBase = null; // the view and the first two pointers as they were when the number of fingers last changed
+  const topRebase = () => { topBase = { view: { ...topView }, pts: [...topPtr.values()].slice(0, 2).map((p) => ({ ...p })) }; };
   canvas.addEventListener('pointerdown', (e) => {
-    if (mode === 'top') { drag = { x: e.clientX, y: e.clientY }; canvas.setPointerCapture(e.pointerId); }
+    if (mode === 'top') { topPtr.set(e.pointerId, { x: e.clientX, y: e.clientY }); topRebase(); canvas.setPointerCapture(e.pointerId); }
     if (mode === 'walk' && e.pointerType === 'touch') {
       const left = e.clientX < canvas.clientWidth / 2;
       touchPtr.set(e.pointerId, { left, x: e.clientX, y: e.clientY, ox: e.clientX, oy: e.clientY });
@@ -806,12 +811,13 @@ function start() {
   });
   const touchPtr = new Map();
   canvas.addEventListener('pointermove', (e) => {
-    if (mode === 'top' && drag) {
+    if (mode === 'top' && topPtr.has(e.pointerId)) {
       framed = false;
-      const k = (2 * topView.half) / canvas.clientHeight;
-      topView.cx -= (e.clientX - drag.x) * k;
-      topView.cz -= (e.clientY - drag.y) * k;
-      drag = { x: e.clientX, y: e.clientY };
+      Object.assign(topPtr.get(e.pointerId), { x: e.clientX, y: e.clientY });
+      const now = [...topPtr.values()].slice(0, 2);
+      Object.assign(topView, now.length > 1
+        ? pinchTop(topBase.view, topBase.pts[0], topBase.pts[1], now[0], now[1], canvas.clientWidth, canvas.clientHeight)
+        : panTop(topBase.view, topBase.pts[0], now[0], canvas.clientHeight));
       applyTop(); render();
     }
     const t = touchPtr.get(e.pointerId);
@@ -821,7 +827,8 @@ function start() {
     }
   });
   const endPtr = (e) => {
-    drag = null;
+    topPtr.delete(e.pointerId);
+    if (topPtr.size) topRebase(); // the finger that stays starts a fresh pan from where it is
     const t = touchPtr.get(e.pointerId);
     if (t?.left) { touch.forward = 0; touch.strafe = 0; }
     touchPtr.delete(e.pointerId);
