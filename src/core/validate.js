@@ -721,7 +721,7 @@ function analyze(input, strict) {
   const skipped = [];
   const skip = (kind, e, path, why, reason = 'invalid') => skipped.push({ kind, id: isObj(e) && typeof e.id === 'string' ? clip(e.id) : undefined, path, why: clip(why, CAPS.message), reason });
   if (!bad.noLevels && Array.isArray(plan.levels)) {
-    const pruned = { version: 1, name: '', units: !bad.units && hasOwn(UNIT_TO_M, plan.units ?? 'm') ? (plan.units ?? 'm') : 'm', meta: {}, levels: [] };
+    const pruned = { version: 1, name: typeof plan.name === 'string' ? plan.name : '', units: !bad.units && hasOwn(UNIT_TO_M, plan.units ?? 'm') ? (plan.units ?? 'm') : 'm', meta: isObj(plan.meta) ? plan.meta : {}, levels: [] };
     const map = [];
     const drop = { wallIds: new Map(), incomplete: new Set(), levelsDropped: false };
     plan.levels.forEach((lv, li) => {

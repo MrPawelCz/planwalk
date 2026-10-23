@@ -106,6 +106,8 @@ test('an element with an error is skipped and the rest makes a model (partial)',
   assert.equal(byKind.furniture.path, 'levels[0].furniture[2]');
   const m = modelOf(r);
   assert.ok(m, 'a model can be built');
+  assert.equal(m.name, p.name, 'the plan name and meta are kept, as in a whole plan');
+  assert.deepEqual(m.meta, p.meta);
   assert.equal(m.levels[0].walls.length, 8);
   assert.equal(m.levels[0].openings.length, 11);
   assert.equal(m.levels[0].furniture.length, 8);
