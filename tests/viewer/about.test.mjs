@@ -2,7 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { validatePlan } from '../../src/core/validate.js';
+import { PLAN_SCHEMA, validatePlan } from '../../src/core/validate.js';
 import { buildModel } from '../../viewer/src/geometry.js';
 import { setLang } from '../../viewer/src/i18n.js';
 import { aboutRows, scaleGuessed, STRINGS } from '../../viewer/src/about.js';
@@ -106,6 +106,37 @@ test('scaleGuessed: the words of the prompt examples in English and Polish, not 
     'Scale from the printed 5.00 m dimension line; the room areas agree with the polygons',
     '', undefined, null, 42,
   ]) assert.equal(scaleGuessed(measured), false, String(measured));
+});
+
+test('scaleGuessed stays fast on hostile notes: cut to the schema cap, every pattern linear', () => {
+  const cap = PLAN_SCHEMA.properties.meta.properties.scale_note.maxLength;
+  for (const note of [
+    'szacow'.repeat(20000), 'przybli'.repeat(20000), 'typow'.repeat(40000), 'standardow'.repeat(20000), 'estimat'.repeat(20000), 'assum'.repeat(40000),
+    'szacow '.repeat(20000), 'a'.repeat(120000) + 'szacow', 'szacow' + 'a'.repeat(120000), 'skal '.repeat(40000), 'scale '.repeat(40000),
+    'szacow'.repeat(160) + ' skal', 'x'.repeat(2000000),
+  ]) {
+    const t0 = performance.now();
+    assert.equal(scaleGuessed(note), false, note.slice(0, 24));
+    assert.ok(performance.now() - t0 < 50, `${Math.round(performance.now() - t0)} ms for ${note.slice(0, 24)}`);
+  }
+  assert.equal(scaleGuessed(`${'x'.repeat(cap - 40)} skala szacowana`), true, 'a guess inside the cap still counts');
+  assert.equal(scaleGuessed(`${'x'.repeat(cap)} skala szacowana`), false, 'text beyond the cap is not read');
+  assert.equal(scaleGuessed('oszacowana skala'), true, 'a short prefix before the stem still counts');
+  assert.equal(scaleGuessed('typowe drzwi 0,85 m'), true);
+  assert.equal(scaleGuessed('niestandardowe drzwi'), false, 'a stem inside a longer word does not count');
+});
+
+test('an over-long scale note (an E002 error, the model is still built) is shown whole and costs the sheet and the badge nothing', () => {
+  setLang('en');
+  const plan = load('examples/flat-1.plan.json');
+  const note = 'szacow'.repeat(20000);
+  plan.meta = { source: 'image', scale_note: note };
+  const i = info(plan); // info() needs a normalized plan: the validator still returns one for a note over the cap
+  const t0 = performance.now();
+  const scale = row(aboutRows(i), 'scale');
+  assert.ok(performance.now() - t0 < 50, `${Math.round(performance.now() - t0)} ms`);
+  assert.equal(scale.value, note);
+  assert.equal(scale.hint, '');
 });
 
 test('every English string has a Polish one and the other way round, with the same {slots}', () => {

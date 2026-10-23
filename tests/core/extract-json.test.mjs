@@ -93,6 +93,20 @@ test('text over the size limit is refused before any work', () => {
   assert.equal(extractJson(`{"a":"${'y'.repeat(MAX_PLAN_CHARS)}"}`).kind, 'too-long');
 });
 
+test('a last line that is one long run of fence marks is read in linear time', () => {
+  for (const mark of ['`', '~']) {
+    for (const text of [mark.repeat(MAX_PLAN_CHARS), `{"a":1}\n${mark.repeat(MAX_PLAN_CHARS - 20)}`, `${mark.repeat(MAX_PLAN_CHARS - 10)}x`, `x\n${mark.repeat(100000)} json`, `\n  ${mark.repeat(50000)}\n`]) {
+      const t0 = Date.now();
+      const r = extractJson(text);
+      assert.equal(typeof r.ok, 'boolean');
+      assert.ok(Date.now() - t0 < 300, `took ${Date.now() - t0} ms for ${text.slice(0, 12)}`);
+    }
+  }
+  // the pattern still finds an ordinary block, also one fenced with a longer run of marks
+  assert.deepEqual(extractJson(`Here you go:\n\`\`\`\`json\n${bare}\n\`\`\`\`\nDone.`).value, plan);
+  assert.deepEqual(extractJson(`Here you go:\n~~~~~\n${bare}\n~~~~~\nDone.`).value, plan);
+});
+
 test('a large text of the allowed size is read in reasonable time', () => {
   const filler = 'Some chat text with { stray braces } and more. '.repeat(20000);
   const t0 = Date.now();

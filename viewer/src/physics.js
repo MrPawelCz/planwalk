@@ -198,8 +198,10 @@ export function defaultSpawn(model) {
     let best = null, bestD = Infinity;
     const poly = found.room.polygon;
     const xs = poly.map((q) => q[0]), ys = poly.map((q) => q[1]);
-    for (let x = Math.min(...xs); x <= Math.max(...xs); x += 0.1) {
-      for (let y = Math.min(...ys); y <= Math.max(...ys); y += 0.1) {
+    const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+    const step = Math.max(0.1, (x1 - x0) / 300, (y1 - y0) / 300); // 10 cm, coarser for a huge room: at most 300 x 300 points
+    for (let x = x0; x <= x1; x += step) {
+      for (let y = y0; y <= y1; y += step) {
         if (!clear(x, y)) continue;
         const d = Math.hypot(x - sx, y - sy);
         if (d < bestD) { bestD = d; best = [x, y]; }

@@ -10,6 +10,7 @@ export const CAPS = Object.freeze({
   furniture: 400, // per level
   polygonPoints: 120, // points of one room polygon
   furnitureSpan: 6, // metres: the largest width, depth or height of a piece of furniture the viewer draws (W112 warns above it)
+  coordinate: 1000, // metres from the origin: a wall end, room corner, stair end or furniture centre farther out is E014 (a mistyped number)
   echo: 80, // characters of a user supplied value that a message may repeat
   message: 1500, // characters of one message or fix text
   violations: 1000, // schema violations collected before the check gives up

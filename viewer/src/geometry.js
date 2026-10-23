@@ -179,7 +179,10 @@ function labelPoint(poly) {
     return d;
   };
   const bb = bbox(poly);
-  const step = Math.max(0.05, Math.min(bb.width, bb.height) / 24);
+  // The grid has at most maxSamples points (fewer for a polygon with many edges, each point is tested against all of them)
+  // and at most 200 columns or rows, so a long thin room or one far flung vertex cannot make this long.
+  const maxSamples = Math.min(2500, Math.max(150, Math.floor(40000 / poly.length)));
+  const step = Math.max(0.05, Math.min(bb.width, bb.height) / 24, Math.max(bb.width, bb.height) / 200, Math.sqrt((bb.width * bb.height) / maxSamples));
   let best = null, bestD = -1;
   for (let x = bb.minX + step / 2; x < bb.maxX; x += step) {
     for (let y = bb.minY + step / 2; y < bb.maxY; y += step) {

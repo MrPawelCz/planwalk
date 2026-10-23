@@ -187,3 +187,29 @@ test('a meta nested 100,000 deep, and a number that parses to Infinity inside it
   const inf = validatePlan(`{"version":1,"meta":{"x":1e999},"levels":[{"id":"L0","walls":${walls}}]}`);
   assert.ok(inf.errors.some((e) => e.code === 'E010'));
 });
+
+test('checkSchema called on its own offers "did you mean" every time, not only until a shared budget runs out', () => {
+  const p = flat();
+  const level = { wals: [], ...p.levels[0] }; // a typo first, so each call asks for its suggestion with the budget it was given
+  for (let i = 0; i < 900; i++) level[`wallz${i}`] = 1; // 900 near misses use up part of the budget of every call
+  p.levels[0] = level;
+  for (let call = 0; call < 12; call++) {
+    const viol = checkSchema(p, PLAN_SCHEMA);
+    assert.ok(viol.some((v) => /unknown property "wals" \(did you mean "walls"\?\)/.test(v.detail)), `call ${call} found no suggestion`);
+  }
+});
+
+test('E014: a point more than 1000 m from the origin is an error with a fix, one at 1000 m is not, and E011 keeps the wrong scale', () => {
+  const at = (mutate) => { const p = flat(); mutate(p.levels[0]); const r = validatePlan(p); return { r, e014: r.errors.filter((e) => e.code === 'E014') }; };
+  assert.equal(at((L) => { L.rooms[0].polygon[2][1] = 1000; }).e014.length, 0);
+  const far = at((L) => { L.rooms[0].polygon[2][1] = 1001; });
+  assert.equal(far.e014.length, 1);
+  assert.equal(far.e014[0].path, 'levels[0].rooms[0]');
+  assert.equal(far.e014[0].id, flat().levels[0].rooms[0].id);
+  assert.match(far.e014[0].message, /more than 1000 m from the origin/);
+  assert.match(far.e014[0].fix, /extra digit/);
+  assert.equal(far.r.ok, false);
+  const wall = at((L) => { L.walls[0].to[1] = 1e6; });
+  assert.ok(codes(wall.r).includes('E011') && !codes(wall.r).includes('E014'), 'a far wall end is the scale error');
+  assert.equal(CAPS.coordinate, 1000);
+});

@@ -3,12 +3,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { validatePlan } from '../../src/core/validate.js';
+import { validatePlan, netAreaCost } from '../../src/core/validate.js';
+import { normalizePlan } from '../../src/core/defaults.js';
 import { pointInPolygon } from '../../src/core/geom2d.js';
 import { buildModel } from '../../viewer/src/geometry.js';
 import { PlanScene } from '../../viewer/src/scene.js';
 import { setLang } from '../../viewer/src/i18n.js';
-import { roomArea, formatArea, areaText, totalArea } from '../../viewer/src/areas.js';
+import { roomArea, formatArea, areaText, totalArea, NET_BUDGET } from '../../viewer/src/areas.js';
+import { aboutRows } from '../../viewer/src/about.js';
 
 const printed = [];
 const ctx = new Proxy({}, {
@@ -162,4 +164,69 @@ test('totalArea sums the shown areas and is an estimate as soon as one room is',
   const mixed = load('examples/duplex-1.plan.json');
   delete mixed.levels[0].rooms[0].area;
   assert.equal(totalArea(modelOf(mixed)).estimated, true);
+});
+
+// One level with `nWalls` walls on rings of 30 to 60 m and `nRooms` rooms without an area, each a regular 120 gon of the given radius.
+// With the defaults (600 walls, 150 rooms of 200 m) it is 785 KB of JSON: inside every cap and every size limit.
+function ringPlan(nWalls, nRooms, radius) {
+  const walls = [], rooms = [];
+  for (let i = 0; i < nWalls; i++) {
+    const a = (i / nWalls) * Math.PI * 2, b = ((i + 1) / nWalls) * Math.PI * 2, rr = 30 + (i % 20) * 1.5;
+    walls.push({ id: `w${i}`, from: [Math.cos(a) * rr, Math.sin(a) * rr], to: [Math.cos(b) * rr, Math.sin(b) * rr] });
+  }
+  const polygon = Array.from({ length: 120 }, (_, k) => [Math.cos((k / 120) * Math.PI * 2) * radius, Math.sin((k / 120) * Math.PI * 2) * radius]);
+  for (let r = 0; r < nRooms; r++) rooms.push({ id: `r${r}`, name: 'room', polygon });
+  return { version: 1, name: 'heavy', units: 'm', levels: [{ id: 'L0', walls, rooms }] };
+}
+
+test('a very large plan inside every cap is built, labelled and totalled in well under a second, each room worked out once', () => {
+  const plan = ringPlan(600, 150, 200);
+  assert.ok(JSON.stringify(plan).length > 700000, 'the plan really is big');
+  const norm = normalizePlan(plan);
+  const t0 = performance.now();
+  const m = buildModel(norm);
+  const lv = m.levels[0];
+  for (const room of lv.rooms) roomArea(room, lv.walls); // what the scene does for every room
+  const total = totalArea(m);                            // what every opening of the About sheet does
+  const again = performance.now();
+  totalArea(m);
+  const ms = performance.now() - t0;
+  assert.ok(ms < 500, `${Math.round(ms)} ms`);
+  assert.ok(performance.now() - again < 5, 'the second total reuses the areas worked out before');
+  assert.equal(total.rooms, 150);
+  assert.equal(total.estimated, true);
+  assert.equal(total.skipped, 150, 'one room alone costs more than the whole budget of a level');
+  for (const room of lv.rooms) assert.deepEqual(roomArea(room, lv.walls), { m2: room.area, estimated: true, skipped: true });
+  setLang('en');
+  assert.match(aboutRows({ plan, model: m }).find((r) => r.id === 'area').hint, /Very large plan/);
+  setLang('pl');
+  assert.match(aboutRows({ plan, model: m }).find((r) => r.id === 'area').hint, /Bardzo duży plan/);
+  setLang('en');
+});
+
+test('the budget is first come first served per level: early rooms keep the net estimate, later ones fall back to the polygon area', () => {
+  const norm = normalizePlan(ringPlan(100, 20, 45));
+  const lv = buildModel(norm).levels[0];
+  const cost = netAreaCost(lv.rooms[0].polygon, lv.walls.length);
+  const fit = Math.floor(NET_BUDGET / cost);
+  assert.ok(fit >= 2 && fit < 20, `${fit} rooms fit`);
+  lv.rooms.forEach((room, i) => {
+    const a = roomArea(room, lv.walls);
+    assert.equal(a.estimated, true);
+    if (i < fit) assert.ok(a.skipped === undefined && a.m2 > 0 && a.m2 < room.area, `room ${i} keeps the net estimate`);
+    else assert.deepEqual(a, { m2: room.area, estimated: true, skipped: true }, `room ${i}`);
+  });
+  const total = totalArea({ levels: [lv] });
+  assert.equal(total.skipped, 20 - fit);
+  assert.equal(totalArea({ levels: [lv] }).m2, total.m2, 'the same numbers every time');
+});
+
+test('a plan of ordinary size never reaches the budget: the bundled examples cost a few thousand wall checks', () => {
+  for (const file of EXAMPLES) {
+    for (const lv of modelOf(withoutAreas(load(file))).levels) {
+      const cost = lv.rooms.reduce((n, r) => n + netAreaCost(r.polygon, lv.walls.length), 0);
+      assert.ok(cost < NET_BUDGET / 50, `${file} ${lv.id}: ${cost} of ${NET_BUDGET}`);
+      assert.equal(totalArea({ levels: [lv] }).skipped, 0);
+    }
+  }
 });

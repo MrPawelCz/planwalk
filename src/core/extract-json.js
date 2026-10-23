@@ -10,7 +10,7 @@ const OTHER_SPACE = /[\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]/;
 const TYPO_QUOTES = '\u201c\u201d\u201e\u201f\u00ab\u00bb\u2033\uff02';
 const HAS_TYPO_QUOTE = new RegExp(`[${TYPO_QUOTES}]`);
 const STARTS_LIKE_PLAN = new RegExp(`^\\{\\s*["${TYPO_QUOTES}]\\s*[A-Za-z_]`); // { then a quoted key
-const FENCE = /(?:^|\n)[ \t]*(`{3,}|~{3,})[^\n]*\n([\s\S]*?)(?:\n[ \t]*\1[`~]*[ \t]*(?=\n|$)|$)/g;
+const FENCE = /(?:^|\n)[ \t]*(`{3,}(?!`)|~{3,}(?!~))[^\n]*\n([\s\S]*?)(?:\n[ \t]*\1[`~]*[ \t]*(?=\n|$)|$)/g; // (?!`): a run of fence marks is never retried one mark shorter (quadratic on a last line of marks)
 const JSON_LINE = /^\s*json[ \t]*:?[ \t]*\r?\n/i;
 const MAX_FENCES = 4, MAX_TRIES = 3;
 
