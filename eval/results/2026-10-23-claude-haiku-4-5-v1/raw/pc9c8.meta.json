@@ -1,0 +1,32 @@
+{
+  "code": "pc9c8",
+  "model": "claude-haiku-4-5",
+  "status": "ok",
+  "finishedAt": "2026-10-23 23:00:22",
+  "ms": 106832,
+  "answerChars": 4945,
+  "bare": false,
+  "fenceBlocks": 1,
+  "charsBeforeBlock": 0,
+  "charsAfterBlock": 424,
+  "extractOk": true,
+  "repairs": [
+    "took the code block"
+  ],
+  "planFile": "readings-sketch-zoom/pc9c8.plan.json",
+  "call": {
+    "turns": 2,
+    "costUsdList": 0.07822899999999999,
+    "inputTokens": 6884,
+    "outputTokens": 14269,
+    "subtype": "success"
+  },
+  "attempts": [
+    {
+      "n": 1,
+      "at": "2026-10-23 23:00:22",
+      "ms": 106832,
+      "ok": true
+    }
+  ]
+}

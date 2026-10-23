@@ -1,0 +1,51 @@
+```json
+{
+  "version": 1,
+  "name": "Apartment",
+  "units": "m",
+  "meta": {
+    "source": "image",
+    "scale_note": "Scaled from the printed dimension of 11.2 m width shown at the bottom of the plan. Interior wall positions estimated from visual proportions. Room depths estimated from aspect ratio.",
+    "notes": "Wall coordinates are approximate; visual proportions used for room dividers. Window and door positions estimated from visible openings on the plan. Floor height estimated at 6 m from aspect ratio."
+  },
+  "levels": [
+    {
+      "id": "L0",
+      "walls": [
+        { "id": "w1", "from": [0, 0], "to": [11.2, 0], "kind": "exterior" },
+        { "id": "w2", "from": [11.2, 0], "to": [11.2, 6], "kind": "exterior" },
+        { "id": "w3", "from": [11.2, 6], "to": [0, 6], "kind": "exterior" },
+        { "id": "w4", "from": [0, 6], "to": [0, 0], "kind": "exterior" },
+        { "id": "w5", "from": [3.5, 0], "to": [3.5, 3.5], "kind": "interior" },
+        { "id": "w6", "from": [3.5, 3.5], "to": [3.5, 6], "kind": "interior" },
+        { "id": "w7", "from": [8, 3.5], "to": [8, 6], "kind": "interior" },
+        { "id": "w8", "from": [10, 3.5], "to": [10, 6], "kind": "interior" },
+        { "id": "w9", "from": [0, 3.5], "to": [3.5, 3.5], "kind": "interior" },
+        { "id": "w10", "from": [3.5, 3.5], "to": [8, 3.5], "kind": "interior" },
+        { "id": "w11", "from": [8, 3.5], "to": [11.2, 3.5], "kind": "interior" }
+      ],
+      "openings": [
+        { "id": "d1", "wall": "w9", "type": "door", "offset": 0.7, "width": 0.85 },
+        { "id": "d2", "wall": "w10", "type": "door", "offset": 1.2, "width": 0.85 },
+        { "id": "d3", "wall": "w6", "type": "door", "offset": 0.5, "width": 0.85 },
+        { "id": "d4", "wall": "w7", "type": "door", "offset": 0.8, "width": 0.85 },
+        { "id": "d5", "wall": "w8", "type": "door", "offset": 0.8, "width": 0.85 },
+        { "id": "win1", "wall": "w1", "type": "window", "offset": 0.7, "width": 2.0 },
+        { "id": "win2", "wall": "w1", "type": "window", "offset": 4.2, "width": 2.8 },
+        { "id": "win3", "wall": "w2", "type": "window", "offset": 0.4, "width": 2.2 },
+        { "id": "win4", "wall": "w4", "type": "window", "offset": 3.0, "width": 2.0 }
+      ],
+      "rooms": [
+        { "id": "r1", "name": "Bedroom 1", "polygon": [[0, 0], [3.5, 0], [3.5, 3.5], [0, 3.5]], "area": 11.0 },
+        { "id": "r2", "name": "Bedroom 2", "polygon": [[3.5, 0], [11.2, 0], [11.2, 3.5], [3.5, 3.5]], "area": 13.0 },
+        { "id": "r3", "name": "Hall", "polygon": [[0, 3.5], [3.5, 3.5], [3.5, 6], [0, 6]], "area": 16.1 },
+        { "id": "r4", "name": "Living room", "polygon": [[3.5, 3.5], [8, 3.5], [8, 6], [3.5, 6]], "area": 17.4 },
+        { "id": "r5", "name": "Kitchen", "polygon": [[8, 3.5], [10, 3.5], [10, 6], [8, 6]], "area": 12.6 },
+        { "id": "r6", "name": "Bathroom", "polygon": [[10, 3.5], [11.2, 3.5], [11.2, 6], [10, 6]], "area": 9.2 }
+      ]
+    }
+  ]
+}
+```
+
+**Scale:** Printed width dimension of 11.2 m at floor plan bottom. Interior walls estimated from visual proportions; coordinates are approximate. Room areas from plan labels; polygons traced from wall centerlines.

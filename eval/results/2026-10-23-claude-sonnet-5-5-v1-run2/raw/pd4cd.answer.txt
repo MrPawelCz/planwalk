@@ -1,0 +1,88 @@
+```json
+{
+  "version": 1,
+  "name": "Two-storey house",
+  "units": "m",
+  "meta": {
+    "source": "image",
+    "scale_note": "No printed dimensions or room areas, so I used the standard 0.85 m door as a last resort. The hall door chord is about 78 px in the 2000 px view, which gives about 90 px/m. The outer box then comes to roughly 9.0 x 5.9 m.",
+    "notes": "Wall thickness was left at the default. Some windows in the upper-floor top, left and right walls were too faint to read, so I left them out. The right-wall windows on the ground floor are uncertain. The 0.55 m window on the right side of the ground-floor top wall is also uncertain. The stairs have no to_level offset or step count printed, so 14 steps is an estimate. Ground-floor kitchen and living room are open to each other through a gap, but I kept them as separate rooms."
+  },
+  "levels": [
+    {
+      "id": "L0",
+      "elevation": 0,
+      "walls": [
+        { "id": "w1", "from": [0, 0], "to": [9, 0], "kind": "exterior" },
+        { "id": "w2", "from": [9, 0], "to": [9, 5.9], "kind": "exterior" },
+        { "id": "w3", "from": [0, 5.9], "to": [9, 5.9], "kind": "exterior" },
+        { "id": "w4", "from": [0, 0], "to": [0, 5.9], "kind": "exterior" },
+        { "id": "w5", "from": [3.72, 0], "to": [3.72, 2.02], "kind": "interior" },
+        { "id": "w6", "from": [5.56, 0], "to": [5.56, 2.02], "kind": "interior" },
+        { "id": "w7", "from": [0, 2.02], "to": [1.0, 2.02], "kind": "interior" },
+        { "id": "w8", "from": [2.78, 2.02], "to": [9, 2.02], "kind": "interior" },
+        { "id": "w9", "from": [5.89, 2.04], "to": [5.89, 3.17], "kind": "interior" },
+        { "id": "w10", "from": [5.89, 4.72], "to": [5.89, 5.9], "kind": "interior" }
+      ],
+      "openings": [
+        { "id": "d1", "wall": "w1", "type": "door", "offset": 6.47, "width": 0.87 },
+        { "id": "win1", "wall": "w1", "type": "window", "offset": 1.13, "width": 1.48 },
+        { "id": "win2", "wall": "w1", "type": "window", "offset": 7.67, "width": 0.55 },
+        { "id": "win3", "wall": "w4", "type": "window", "offset": 0.19, "width": 1.45 },
+        { "id": "win4", "wall": "w4", "type": "window", "offset": 3.41, "width": 1.1 },
+        { "id": "win5", "wall": "w2", "type": "window", "offset": 3.24, "width": 1.5 },
+        { "id": "win6", "wall": "w3", "type": "window", "offset": 0.91, "width": 1.14 },
+        { "id": "win7", "wall": "w3", "type": "window", "offset": 3.63, "width": 1.59 },
+        { "id": "win8", "wall": "w3", "type": "window", "offset": 6.87, "width": 1.22 },
+        { "id": "d2", "wall": "w8", "type": "door", "offset": 1.53, "width": 0.8 },
+        { "id": "d3", "wall": "w8", "type": "door", "offset": 3.85, "width": 0.84 }
+      ],
+      "rooms": [
+        { "id": "r_kitchen", "name": "Kitchen", "polygon": [[0, 0], [3.72, 0], [3.72, 2.02], [0, 2.02]] },
+        { "id": "r_wc", "name": "WC", "polygon": [[3.72, 0], [5.56, 0], [5.56, 2.02], [3.72, 2.02]] },
+        { "id": "r_hall", "name": "Hall", "polygon": [[5.56, 0], [9, 0], [9, 2.02], [5.56, 2.02]] },
+        { "id": "r_living", "name": "Living room", "polygon": [[0, 2.02], [5.89, 2.02], [5.89, 5.9], [0, 5.9]] },
+        { "id": "r_dining", "name": "Dining room", "polygon": [[5.89, 2.02], [9, 2.02], [9, 5.9], [5.89, 5.9]] }
+      ],
+      "stairs": [
+        { "id": "s1", "from": [0.83, 5.52], "to": [0.83, 2.52], "width": 0.9, "steps": 14, "to_level": "L1" }
+      ]
+    },
+    {
+      "id": "L1",
+      "elevation": 3.0,
+      "walls": [
+        { "id": "u1", "from": [0, 0], "to": [9, 0], "kind": "exterior" },
+        { "id": "u2", "from": [9, 0], "to": [9, 5.9], "kind": "exterior" },
+        { "id": "u3", "from": [0, 5.9], "to": [9, 5.9], "kind": "exterior" },
+        { "id": "u4", "from": [0, 0], "to": [0, 5.9], "kind": "exterior" },
+        { "id": "u5", "from": [1.61, 0], "to": [1.61, 2.02], "kind": "interior" },
+        { "id": "u6", "from": [0, 2.02], "to": [9, 2.02], "kind": "interior" },
+        { "id": "u7", "from": [3.3, 2.02], "to": [3.3, 5.9], "kind": "interior" }
+      ],
+      "openings": [
+        { "id": "ud1", "wall": "u6", "type": "door", "offset": 0.46, "width": 0.76 },
+        { "id": "ud2", "wall": "u6", "type": "door", "offset": 2.11, "width": 0.83 },
+        { "id": "ud3", "wall": "u7", "type": "door", "offset": 1.06, "width": 0.8 },
+        { "id": "uw1", "wall": "u3", "type": "window", "offset": 1.37, "width": 0.58 },
+        { "id": "uw2", "wall": "u3", "type": "window", "offset": 4.13, "width": 1.2 },
+        { "id": "uw3", "wall": "u3", "type": "window", "offset": 6.94, "width": 1.28 }
+      ],
+      "rooms": [
+        { "id": "r_bath", "name": "Bathroom", "polygon": [[0, 0], [1.61, 0], [1.61, 2.02], [0, 2.02]] },
+        { "id": "r_bed1", "name": "Bedroom 1", "polygon": [[1.61, 0], [9, 0], [9, 2.02], [1.61, 2.02]] },
+        { "id": "r_landing", "name": "Landing", "polygon": [[0, 2.02], [3.3, 2.02], [3.3, 5.9], [0, 5.9]] },
+        { "id": "r_bed2", "name": "Bedroom 2", "polygon": [[3.3, 2.02], [9, 2.02], [9, 5.9], [3.3, 5.9]] }
+      ],
+      "stairs": [
+        { "id": "s2", "from": [0.83, 5.52], "to": [0.83, 2.52], "width": 0.9, "steps": 14, "to_level": "L0" }
+      ]
+    }
+  ]
+}
+```
+
+- Scale: the plan has no printed dimensions or areas, so I used the 0.85 m standard door, which gives about 90 px/m.
+- I left out some faint upper-floor windows. The ground-floor right-wall windows and the small window at the right of the top wall are uncertain.
+- I estimated the stair step count (14).
+- The kitchen and living room are open to each other through a gap, but I kept them as separate rooms.

@@ -1,0 +1,109 @@
+```json
+{
+  "version": 1,
+  "name": "Three-bedroom floor plan",
+  "units": "m",
+  "meta": {
+    "source": "image",
+    "scale_note": "No printed dimensions or room areas are visible. Scale estimated using a standard 0.85 m door: the approximately 71-pixel straight opening of the hall entrance gives approximately 0.012 m/pixel. Origin is the top-left outer face of the traced exterior walls; wall centerlines are inset from that origin.",
+    "notes": "All dimensions are approximate because the drawing is hand-drawn and the scale is inferred. Slight wall irregularities have been straightened. The leafless opening between Kitchen and Living room is recorded as a passage. No room areas are printed."
+  },
+  "levels": [
+    {
+      "id": "L0",
+      "walls": [
+        { "id": "w1", "from": [0.144, 0.156], "to": [3.216, 0.156], "kind": "exterior", "thickness": 0.288 },
+        { "id": "w2", "from": [3.216, 0.156], "to": [6.048, 0.156], "kind": "exterior", "thickness": 0.288 },
+        { "id": "w3", "from": [6.048, 0.156], "to": [8.652, 0.156], "kind": "exterior", "thickness": 0.288 },
+        { "id": "w4", "from": [8.652, 0.156], "to": [11.472, 0.156], "kind": "exterior", "thickness": 0.288 },
+        { "id": "w5", "from": [11.472, 0.156], "to": [11.472, 3.612], "kind": "exterior", "thickness": 0.288 },
+        { "id": "w6", "from": [11.472, 3.612], "to": [11.472, 4.764], "kind": "exterior", "thickness": 0.288 },
+        { "id": "w7", "from": [11.472, 4.764], "to": [11.472, 7.884], "kind": "exterior", "thickness": 0.288 },
+        { "id": "w8", "from": [0.144, 7.884], "to": [2.352, 7.884], "kind": "exterior", "thickness": 0.288 },
+        { "id": "w9", "from": [2.352, 7.884], "to": [5.52, 7.884], "kind": "exterior", "thickness": 0.288 },
+        { "id": "w10", "from": [5.52, 7.884], "to": [11.472, 7.884], "kind": "exterior", "thickness": 0.288 },
+        { "id": "w11", "from": [0.144, 0.156], "to": [0.144, 3.612], "kind": "exterior", "thickness": 0.288 },
+        { "id": "w12", "from": [0.144, 3.612], "to": [0.144, 4.764], "kind": "exterior", "thickness": 0.288 },
+        { "id": "w13", "from": [0.144, 4.764], "to": [0.144, 7.884], "kind": "exterior", "thickness": 0.288 },
+        { "id": "w14", "from": [3.216, 0.156], "to": [3.216, 3.612], "kind": "interior", "thickness": 0.12 },
+        { "id": "w15", "from": [6.048, 0.156], "to": [6.048, 3.612], "kind": "interior", "thickness": 0.12 },
+        { "id": "w16", "from": [8.652, 0.156], "to": [8.652, 3.612], "kind": "interior", "thickness": 0.12 },
+        { "id": "w17", "from": [0.144, 3.612], "to": [3.216, 3.612], "kind": "interior", "thickness": 0.12 },
+        { "id": "w18", "from": [3.216, 3.612], "to": [6.048, 3.612], "kind": "interior", "thickness": 0.12 },
+        { "id": "w19", "from": [6.048, 3.612], "to": [8.652, 3.612], "kind": "interior", "thickness": 0.12 },
+        { "id": "w20", "from": [8.652, 3.612], "to": [11.472, 3.612], "kind": "interior", "thickness": 0.12 },
+        { "id": "w21", "from": [0.144, 4.764], "to": [2.352, 4.764], "kind": "interior", "thickness": 0.12 },
+        { "id": "w22", "from": [2.352, 4.764], "to": [5.52, 4.764], "kind": "interior", "thickness": 0.12 },
+        { "id": "w23", "from": [5.52, 4.764], "to": [11.472, 4.764], "kind": "interior", "thickness": 0.12 },
+        { "id": "w24", "from": [2.352, 4.764], "to": [2.352, 7.884], "kind": "interior", "thickness": 0.12 },
+        { "id": "w25", "from": [5.52, 4.764], "to": [5.52, 7.884], "kind": "interior", "thickness": 0.12 }
+      ],
+      "openings": [
+        { "id": "win1", "wall": "w1", "type": "window", "offset": 0.768, "width": 1.596 },
+        { "id": "win2", "wall": "w2", "type": "window", "offset": 0.84, "width": 1.188 },
+        { "id": "win3", "wall": "w3", "type": "window", "offset": 0.696, "width": 1.224 },
+        { "id": "win4", "wall": "w4", "type": "window", "offset": 1.128, "width": 0.54 },
+        { "id": "win5", "wall": "w11", "type": "window", "offset": 1.044, "width": 1.368 },
+        { "id": "win6", "wall": "w13", "type": "window", "offset": 1.296, "width": 0.588 },
+        { "id": "win7", "wall": "w7", "type": "window", "offset": 0.912, "width": 1.356 },
+        { "id": "win8", "wall": "w9", "type": "window", "offset": 0.732, "width": 1.728 },
+        { "id": "win9", "wall": "w10", "type": "window", "offset": 0.768, "width": 1.464 },
+        { "id": "win10", "wall": "w10", "type": "window", "offset": 3.888, "width": 1.2 },
+        { "id": "d1", "wall": "w8", "type": "door", "offset": 0.54, "width": 0.852, "hinge": "start", "opens_to": "left" },
+        { "id": "d2", "wall": "w17", "type": "door", "offset": 1.08, "width": 0.84, "hinge": "start", "opens_to": "left" },
+        { "id": "d3", "wall": "w18", "type": "door", "offset": 1.212, "width": 0.852, "hinge": "start", "opens_to": "left" },
+        { "id": "d4", "wall": "w19", "type": "door", "offset": 1.056, "width": 0.888, "hinge": "start", "opens_to": "left" },
+        { "id": "d5", "wall": "w20", "type": "door", "offset": 0.672, "width": 0.756, "hinge": "start", "opens_to": "left" },
+        { "id": "d6", "wall": "w21", "type": "door", "offset": 0.636, "width": 0.852, "hinge": "start", "opens_to": "left" },
+        { "id": "d7", "wall": "w22", "type": "door", "offset": 1.164, "width": 0.816, "hinge": "start", "opens_to": "left" },
+        { "id": "d8", "wall": "w23", "type": "door", "offset": 2.472, "width": 0.84, "hinge": "start", "opens_to": "left" },
+        { "id": "p1", "wall": "w25", "type": "passage", "offset": 1.152, "width": 1.224 }
+      ],
+      "rooms": [
+        {
+          "id": "r1",
+          "name": "Bedroom 1",
+          "polygon": [[0.144, 0.156], [3.216, 0.156], [3.216, 3.612], [0.144, 3.612]]
+        },
+        {
+          "id": "r2",
+          "name": "Bedroom 2",
+          "polygon": [[3.216, 0.156], [6.048, 0.156], [6.048, 3.612], [3.216, 3.612]]
+        },
+        {
+          "id": "r3",
+          "name": "Bedroom 3",
+          "polygon": [[6.048, 0.156], [8.652, 0.156], [8.652, 3.612], [6.048, 3.612]]
+        },
+        {
+          "id": "r4",
+          "name": "Bathroom",
+          "polygon": [[8.652, 0.156], [11.472, 0.156], [11.472, 3.612], [8.652, 3.612]]
+        },
+        {
+          "id": "r5",
+          "name": "Corridor",
+          "polygon": [[0.144, 3.612], [3.216, 3.612], [6.048, 3.612], [8.652, 3.612], [11.472, 3.612], [11.472, 4.764], [5.52, 4.764], [2.352, 4.764], [0.144, 4.764]]
+        },
+        {
+          "id": "r6",
+          "name": "Hall",
+          "polygon": [[0.144, 4.764], [2.352, 4.764], [2.352, 7.884], [0.144, 7.884]]
+        },
+        {
+          "id": "r7",
+          "name": "Kitchen",
+          "polygon": [[2.352, 4.764], [5.52, 4.764], [5.52, 7.884], [2.352, 7.884]]
+        },
+        {
+          "id": "r8",
+          "name": "Living room",
+          "polygon": [[5.52, 4.764], [11.472, 4.764], [11.472, 7.884], [5.52, 7.884]]
+        }
+      ]
+    }
+  ]
+}
+```
+Scale: inferred from a standard 0.85 m door; no dimensions or areas are printed.
+Hand-drawn wall irregularities were straightened; measurements are approximate.

@@ -1,0 +1,26 @@
+{
+  "code": "p6ea2",
+  "model": "openai/gpt-6-astra",
+  "status": "ok",
+  "finishedAt": "2026-10-23 22:46:21",
+  "ms": 76704,
+  "answerChars": 7644,
+  "bare": false,
+  "fenceBlocks": 1,
+  "charsBeforeBlock": 0,
+  "charsAfterBlock": 147,
+  "extractOk": true,
+  "repairs": [
+    "took the code block"
+  ],
+  "planFile": "readings/p6ea2.plan.json",
+  "call": {},
+  "attempts": [
+    {
+      "n": 1,
+      "at": "2026-10-23 22:46:21",
+      "ms": 76704,
+      "ok": true
+    }
+  ]
+}

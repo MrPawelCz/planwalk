@@ -1,0 +1,786 @@
+{
+  "version": 1,
+  "name": "Two-storey house, ground floor and upper floor",
+  "units": "m",
+  "meta": {
+    "source": "image",
+    "scale_note": "Scale taken from the printed 9.35 m dimension line. It spans about 748 px, so 80 px per metre. It matches the centerline-to-centerline width of the outer walls. Printed room areas agree with the polygons within about 0.1-0.5 m2, so confidence is high.",
+    "notes": "Both floors have the same outline. Window and door positions are estimated from the drawing, to about 0.1 m. Hinge sides are not set. Left out: the kitchen counter run and fridge, the bathtub-like symbol in the WC, the bathroom fixtures, the desk and wardrobe in Bedroom 2, the ceiling hatch or void symbols, the round column symbols, the rug, and the shelf in the living room. The left-wall window of Bedroom 2 and the landing is unclear and left out. The wall between the Landing and Bedroom 2 has a swing door in its gap. The gaps in the wall between Living room and Dining room are left open. Stair step counts, stair rise (3.0 m) and the upper floor elevation are guesses."
+  },
+  "levels": [
+    {
+      "id": "L0",
+      "elevation": 0,
+      "walls": [
+        {
+          "id": "w1",
+          "from": [
+            0.15,
+            0.15
+          ],
+          "to": [
+            9.5,
+            0.15
+          ],
+          "kind": "exterior"
+        },
+        {
+          "id": "w2",
+          "from": [
+            9.5,
+            0.15
+          ],
+          "to": [
+            9.5,
+            6.55
+          ],
+          "kind": "exterior"
+        },
+        {
+          "id": "w3",
+          "from": [
+            0.15,
+            6.55
+          ],
+          "to": [
+            9.5,
+            6.55
+          ],
+          "kind": "exterior"
+        },
+        {
+          "id": "w4",
+          "from": [
+            0.15,
+            0.15
+          ],
+          "to": [
+            0.15,
+            6.55
+          ],
+          "kind": "exterior"
+        },
+        {
+          "id": "w5",
+          "from": [
+            4.24,
+            0.15
+          ],
+          "to": [
+            4.24,
+            2.33
+          ],
+          "kind": "interior"
+        },
+        {
+          "id": "w6",
+          "from": [
+            6.25,
+            0.15
+          ],
+          "to": [
+            6.25,
+            2.33
+          ],
+          "kind": "interior"
+        },
+        {
+          "id": "w7",
+          "from": [
+            0.15,
+            2.33
+          ],
+          "to": [
+            0.95,
+            2.33
+          ],
+          "kind": "interior"
+        },
+        {
+          "id": "w8",
+          "from": [
+            3.06,
+            2.33
+          ],
+          "to": [
+            5.6,
+            2.33
+          ],
+          "kind": "interior"
+        },
+        {
+          "id": "w9",
+          "from": [
+            5.6,
+            2.33
+          ],
+          "to": [
+            9.5,
+            2.33
+          ],
+          "kind": "interior"
+        },
+        {
+          "id": "w10",
+          "from": [
+            6.1,
+            2.33
+          ],
+          "to": [
+            6.1,
+            3.65
+          ],
+          "kind": "interior"
+        },
+        {
+          "id": "w11",
+          "from": [
+            6.1,
+            5.4
+          ],
+          "to": [
+            6.1,
+            6.55
+          ],
+          "kind": "interior"
+        }
+      ],
+      "openings": [
+        {
+          "id": "ow1",
+          "wall": "w1",
+          "type": "window",
+          "offset": 1.31,
+          "width": 1.44
+        },
+        {
+          "id": "ow2",
+          "wall": "w1",
+          "type": "window",
+          "offset": 4.81,
+          "width": 0.58
+        },
+        {
+          "id": "d1",
+          "wall": "w1",
+          "type": "door",
+          "offset": 6.95,
+          "width": 0.9
+        },
+        {
+          "id": "ow3",
+          "wall": "w4",
+          "type": "window",
+          "offset": 0.15,
+          "width": 1.6
+        },
+        {
+          "id": "ow4",
+          "wall": "w4",
+          "type": "window",
+          "offset": 3.5,
+          "width": 1.56
+        },
+        {
+          "id": "ow5",
+          "wall": "w2",
+          "type": "window",
+          "offset": 0.78,
+          "width": 0.62
+        },
+        {
+          "id": "ow6",
+          "wall": "w2",
+          "type": "window",
+          "offset": 3.54,
+          "width": 1.5
+        },
+        {
+          "id": "ow7",
+          "wall": "w3",
+          "type": "window",
+          "offset": 0.6,
+          "width": 1.75
+        },
+        {
+          "id": "ow8",
+          "wall": "w3",
+          "type": "window",
+          "offset": 3.55,
+          "width": 1.8
+        },
+        {
+          "id": "ow9",
+          "wall": "w3",
+          "type": "window",
+          "offset": 6.88,
+          "width": 1.64
+        },
+        {
+          "id": "d2",
+          "wall": "w8",
+          "type": "door",
+          "offset": 1.75,
+          "width": 0.8
+        },
+        {
+          "id": "d3",
+          "wall": "w9",
+          "type": "door",
+          "offset": 1.75,
+          "width": 0.9
+        }
+      ],
+      "rooms": [
+        {
+          "id": "r1",
+          "name": "Kitchen",
+          "polygon": [
+            [
+              0.15,
+              0.15
+            ],
+            [
+              4.24,
+              0.15
+            ],
+            [
+              4.24,
+              2.33
+            ],
+            [
+              0.15,
+              2.33
+            ]
+          ],
+          "area": 9
+        },
+        {
+          "id": "r2",
+          "name": "WC",
+          "polygon": [
+            [
+              4.24,
+              0.15
+            ],
+            [
+              6.25,
+              0.15
+            ],
+            [
+              6.25,
+              2.33
+            ],
+            [
+              4.24,
+              2.33
+            ]
+          ],
+          "area": 4.4
+        },
+        {
+          "id": "r3",
+          "name": "Hall",
+          "polygon": [
+            [
+              6.25,
+              0.15
+            ],
+            [
+              9.5,
+              0.15
+            ],
+            [
+              9.5,
+              2.33
+            ],
+            [
+              6.25,
+              2.33
+            ]
+          ],
+          "area": 7.1
+        },
+        {
+          "id": "r4",
+          "name": "Living room",
+          "polygon": [
+            [
+              0.15,
+              2.33
+            ],
+            [
+              4.24,
+              2.33
+            ],
+            [
+              6.1,
+              2.33
+            ],
+            [
+              6.1,
+              6.55
+            ],
+            [
+              0.15,
+              6.55
+            ]
+          ],
+          "area": 25
+        },
+        {
+          "id": "r5",
+          "name": "Dining room",
+          "polygon": [
+            [
+              6.1,
+              2.33
+            ],
+            [
+              9.5,
+              2.33
+            ],
+            [
+              9.5,
+              6.55
+            ],
+            [
+              6.1,
+              6.55
+            ]
+          ],
+          "area": 14.3
+        }
+      ],
+      "stairs": [
+        {
+          "id": "s1",
+          "from": [
+            1.05,
+            6.11
+          ],
+          "to": [
+            1.05,
+            2.875
+          ],
+          "width": 1,
+          "steps": 14,
+          "to_level": "L1"
+        }
+      ],
+      "furniture": [
+        {
+          "id": "f1",
+          "type": "sofa",
+          "center": [
+            3.125,
+            5.89
+          ],
+          "size": [
+            2,
+            0.9
+          ],
+          "rotation": 180
+        },
+        {
+          "id": "f2",
+          "type": "table-dining",
+          "center": [
+            7.8,
+            4.45
+          ],
+          "size": [
+            1.6,
+            0.9
+          ],
+          "rotation": 0
+        },
+        {
+          "id": "f3",
+          "type": "chair",
+          "center": [
+            7.35,
+            3.74
+          ],
+          "size": [
+            0.45,
+            0.45
+          ],
+          "rotation": 0
+        },
+        {
+          "id": "f4",
+          "type": "chair",
+          "center": [
+            8.25,
+            3.74
+          ],
+          "size": [
+            0.45,
+            0.45
+          ],
+          "rotation": 0
+        },
+        {
+          "id": "f5",
+          "type": "chair",
+          "center": [
+            7.35,
+            5.15
+          ],
+          "size": [
+            0.45,
+            0.45
+          ],
+          "rotation": 180
+        },
+        {
+          "id": "f6",
+          "type": "chair",
+          "center": [
+            8.25,
+            5.15
+          ],
+          "size": [
+            0.45,
+            0.45
+          ],
+          "rotation": 180
+        },
+        {
+          "id": "f7",
+          "type": "toilet",
+          "center": [
+            5.81,
+            0.65
+          ],
+          "size": [
+            0.4,
+            0.7
+          ],
+          "rotation": 0
+        },
+        {
+          "id": "f8",
+          "type": "basin",
+          "center": [
+            4.75,
+            0.65
+          ],
+          "size": [
+            0.5,
+            0.4
+          ],
+          "rotation": 0
+        },
+        {
+          "id": "f9",
+          "type": "stove",
+          "center": [
+            2.93,
+            0.65
+          ],
+          "size": [
+            0.65,
+            0.6
+          ],
+          "rotation": 0
+        }
+      ]
+    },
+    {
+      "id": "L1",
+      "elevation": 3,
+      "walls": [
+        {
+          "id": "u1",
+          "from": [
+            0.15,
+            0.15
+          ],
+          "to": [
+            9.5,
+            0.15
+          ],
+          "kind": "exterior"
+        },
+        {
+          "id": "u2",
+          "from": [
+            9.5,
+            0.15
+          ],
+          "to": [
+            9.5,
+            6.55
+          ],
+          "kind": "exterior"
+        },
+        {
+          "id": "u3",
+          "from": [
+            0.15,
+            6.55
+          ],
+          "to": [
+            9.5,
+            6.55
+          ],
+          "kind": "exterior"
+        },
+        {
+          "id": "u4",
+          "from": [
+            0.15,
+            0.15
+          ],
+          "to": [
+            0.15,
+            6.55
+          ],
+          "kind": "exterior"
+        },
+        {
+          "id": "u5",
+          "from": [
+            1.95,
+            0.15
+          ],
+          "to": [
+            1.95,
+            2.33
+          ],
+          "kind": "interior"
+        },
+        {
+          "id": "u6",
+          "from": [
+            0.15,
+            2.33
+          ],
+          "to": [
+            9.5,
+            2.33
+          ],
+          "kind": "interior"
+        },
+        {
+          "id": "u7",
+          "from": [
+            3.75,
+            2.33
+          ],
+          "to": [
+            3.75,
+            6.55
+          ],
+          "kind": "interior"
+        }
+      ],
+      "openings": [
+        {
+          "id": "uw1",
+          "wall": "u1",
+          "type": "window",
+          "offset": 2.86,
+          "width": 1.69
+        },
+        {
+          "id": "uw2",
+          "wall": "u1",
+          "type": "window",
+          "offset": 6.7,
+          "width": 1.56
+        },
+        {
+          "id": "uw3",
+          "wall": "u4",
+          "type": "window",
+          "offset": 0.8,
+          "width": 0.95
+        },
+        {
+          "id": "uw4",
+          "wall": "u2",
+          "type": "window",
+          "offset": 0.45,
+          "width": 1.3
+        },
+        {
+          "id": "uw5",
+          "wall": "u2",
+          "type": "window",
+          "offset": 3.6,
+          "width": 1.44
+        },
+        {
+          "id": "uw6",
+          "wall": "u3",
+          "type": "window",
+          "offset": 0.15,
+          "width": 1.95
+        },
+        {
+          "id": "uw7",
+          "wall": "u3",
+          "type": "window",
+          "offset": 4.2,
+          "width": 1.65
+        },
+        {
+          "id": "uw8",
+          "wall": "u3",
+          "type": "window",
+          "offset": 7.2,
+          "width": 2
+        },
+        {
+          "id": "ud1",
+          "wall": "u6",
+          "type": "door",
+          "offset": 0.49,
+          "width": 0.8
+        },
+        {
+          "id": "ud2",
+          "wall": "u6",
+          "type": "door",
+          "offset": 2.33,
+          "width": 0.88
+        },
+        {
+          "id": "ud3",
+          "wall": "u7",
+          "type": "door",
+          "offset": 1.27,
+          "width": 0.9
+        }
+      ],
+      "rooms": [
+        {
+          "id": "ur1",
+          "name": "Bathroom",
+          "polygon": [
+            [
+              0.15,
+              0.15
+            ],
+            [
+              1.95,
+              0.15
+            ],
+            [
+              1.95,
+              2.33
+            ],
+            [
+              0.15,
+              2.33
+            ]
+          ],
+          "area": 4
+        },
+        {
+          "id": "ur2",
+          "name": "Bedroom 1",
+          "polygon": [
+            [
+              1.95,
+              0.15
+            ],
+            [
+              9.5,
+              0.15
+            ],
+            [
+              9.5,
+              2.33
+            ],
+            [
+              1.95,
+              2.33
+            ]
+          ],
+          "area": 16.6
+        },
+        {
+          "id": "ur3",
+          "name": "Landing",
+          "polygon": [
+            [
+              0.15,
+              2.33
+            ],
+            [
+              3.75,
+              2.33
+            ],
+            [
+              3.75,
+              6.55
+            ],
+            [
+              0.15,
+              6.55
+            ]
+          ],
+          "area": 15.1
+        },
+        {
+          "id": "ur4",
+          "name": "Bedroom 2",
+          "polygon": [
+            [
+              3.75,
+              2.33
+            ],
+            [
+              9.5,
+              2.33
+            ],
+            [
+              9.5,
+              6.55
+            ],
+            [
+              3.75,
+              6.55
+            ]
+          ],
+          "area": 24.1
+        }
+      ],
+      "stairs": [
+        {
+          "id": "us1",
+          "from": [
+            1.05,
+            6.11
+          ],
+          "to": [
+            1.05,
+            2.875
+          ],
+          "width": 1,
+          "steps": 14,
+          "to_level": "L0"
+        }
+      ],
+      "furniture": [
+        {
+          "id": "uf1",
+          "type": "bed-double",
+          "center": [
+            8.3,
+            4.45
+          ],
+          "size": [
+            2,
+            1.6
+          ],
+          "rotation": 180
+        }
+      ]
+    }
+  ]
+}

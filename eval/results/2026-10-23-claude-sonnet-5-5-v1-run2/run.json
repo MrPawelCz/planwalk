@@ -1,0 +1,12 @@
+{
+  "model": "claude-sonnet-5-5",
+  "route": "claude -p (Read tool only, no session, no project files)",
+  "promptSpec": "git:a959169:docs/PROMPT.md",
+  "promptMode": "code block under \"## Prompt\"",
+  "promptBranchTip": "a9591698d34d",
+  "promptFileCommit": "a959169",
+  "promptSha256": "c00a80f4aa550ee27d3106640cfa74fa6b329a941df5547e43073e3e965fca58",
+  "promptChars": 3104,
+  "extractor": "src/core/extract-json.js (the viewer's extractor, first version)",
+  "createdAt": "2026-10-23 23:02:26"
+}

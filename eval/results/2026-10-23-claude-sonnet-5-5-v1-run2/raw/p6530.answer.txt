@@ -1,0 +1,61 @@
+```json
+{
+  "version": 1,
+  "name": "Apartment with two bedrooms",
+  "units": "m",
+  "meta": {
+    "source": "image",
+    "scale_note": "Printed dimension 9.80 m between the centerlines of the left and right outer walls (112 px to 896 px, so 80 px per m). Printed room areas were not needed for the scale.",
+    "notes": "Furniture and sanitary fixtures left out. The Kitchen and Living room are open to each other. I split them at x=5.8, where the two short wall stubs are. Opening positions are estimated from the image."
+  },
+  "levels": [
+    {
+      "id": "L0",
+      "walls": [
+        { "id": "w1", "from": [0.15, 0.15], "to": [9.95, 0.15], "kind": "exterior" },
+        { "id": "w2", "from": [9.95, 0.15], "to": [9.95, 8.1], "kind": "exterior" },
+        { "id": "w3", "from": [0.15, 8.1], "to": [9.95, 8.1], "kind": "exterior" },
+        { "id": "w4", "from": [0.15, 0.15], "to": [0.15, 8.1], "kind": "exterior" },
+        { "id": "w5", "from": [0.15, 3.55], "to": [9.95, 3.55], "kind": "interior" },
+        { "id": "w6", "from": [0.15, 4.7], "to": [9.95, 4.7], "kind": "interior" },
+        { "id": "w7", "from": [3.5, 0.15], "to": [3.5, 3.55], "kind": "interior" },
+        { "id": "w8", "from": [6.45, 0.15], "to": [6.45, 3.55], "kind": "interior" },
+        { "id": "w9", "from": [2.45, 4.7], "to": [2.45, 8.1], "kind": "interior" },
+        { "id": "w10", "from": [5.8, 4.7], "to": [5.8, 5.9], "kind": "interior" },
+        { "id": "w11", "from": [5.8, 7.4], "to": [5.8, 8.1], "kind": "interior" }
+      ],
+      "openings": [
+        { "id": "win1", "wall": "w1", "type": "window", "offset": 1.05, "width": 1.3 },
+        { "id": "win2", "wall": "w1", "type": "window", "offset": 4.15, "width": 1.35 },
+        { "id": "win3", "wall": "w1", "type": "window", "offset": 7.75, "width": 0.6 },
+        { "id": "win4", "wall": "w2", "type": "window", "offset": 5.65, "width": 1.2 },
+        { "id": "d_entry", "wall": "w3", "type": "door", "offset": 0.55, "width": 0.9 },
+        { "id": "win5", "wall": "w3", "type": "window", "offset": 3.26, "width": 1.5 },
+        { "id": "win6", "wall": "w3", "type": "window", "offset": 6.9, "width": 1.7 },
+        { "id": "win7", "wall": "w4", "type": "window", "offset": 0.95, "width": 1.5 },
+        { "id": "win8", "wall": "w4", "type": "window", "offset": 6.0, "width": 0.6 },
+        { "id": "d_bed1", "wall": "w5", "type": "door", "offset": 1.16, "width": 0.89 },
+        { "id": "d_bed2", "wall": "w5", "type": "door", "offset": 4.5, "width": 0.9 },
+        { "id": "d_bath", "wall": "w5", "type": "door", "offset": 7.81, "width": 0.8 },
+        { "id": "d_hall", "wall": "w6", "type": "door", "offset": 0.7, "width": 0.9 },
+        { "id": "d_kitchen", "wall": "w6", "type": "door", "offset": 3.56, "width": 0.85 },
+        { "id": "d_living", "wall": "w6", "type": "door", "offset": 7.25, "width": 0.9 }
+      ],
+      "rooms": [
+        { "id": "r_bed1", "name": "Bedroom 1", "polygon": [[0.15, 0.15], [3.5, 0.15], [3.5, 3.55], [0.15, 3.55]], "area": 11.4 },
+        { "id": "r_bed2", "name": "Bedroom 2", "polygon": [[3.5, 0.15], [6.45, 0.15], [6.45, 3.55], [3.5, 3.55]], "area": 10.0 },
+        { "id": "r_bath", "name": "Bathroom", "polygon": [[6.45, 0.15], [9.95, 0.15], [9.95, 3.55], [6.45, 3.55]], "area": 11.9 },
+        { "id": "r_corr", "name": "Corridor", "polygon": [[0.15, 3.55], [9.95, 3.55], [9.95, 4.7], [0.15, 4.7]], "area": 11.8 },
+        { "id": "r_hall", "name": "Hall", "polygon": [[0.15, 4.7], [2.45, 4.7], [2.45, 8.1], [0.15, 8.1]], "area": 7.7 },
+        { "id": "r_kitchen", "name": "Kitchen", "polygon": [[2.45, 4.7], [5.8, 4.7], [5.8, 8.1], [2.45, 8.1]], "area": 11.2 },
+        { "id": "r_living", "name": "Living room", "polygon": [[5.8, 4.7], [9.95, 4.7], [9.95, 8.1], [5.8, 8.1]], "area": 13.9 }
+      ]
+    }
+  ]
+}
+```
+
+- Scale source: the printed 9.80 m dimension, measured between wall centerlines.
+- Room areas are copied from the plan. My polygons run along centerlines, so they are a little larger.
+- The Kitchen/Living room split at x=5.8 is my estimate, since there is no wall between them.
+- Door hinge sides and swing directions are not set.

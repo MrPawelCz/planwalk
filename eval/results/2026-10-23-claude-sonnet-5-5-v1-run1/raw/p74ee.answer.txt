@@ -1,0 +1,57 @@
+```json
+{
+  "version": 1,
+  "name": "Small apartment",
+  "units": "m",
+  "meta": {
+    "source": "image",
+    "scale_note": "Printed dimension 9.25 m, taken as the outer width of the building (about 82.5 px/m). Printed room areas were roughly consistent with this.",
+    "notes": "The image is slightly rotated, so coordinates are approximate and I straightened them. Wall thickness is about 0.25 m. No furniture or stairs are drawn. The front door in the bottom wall sits in a gap, so I modelled it as a door on one continuous bottom wall."
+  },
+  "levels": [
+    {
+      "id": "L0",
+      "walls": [
+        { "id": "w_top", "from": [0.12, 0.12], "to": [9.12, 0.12], "kind": "exterior" },
+        { "id": "w_right", "from": [9.12, 0.12], "to": [9.12, 6.67], "kind": "exterior" },
+        { "id": "w_bottom", "from": [0.12, 6.67], "to": [9.12, 6.67], "kind": "exterior" },
+        { "id": "w_left", "from": [0.12, 0.12], "to": [0.12, 6.67], "kind": "exterior" },
+        { "id": "w_mid", "from": [0.12, 3.4], "to": [9.12, 3.4], "kind": "interior" },
+        { "id": "w_bed", "from": [6.2, 0.12], "to": [6.2, 3.4], "kind": "interior" },
+        { "id": "w_bath", "from": [2.2, 3.4], "to": [2.2, 6.67], "kind": "interior" },
+        { "id": "w_kit", "from": [4.15, 3.4], "to": [4.15, 6.67], "kind": "interior" }
+      ],
+      "openings": [
+        { "id": "win_t1", "wall": "w_top", "type": "window", "offset": 0.8, "width": 1.44 },
+        { "id": "win_t2", "wall": "w_top", "type": "window", "offset": 3.92, "width": 1.27 },
+        { "id": "win_t3", "wall": "w_top", "type": "window", "offset": 6.7, "width": 1.64 },
+        { "id": "win_r1", "wall": "w_right", "type": "window", "offset": 0.9, "width": 1.25 },
+        { "id": "win_r2", "wall": "w_right", "type": "window", "offset": 4.1, "width": 1.4 },
+        { "id": "win_l1", "wall": "w_left", "type": "window", "offset": 1.1, "width": 1.35 },
+        { "id": "win_l2", "wall": "w_left", "type": "window", "offset": 4.8, "width": 0.6 },
+        { "id": "win_b1", "wall": "w_bottom", "type": "window", "offset": 2.9, "width": 0.55 },
+        { "id": "win_b2", "wall": "w_bottom", "type": "window", "offset": 4.6, "width": 1.6 },
+        { "id": "win_b3", "wall": "w_bottom", "type": "window", "offset": 7.2, "width": 1.45 },
+        { "id": "d_front", "wall": "w_bottom", "type": "door", "offset": 0.65, "width": 0.9 },
+        { "id": "d_hall", "wall": "w_mid", "type": "door", "offset": 0.6, "width": 0.9 },
+        { "id": "d_kit", "wall": "w_mid", "type": "door", "offset": 4.7, "width": 0.85 },
+        { "id": "d_bed", "wall": "w_bed", "type": "door", "offset": 0.9, "width": 0.85 },
+        { "id": "d_bath", "wall": "w_bath", "type": "door", "offset": 1.1, "width": 0.8 }
+      ],
+      "rooms": [
+        { "id": "r_living", "name": "Living room", "polygon": [[0.12, 0.12], [6.2, 0.12], [6.2, 3.4], [0.12, 3.4]], "area": 21.3 },
+        { "id": "r_bed", "name": "Bedroom", "polygon": [[6.2, 0.12], [9.12, 0.12], [9.12, 3.4], [6.2, 3.4]], "area": 10.2 },
+        { "id": "r_hall", "name": "Hall", "polygon": [[0.12, 3.4], [2.2, 3.4], [2.2, 6.67], [0.12, 6.67]], "area": 6.7 },
+        { "id": "r_bath", "name": "Bathroom", "polygon": [[2.2, 3.4], [4.15, 3.4], [4.15, 6.67], [2.2, 6.67]], "area": 6.7 },
+        { "id": "r_kitchen", "name": "Kitchen", "polygon": [[4.15, 3.4], [9.12, 3.4], [9.12, 6.67], [4.15, 6.67]], "area": 17.6 }
+      ]
+    }
+  ]
+}
+```
+
+- Scale source: the printed 9.25 m dimension, which I took as the outer width of the building.
+- I wasn't sure whether the dimension line measures the outer or the centerline width. The printed room areas fit the result roughly.
+- The plan is tilted by about 1.7°. I straightened it, so positions are accurate to about ±0.1 m.
+- The living room is larger than its printed 21.3 m². The polygons run along wall centerlines, so they come out bigger than the net areas.
+- Door hinge sides and swing directions are left at the defaults.

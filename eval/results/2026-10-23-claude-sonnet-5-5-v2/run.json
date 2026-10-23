@@ -1,0 +1,10 @@
+{
+  "model": "claude-sonnet-5-5",
+  "route": "claude -p (Read tool only, no session, no project files)",
+  "promptSpec": "docs/PROMPT.md (revised prompt; the exact text that was sent is prompt.txt)",
+  "promptMode": "whole file",
+  "promptSha256": "f7173914c05b24776e1347ebe34e093f24b3b0ca600abed85ae4afb88fe7acef",
+  "promptChars": 4346,
+  "extractor": "src/core/extract-json.js (the viewer's extractor, first version)",
+  "createdAt": "2026-10-23 23:05:45"
+}

@@ -1,0 +1,63 @@
+```json
+{
+  "version": 1,
+  "name": "Two bedrooms, hall, living room, kitchen and bathroom",
+  "units": "m",
+  "meta": {
+    "source": "image",
+    "scale_note": "Scale from the printed overall dimension 11.75 m. The dimension line is about 940 px long, which gives about 80 px/m. This is fairly reliable. The printed room areas were not used to set the scale. The drawing is slightly skewed, so coordinates are approximate to about 0.1 m.",
+    "notes": "Wall centerlines were estimated from the image and the thickness is set at 0.25 m. The bottom and right walls are slightly slanted in the image, so I straightened them. The living room and kitchen are open to each other except for two short wall stubs, so they are split at x=6.8 and share an edge. Door hinge and swing sides were not specified. No furniture is clearly drawn, so none was added. The entrance door is in the bottom wall of the Hall."
+  },
+  "levels": [
+    {
+      "id": "L0",
+      "walls": [
+        { "id": "w1", "from": [0.125, 0.125], "to": [6.8, 0.125], "kind": "exterior", "thickness": 0.25 },
+        { "id": "w2", "from": [6.8, 0.125], "to": [6.8, 3.85], "kind": "exterior", "thickness": 0.25 },
+        { "id": "w3", "from": [6.8, 3.85], "to": [11.8, 3.85], "kind": "exterior", "thickness": 0.25 },
+        { "id": "w4", "from": [11.8, 3.85], "to": [11.8, 8.0], "kind": "exterior", "thickness": 0.25 },
+        { "id": "w5", "from": [0.125, 8.0], "to": [11.8, 8.0], "kind": "exterior", "thickness": 0.25 },
+        { "id": "w6", "from": [0.125, 8.0], "to": [0.125, 0.125], "kind": "exterior", "thickness": 0.25 },
+        { "id": "w7", "from": [3.16, 0.125], "to": [3.16, 3.85], "kind": "interior", "thickness": 0.15 },
+        { "id": "w8", "from": [0.125, 3.85], "to": [6.8, 3.85], "kind": "interior", "thickness": 0.15 },
+        { "id": "w9", "from": [2.44, 3.85], "to": [2.44, 8.0], "kind": "interior", "thickness": 0.15 },
+        { "id": "w10", "from": [6.8, 3.85], "to": [6.8, 5.4], "kind": "interior", "thickness": 0.15 },
+        { "id": "w11", "from": [6.8, 7.1], "to": [6.8, 8.0], "kind": "interior", "thickness": 0.15 },
+        { "id": "w12", "from": [9.59, 3.85], "to": [9.59, 8.0], "kind": "interior", "thickness": 0.15 }
+      ],
+      "openings": [
+        { "id": "win1", "wall": "w1", "type": "window", "offset": 0.8, "width": 1.5 },
+        { "id": "win2", "wall": "w1", "type": "window", "offset": 4.28, "width": 1.3 },
+        { "id": "win3", "wall": "w2", "type": "window", "offset": 1.23, "width": 1.5 },
+        { "id": "win4", "wall": "w3", "type": "window", "offset": 0.8, "width": 1.2 },
+        { "id": "win5", "wall": "w5", "type": "window", "offset": 3.65, "width": 1.45 },
+        { "id": "win6", "wall": "w5", "type": "window", "offset": 7.3, "width": 1.3 },
+        { "id": "win7", "wall": "w5", "type": "window", "offset": 10.25, "width": 0.6 },
+        { "id": "win8", "wall": "w6", "type": "window", "offset": 1.85, "width": 0.6 },
+        { "id": "win9", "wall": "w6", "type": "window", "offset": 5.33, "width": 1.45 },
+        { "id": "d_entry", "wall": "w5", "type": "door", "offset": 0.6, "width": 0.9 },
+        { "id": "d_bed1", "wall": "w8", "type": "door", "offset": 0.78, "width": 0.9 },
+        { "id": "d_bed2", "wall": "w8", "type": "door", "offset": 4.78, "width": 0.85 },
+        { "id": "d_hall", "wall": "w9", "type": "door", "offset": 1.75, "width": 0.9 },
+        { "id": "d_bath", "wall": "w12", "type": "door", "offset": 1.95, "width": 0.8 },
+        { "id": "p_lk", "wall": "w5", "type": "passage", "offset": 6.0, "width": 0.01 }
+      ],
+      "rooms": [
+        { "id": "r_bed1", "name": "Bedroom 1", "polygon": [[0.125, 0.125], [3.16, 0.125], [3.16, 3.85], [0.125, 3.85]], "area": 11.0 },
+        { "id": "r_bed2", "name": "Bedroom 2", "polygon": [[3.16, 0.125], [6.8, 0.125], [6.8, 3.85], [3.16, 3.85]], "area": 13.0 },
+        { "id": "r_hall", "name": "Hall", "polygon": [[0.125, 3.85], [2.44, 3.85], [2.44, 8.0], [0.125, 8.0]], "area": 10.1 },
+        { "id": "r_living", "name": "Living room", "polygon": [[2.44, 3.85], [6.8, 3.85], [6.8, 8.0], [2.44, 8.0]], "area": 17.4 },
+        { "id": "r_kitchen", "name": "Kitchen", "polygon": [[6.8, 3.85], [9.59, 3.85], [9.59, 8.0], [6.8, 8.0]], "area": 12.6 },
+        { "id": "r_bath", "name": "Bathroom", "polygon": [[9.59, 3.85], [11.8, 3.85], [11.8, 8.0], [9.59, 8.0]], "area": 9.2 }
+      ]
+    }
+  ]
+}
+```
+
+I made a mistake: the opening `p_lk` is a stray 0.01 m passage on the bottom wall that doesn't correspond to anything in the plan. Delete it before using the file.
+
+Notes:
+- Scale comes from the printed 11.75 m overall dimension, about 80 px/m. Coordinates are accurate to roughly 0.1 m because the scan is slightly skewed.
+- The living room and kitchen are split at x=6.8, and the only walls between them are the two short stubs.
+- Door swing sides and hinges are left out, and no furniture is drawn clearly enough to add.

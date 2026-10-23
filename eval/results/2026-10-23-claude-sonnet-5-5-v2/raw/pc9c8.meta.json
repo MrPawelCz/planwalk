@@ -1,0 +1,32 @@
+{
+  "code": "pc9c8",
+  "model": "claude-sonnet-5-5",
+  "status": "ok",
+  "finishedAt": "2026-10-23 23:08:43",
+  "ms": 31087,
+  "answerChars": 4513,
+  "bare": false,
+  "fenceBlocks": 1,
+  "charsBeforeBlock": 0,
+  "charsAfterBlock": 323,
+  "extractOk": true,
+  "repairs": [
+    "took the code block"
+  ],
+  "planFile": "readings-sketch-zoom/pc9c8.plan.json",
+  "call": {
+    "turns": 2,
+    "costUsdList": 0.04934940000000001,
+    "inputTokens": 4,
+    "outputTokens": 4182,
+    "subtype": "success"
+  },
+  "attempts": [
+    {
+      "n": 1,
+      "at": "2026-10-23 23:08:43",
+      "ms": 31087,
+      "ok": true
+    }
+  ]
+}

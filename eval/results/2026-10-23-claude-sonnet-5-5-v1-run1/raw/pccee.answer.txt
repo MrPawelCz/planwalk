@@ -1,0 +1,65 @@
+```json
+{
+  "version": 1,
+  "name": "Apartment with three bedrooms",
+  "units": "m",
+  "meta": {
+    "source": "image",
+    "scale_note": "The plan has no printed dimensions or areas. I used a standard door of 0.85 m, which measures about 55 px on the image, so the scale is about 65 px/m. The origin is the top-left corner of the outer wall centerline.",
+    "notes": "Door swing sides and hinges were not set. Window positions are approximate. The short wall stubs between the kitchen and the living room are traced as drawn, and the gap between them is open."
+  },
+  "levels": [
+    {
+      "id": "L0",
+      "walls": [
+        { "id": "w1", "from": [0, 0], "to": [10.75, 0], "kind": "exterior" },
+        { "id": "w2", "from": [10.75, 0], "to": [10.75, 8.15], "kind": "exterior" },
+        { "id": "w3", "from": [0, 8.15], "to": [10.75, 8.15], "kind": "exterior" },
+        { "id": "w4", "from": [0, 0], "to": [0, 8.15], "kind": "exterior" },
+        { "id": "c1", "from": [0, 3.4], "to": [10.75, 3.4], "kind": "interior" },
+        { "id": "c2", "from": [0, 4.5], "to": [10.75, 4.5], "kind": "interior" },
+        { "id": "p1", "from": [2.9, 0], "to": [2.9, 3.4], "kind": "interior" },
+        { "id": "p2", "from": [5.57, 0], "to": [5.57, 3.4], "kind": "interior" },
+        { "id": "p3", "from": [8.05, 0], "to": [8.05, 3.4], "kind": "interior" },
+        { "id": "h1", "from": [2.15, 4.5], "to": [2.15, 8.15], "kind": "interior" },
+        { "id": "s1", "from": [5.15, 4.5], "to": [5.15, 5.3], "kind": "interior" },
+        { "id": "s2", "from": [5.15, 6.48], "to": [5.15, 8.15], "kind": "interior" }
+      ],
+      "openings": [
+        { "id": "d1", "wall": "c1", "type": "door", "offset": 1.05, "width": 0.85 },
+        { "id": "d2", "wall": "c1", "type": "door", "offset": 4.09, "width": 0.85 },
+        { "id": "d3", "wall": "c1", "type": "door", "offset": 6.52, "width": 0.85 },
+        { "id": "d4", "wall": "c1", "type": "door", "offset": 8.71, "width": 0.8 },
+        { "id": "d5", "wall": "c2", "type": "door", "offset": 0.63, "width": 0.85 },
+        { "id": "d6", "wall": "c2", "type": "door", "offset": 3.28, "width": 0.8 },
+        { "id": "d7", "wall": "c2", "type": "door", "offset": 8.25, "width": 0.8 },
+        { "id": "d8", "wall": "w3", "type": "door", "offset": 0.55, "width": 0.8 },
+        { "id": "win1", "wall": "w1", "type": "window", "offset": 0.8, "width": 1.25 },
+        { "id": "win2", "wall": "w1", "type": "window", "offset": 3.45, "width": 1.6 },
+        { "id": "win3", "wall": "w1", "type": "window", "offset": 6.1, "width": 1.45 },
+        { "id": "win4", "wall": "w4", "type": "window", "offset": 0.88, "width": 1.65 },
+        { "id": "win5", "wall": "w4", "type": "window", "offset": 6.07, "width": 0.55 },
+        { "id": "win6", "wall": "w3", "type": "window", "offset": 3.06, "width": 1.25 },
+        { "id": "win7", "wall": "w3", "type": "window", "offset": 5.9, "width": 1.25 },
+        { "id": "win8", "wall": "w3", "type": "window", "offset": 8.74, "width": 1.25 },
+        { "id": "win9", "wall": "w2", "type": "window", "offset": 5.77, "width": 1.3 }
+      ],
+      "rooms": [
+        { "id": "r1", "name": "Bedroom 1", "polygon": [[0, 0], [2.9, 0], [2.9, 3.4], [0, 3.4]] },
+        { "id": "r2", "name": "Bedroom 2", "polygon": [[2.9, 0], [5.57, 0], [5.57, 3.4], [2.9, 3.4]] },
+        { "id": "r3", "name": "Bedroom 3", "polygon": [[5.57, 0], [8.05, 0], [8.05, 3.4], [5.57, 3.4]] },
+        { "id": "r4", "name": "Bathroom", "polygon": [[8.05, 0], [10.75, 0], [10.75, 3.4], [8.05, 3.4]] },
+        { "id": "r5", "name": "Corridor", "polygon": [[0, 3.4], [10.75, 3.4], [10.75, 4.5], [0, 4.5]] },
+        { "id": "r6", "name": "Hall", "polygon": [[0, 4.5], [2.15, 4.5], [2.15, 8.15], [0, 8.15]] },
+        { "id": "r7", "name": "Kitchen", "polygon": [[2.15, 4.5], [5.15, 4.5], [5.15, 8.15], [2.15, 8.15]] },
+        { "id": "r8", "name": "Living room", "polygon": [[5.15, 4.5], [10.75, 4.5], [10.75, 8.15], [5.15, 8.15]] }
+      ]
+    }
+  ]
+}
+```
+
+- Scale source: a standard 0.85 m door, because the plan has no printed dimensions or areas.
+- Wall centerlines and window positions are estimated by eye from the image.
+- I left out door hinge and swing direction.
+- The gap between the two short wall stubs is treated as an open connection between the kitchen and the living room. I added no passage for it.

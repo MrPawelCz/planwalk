@@ -1,0 +1,311 @@
+```json
+{
+  "version": 1,
+  "name": "Three-bedroom floor plan",
+  "units": "m",
+  "meta": {
+    "source": "image",
+    "scale_note": "No printed dimensions or room areas are visible. Scale estimated using a standard 0.85 m door: a typical opening spans approximately 55 image pixels, giving approximately 0.01545 m/pixel. Origin is the top-left outer wall corner, approximately image pixel (75,111). Wall centerlines are slightly inset from this origin.",
+    "notes": "The drawing is hand-drawn; wall centerlines have been straightened and aligned at junctions. All dimensions are approximate. The open connection between Kitchen and Living room is interpreted as a passage. Window extents are estimated from the multiple parallel lines in the exterior walls. Door swing metadata and furniture are omitted."
+  },
+  "levels": [
+    {
+      "id": "L0",
+      "walls": [
+        {
+          "id": "w1",
+          "from": [0.155, 0.155],
+          "to": [10.892, 0.155],
+          "kind": "exterior",
+          "thickness": 0.28
+        },
+        {
+          "id": "w2",
+          "from": [10.892, 0.155],
+          "to": [10.892, 8.327],
+          "kind": "exterior",
+          "thickness": 0.28
+        },
+        {
+          "id": "w3",
+          "from": [0.155, 8.327],
+          "to": [10.892, 8.327],
+          "kind": "exterior",
+          "thickness": 0.28
+        },
+        {
+          "id": "w4",
+          "from": [0.155, 0.155],
+          "to": [0.155, 8.327],
+          "kind": "exterior",
+          "thickness": 0.28
+        },
+        {
+          "id": "w5",
+          "from": [0.155, 3.538],
+          "to": [3.075, 3.538],
+          "kind": "interior",
+          "thickness": 0.12
+        },
+        {
+          "id": "w6",
+          "from": [3.075, 3.538],
+          "to": [5.747, 3.538],
+          "kind": "interior",
+          "thickness": 0.12
+        },
+        {
+          "id": "w7",
+          "from": [5.747, 3.538],
+          "to": [8.219, 3.538],
+          "kind": "interior",
+          "thickness": 0.12
+        },
+        {
+          "id": "w8",
+          "from": [8.219, 3.538],
+          "to": [10.892, 3.538],
+          "kind": "interior",
+          "thickness": 0.12
+        },
+        {
+          "id": "w9",
+          "from": [3.075, 0.155],
+          "to": [3.075, 3.538],
+          "kind": "interior",
+          "thickness": 0.12
+        },
+        {
+          "id": "w10",
+          "from": [5.747, 0.155],
+          "to": [5.747, 3.538],
+          "kind": "interior",
+          "thickness": 0.12
+        },
+        {
+          "id": "w11",
+          "from": [8.219, 0.155],
+          "to": [8.219, 3.538],
+          "kind": "interior",
+          "thickness": 0.12
+        },
+        {
+          "id": "w12",
+          "from": [0.155, 4.681],
+          "to": [2.302, 4.681],
+          "kind": "interior",
+          "thickness": 0.12
+        },
+        {
+          "id": "w13",
+          "from": [2.302, 4.681],
+          "to": [5.315, 4.681],
+          "kind": "interior",
+          "thickness": 0.12
+        },
+        {
+          "id": "w14",
+          "from": [5.315, 4.681],
+          "to": [10.892, 4.681],
+          "kind": "interior",
+          "thickness": 0.12
+        },
+        {
+          "id": "w15",
+          "from": [2.302, 4.681],
+          "to": [2.302, 8.327],
+          "kind": "interior",
+          "thickness": 0.12
+        },
+        {
+          "id": "w16",
+          "from": [5.315, 4.681],
+          "to": [5.315, 8.327],
+          "kind": "interior",
+          "thickness": 0.12
+        }
+      ],
+      "openings": [
+        {
+          "id": "d1",
+          "wall": "w5",
+          "type": "door",
+          "offset": 1.02,
+          "width": 0.85
+        },
+        {
+          "id": "d2",
+          "wall": "w6",
+          "type": "door",
+          "offset": 1.19,
+          "width": 0.865
+        },
+        {
+          "id": "d3",
+          "wall": "w7",
+          "type": "door",
+          "offset": 0.927,
+          "width": 0.865
+        },
+        {
+          "id": "d4",
+          "wall": "w8",
+          "type": "door",
+          "offset": 0.664,
+          "width": 0.773
+        },
+        {
+          "id": "d5",
+          "wall": "w12",
+          "type": "door",
+          "offset": 0.603,
+          "width": 0.834
+        },
+        {
+          "id": "d6",
+          "wall": "w13",
+          "type": "door",
+          "offset": 1.128,
+          "width": 0.803
+        },
+        {
+          "id": "d7",
+          "wall": "w14",
+          "type": "door",
+          "offset": 3.09,
+          "width": 0.85
+        },
+        {
+          "id": "d8",
+          "wall": "w3",
+          "type": "door",
+          "offset": 0.51,
+          "width": 0.85
+        },
+        {
+          "id": "p1",
+          "wall": "w16",
+          "type": "passage",
+          "offset": 0.788,
+          "width": 1.174
+        },
+        {
+          "id": "win1",
+          "wall": "w1",
+          "type": "window",
+          "offset": 0.85,
+          "width": 1.221
+        },
+        {
+          "id": "win2",
+          "wall": "w1",
+          "type": "window",
+          "offset": 3.43,
+          "width": 1.638
+        },
+        {
+          "id": "win3",
+          "wall": "w1",
+          "type": "window",
+          "offset": 6.103,
+          "width": 1.483
+        },
+        {
+          "id": "win4",
+          "wall": "w1",
+          "type": "window",
+          "offset": 9.1,
+          "width": 0.587
+        },
+        {
+          "id": "win5",
+          "wall": "w4",
+          "type": "window",
+          "offset": 0.865,
+          "width": 1.669
+        },
+        {
+          "id": "win6",
+          "wall": "w4",
+          "type": "window",
+          "offset": 6.041,
+          "width": 0.587
+        },
+        {
+          "id": "win7",
+          "wall": "w2",
+          "type": "window",
+          "offset": 5.794,
+          "width": 1.143
+        },
+        {
+          "id": "win8",
+          "wall": "w3",
+          "type": "window",
+          "offset": 3.044,
+          "width": 1.282
+        },
+        {
+          "id": "win9",
+          "wall": "w3",
+          "type": "window",
+          "offset": 5.902,
+          "width": 1.298
+        },
+        {
+          "id": "win10",
+          "wall": "w3",
+          "type": "window",
+          "offset": 8.729,
+          "width": 1.282
+        }
+      ],
+      "rooms": [
+        {
+          "id": "r1",
+          "name": "Bedroom 1",
+          "polygon": [[0.155, 0.155], [3.075, 0.155], [3.075, 3.538], [0.155, 3.538]]
+        },
+        {
+          "id": "r2",
+          "name": "Bedroom 2",
+          "polygon": [[3.075, 0.155], [5.747, 0.155], [5.747, 3.538], [3.075, 3.538]]
+        },
+        {
+          "id": "r3",
+          "name": "Bedroom 3",
+          "polygon": [[5.747, 0.155], [8.219, 0.155], [8.219, 3.538], [5.747, 3.538]]
+        },
+        {
+          "id": "r4",
+          "name": "Bathroom",
+          "polygon": [[8.219, 0.155], [10.892, 0.155], [10.892, 3.538], [8.219, 3.538]]
+        },
+        {
+          "id": "r5",
+          "name": "Corridor",
+          "polygon": [[0.155, 3.538], [3.075, 3.538], [5.747, 3.538], [8.219, 3.538], [10.892, 3.538], [10.892, 4.681], [5.315, 4.681], [2.302, 4.681], [0.155, 4.681]]
+        },
+        {
+          "id": "r6",
+          "name": "Hall",
+          "polygon": [[0.155, 4.681], [2.302, 4.681], [2.302, 8.327], [0.155, 8.327]]
+        },
+        {
+          "id": "r7",
+          "name": "Kitchen",
+          "polygon": [[2.302, 4.681], [5.315, 4.681], [5.315, 8.327], [2.302, 8.327]]
+        },
+        {
+          "id": "r8",
+          "name": "Living room",
+          "polygon": [[5.315, 4.681], [10.892, 4.681], [10.892, 8.327], [5.315, 8.327]]
+        }
+      ]
+    }
+  ]
+}
+```
+Scale source: assumed 0.85 m door; no printed dimensions or areas.
+Wall alignment and window endpoints are approximate.
+Kitchen–Living room opening interpreted as a passage.

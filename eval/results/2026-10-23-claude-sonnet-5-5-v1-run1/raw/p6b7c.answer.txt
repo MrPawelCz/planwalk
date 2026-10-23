@@ -1,0 +1,95 @@
+```json
+{
+  "version": 1,
+  "name": "Two-storey house",
+  "units": "m",
+  "meta": {
+    "source": "image",
+    "scale_note": "Printed dimension 9.35 m. It spans the wall centerlines of the ground floor, 748 px, so the scale is 80 px/m. The printed room areas (9.0, 4.4, 7.1, 25.0, 14.3 m2 and so on) agree with the traced polygons.",
+    "notes": "Furniture is skipped. The short door-return stubs next to the hall door and the landing door are left out. Window positions are read from the triple lines and are approximate. The hinge side and swing direction of the doors are estimates."
+  },
+  "levels": [
+    {
+      "id": "L0",
+      "name": "Ground floor",
+      "elevation": 0,
+      "walls": [
+        { "id": "g_n", "from": [0.15, 0.15], "to": [9.5, 0.15], "kind": "exterior" },
+        { "id": "g_e", "from": [9.5, 0.15], "to": [9.5, 6.55], "kind": "exterior" },
+        { "id": "g_s", "from": [9.5, 6.55], "to": [0.15, 6.55], "kind": "exterior" },
+        { "id": "g_w", "from": [0.15, 6.55], "to": [0.15, 0.15], "kind": "exterior" },
+        { "id": "g_i1", "from": [4.24, 0.15], "to": [4.24, 2.35], "kind": "interior" },
+        { "id": "g_i2", "from": [6.2, 0.15], "to": [6.2, 2.35], "kind": "interior" },
+        { "id": "g_i3", "from": [0.15, 2.35], "to": [0.96, 2.35], "kind": "interior" },
+        { "id": "g_i4", "from": [3.06, 2.35], "to": [9.5, 2.35], "kind": "interior" },
+        { "id": "g_i5", "from": [6.2, 2.35], "to": [6.2, 3.65], "kind": "interior" },
+        { "id": "g_i6", "from": [6.2, 5.4], "to": [6.2, 6.55], "kind": "interior" }
+      ],
+      "openings": [
+        { "id": "g_door_main", "wall": "g_n", "type": "door", "offset": 6.95, "width": 0.9, "hinge": "start", "opens_to": "left" },
+        { "id": "g_wn1", "wall": "g_n", "type": "window", "offset": 1.31, "width": 1.44 },
+        { "id": "g_wn2", "wall": "g_n", "type": "window", "offset": 4.81, "width": 0.58 },
+        { "id": "g_ww1", "wall": "g_w", "type": "window", "offset": 1.0, "width": 1.54 },
+        { "id": "g_ww2", "wall": "g_w", "type": "window", "offset": 1.34, "width": 1.56 },
+        { "id": "g_ws1", "wall": "g_s", "type": "window", "offset": 0.9, "width": 1.75 },
+        { "id": "g_ws2", "wall": "g_s", "type": "window", "offset": 3.96, "width": 1.79 },
+        { "id": "g_ws3", "wall": "g_s", "type": "window", "offset": 0.88, "width": 1.62 },
+        { "id": "g_we1", "wall": "g_e", "type": "window", "offset": 0.78, "width": 0.62 },
+        { "id": "g_we2", "wall": "g_e", "type": "window", "offset": 1.34, "width": 1.5 },
+        { "id": "g_dwc", "wall": "g_i4", "type": "door", "offset": 1.75, "width": 0.8, "hinge": "start", "opens_to": "left" },
+        { "id": "g_dhall", "wall": "g_i4", "type": "door", "offset": 4.29, "width": 0.9, "hinge": "start", "opens_to": "right" }
+      ],
+      "stairs": [
+        { "id": "st0", "from": [1.05, 6.12], "to": [1.05, 2.88], "width": 1.0, "steps": 16, "to_level": "L1" }
+      ],
+      "rooms": [
+        { "id": "kitchen", "name": "Kitchen", "polygon": [[0.15, 0.15], [4.24, 0.15], [4.24, 2.35], [0.15, 2.35]], "area": 9.0 },
+        { "id": "wc", "name": "WC", "polygon": [[4.24, 0.15], [6.2, 0.15], [6.2, 2.35], [4.24, 2.35]], "area": 4.4 },
+        { "id": "hall", "name": "Hall", "polygon": [[6.2, 0.15], [9.5, 0.15], [9.5, 2.35], [6.2, 2.35]], "area": 7.1 },
+        { "id": "living", "name": "Living room", "polygon": [[0.15, 2.35], [6.2, 2.35], [6.2, 6.55], [0.15, 6.55]], "area": 25.0 },
+        { "id": "dining", "name": "Dining room", "polygon": [[6.2, 2.35], [9.5, 2.35], [9.5, 6.55], [6.2, 6.55]], "area": 14.3 }
+      ]
+    },
+    {
+      "id": "L1",
+      "name": "Upper floor",
+      "elevation": 3.0,
+      "walls": [
+        { "id": "u_n", "from": [0.15, 0.15], "to": [9.5, 0.15], "kind": "exterior" },
+        { "id": "u_e", "from": [9.5, 0.15], "to": [9.5, 6.55], "kind": "exterior" },
+        { "id": "u_s", "from": [9.5, 6.55], "to": [0.15, 6.55], "kind": "exterior" },
+        { "id": "u_w", "from": [0.15, 6.55], "to": [0.15, 0.15], "kind": "exterior" },
+        { "id": "u_i1", "from": [1.95, 0.15], "to": [1.95, 2.35], "kind": "interior" },
+        { "id": "u_i2", "from": [0.15, 2.35], "to": [9.5, 2.35], "kind": "interior" },
+        { "id": "u_i3", "from": [3.73, 2.35], "to": [3.73, 6.55], "kind": "interior" }
+      ],
+      "openings": [
+        { "id": "u_wn1", "wall": "u_n", "type": "window", "offset": 2.85, "width": 1.7 },
+        { "id": "u_wn2", "wall": "u_n", "type": "window", "offset": 6.7, "width": 1.56 },
+        { "id": "u_ww1", "wall": "u_w", "type": "window", "offset": 5.03, "width": 0.52 },
+        { "id": "u_we1", "wall": "u_e", "type": "window", "offset": 0.44, "width": 1.29 },
+        { "id": "u_we2", "wall": "u_e", "type": "window", "offset": 3.63, "width": 1.43 },
+        { "id": "u_ws1", "wall": "u_s", "type": "window", "offset": 0.99, "width": 1.94 },
+        { "id": "u_ws2", "wall": "u_s", "type": "window", "offset": 3.15, "width": 1.65 },
+        { "id": "u_ws3", "wall": "u_s", "type": "window", "offset": 0.84, "width": 1.31 },
+        { "id": "u_dbath", "wall": "u_i2", "type": "door", "offset": 0.49, "width": 0.78, "hinge": "start", "opens_to": "right" },
+        { "id": "u_dland", "wall": "u_i2", "type": "door", "offset": 2.3, "width": 0.9, "hinge": "start", "opens_to": "left" },
+        { "id": "u_dbed2", "wall": "u_i3", "type": "door", "offset": 1.24, "width": 0.9, "hinge": "start", "opens_to": "left" }
+      ],
+      "stairs": [
+        { "id": "st1", "from": [1.05, 2.88], "to": [1.05, 6.12], "width": 1.0, "steps": 16, "to_level": "L0" }
+      ],
+      "rooms": [
+        { "id": "bath", "name": "Bathroom", "polygon": [[0.15, 0.15], [1.95, 0.15], [1.95, 2.35], [0.15, 2.35]], "area": 4.0 },
+        { "id": "bed1", "name": "Bedroom 1", "polygon": [[1.95, 0.15], [9.5, 0.15], [9.5, 2.35], [1.95, 2.35]], "area": 16.6 },
+        { "id": "landing", "name": "Landing", "polygon": [[0.15, 2.35], [3.73, 2.35], [3.73, 6.55], [0.15, 6.55]], "area": 15.1 },
+        { "id": "bed2", "name": "Bedroom 2", "polygon": [[3.73, 2.35], [9.5, 2.35], [9.5, 6.55], [3.73, 6.55]], "area": 24.1 }
+      ]
+    }
+  ]
+}
+```
+- Scale source: the printed 9.35 m dimension, which spans the wall centerlines (80 px/m). The printed room areas match the polygons.
+- I did not trace the short door-return stubs by the hall door and the landing door.
+- Window extents and door hinge or swing sides are estimates.
+- Furniture is skipped. Each stair has 16 steps, which is a guess.

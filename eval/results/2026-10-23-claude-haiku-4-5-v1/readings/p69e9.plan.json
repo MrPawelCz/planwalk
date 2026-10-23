@@ -1,0 +1,317 @@
+{
+  "version": 1,
+  "name": "Apartment",
+  "units": "m",
+  "meta": {
+    "source": "image",
+    "scale_note": "Scale from marked horizontal dimension of 8.90 m; vertical dimension estimated from visual aspect ratio (~6.0 m).",
+    "notes": "Curved wall between living room and bedroom approximated as straight line at x=6.0. Some room areas show minor discrepancies from polygon calculations, suggesting walls may be included in printed areas."
+  },
+  "levels": [
+    {
+      "id": "L0",
+      "walls": [
+        {
+          "id": "w_top",
+          "from": [
+            0,
+            0
+          ],
+          "to": [
+            8.9,
+            0
+          ],
+          "kind": "exterior"
+        },
+        {
+          "id": "w_right",
+          "from": [
+            8.9,
+            0
+          ],
+          "to": [
+            8.9,
+            6
+          ],
+          "kind": "exterior"
+        },
+        {
+          "id": "w_bottom",
+          "from": [
+            8.9,
+            6
+          ],
+          "to": [
+            0,
+            6
+          ],
+          "kind": "exterior"
+        },
+        {
+          "id": "w_left",
+          "from": [
+            0,
+            6
+          ],
+          "to": [
+            0,
+            0
+          ],
+          "kind": "exterior"
+        },
+        {
+          "id": "w_lr_br",
+          "from": [
+            6,
+            0
+          ],
+          "to": [
+            6,
+            3
+          ],
+          "kind": "interior"
+        },
+        {
+          "id": "w_h_b",
+          "from": [
+            2.3,
+            3
+          ],
+          "to": [
+            2.3,
+            6
+          ],
+          "kind": "interior"
+        },
+        {
+          "id": "w_b_k",
+          "from": [
+            5,
+            3
+          ],
+          "to": [
+            5,
+            6
+          ],
+          "kind": "interior"
+        },
+        {
+          "id": "w_b_top",
+          "from": [
+            2.3,
+            3
+          ],
+          "to": [
+            5,
+            3
+          ],
+          "kind": "interior"
+        }
+      ],
+      "openings": [
+        {
+          "id": "d1",
+          "wall": "w_lr_br",
+          "type": "door",
+          "offset": 1.5,
+          "width": 0.9,
+          "hinge": "end"
+        },
+        {
+          "id": "d2",
+          "wall": "w_h_b",
+          "type": "door",
+          "offset": 1.2,
+          "width": 0.9
+        },
+        {
+          "id": "d3",
+          "wall": "w_b_k",
+          "type": "door",
+          "offset": 0.8,
+          "width": 0.9
+        },
+        {
+          "id": "p1",
+          "wall": "w_left",
+          "type": "passage",
+          "offset": 3,
+          "width": 1
+        },
+        {
+          "id": "d4",
+          "wall": "w_bottom",
+          "type": "door",
+          "offset": 2,
+          "width": 0.9
+        },
+        {
+          "id": "win1",
+          "wall": "w_left",
+          "type": "window",
+          "offset": 1.5,
+          "width": 1.2
+        },
+        {
+          "id": "win2",
+          "wall": "w_left",
+          "type": "window",
+          "offset": 4,
+          "width": 1.2
+        },
+        {
+          "id": "win3",
+          "wall": "w_right",
+          "type": "window",
+          "offset": 1.5,
+          "width": 1.2
+        },
+        {
+          "id": "win4",
+          "wall": "w_right",
+          "type": "window",
+          "offset": 4,
+          "width": 1.2
+        },
+        {
+          "id": "win5",
+          "wall": "w_top",
+          "type": "window",
+          "offset": 1.2,
+          "width": 0.8
+        },
+        {
+          "id": "win6",
+          "wall": "w_top",
+          "type": "window",
+          "offset": 3.5,
+          "width": 0.8
+        },
+        {
+          "id": "win7",
+          "wall": "w_top",
+          "type": "window",
+          "offset": 6.5,
+          "width": 0.8
+        }
+      ],
+      "rooms": [
+        {
+          "id": "r_lr",
+          "name": "Living room",
+          "polygon": [
+            [
+              0,
+              0
+            ],
+            [
+              6,
+              0
+            ],
+            [
+              6,
+              3
+            ],
+            [
+              0,
+              3
+            ]
+          ],
+          "area": 18.9
+        },
+        {
+          "id": "r_br",
+          "name": "Bedroom",
+          "polygon": [
+            [
+              6,
+              0
+            ],
+            [
+              8.9,
+              0
+            ],
+            [
+              8.9,
+              3
+            ],
+            [
+              6,
+              3
+            ]
+          ],
+          "area": 9.6
+        },
+        {
+          "id": "r_h",
+          "name": "Hall",
+          "polygon": [
+            [
+              0,
+              3
+            ],
+            [
+              2.3,
+              3
+            ],
+            [
+              2.3,
+              6
+            ],
+            [
+              0,
+              6
+            ]
+          ],
+          "area": 6.3
+        },
+        {
+          "id": "r_b",
+          "name": "Bathroom",
+          "polygon": [
+            [
+              2.3,
+              3
+            ],
+            [
+              5,
+              3
+            ],
+            [
+              5,
+              6
+            ],
+            [
+              2.3,
+              6
+            ]
+          ],
+          "area": 6.3
+        },
+        {
+          "id": "r_k",
+          "name": "Kitchen",
+          "polygon": [
+            [
+              5,
+              3
+            ],
+            [
+              8.9,
+              3
+            ],
+            [
+              8.9,
+              6
+            ],
+            [
+              5,
+              6
+            ]
+          ],
+          "area": 15.4
+        }
+      ]
+    }
+  ]
+}

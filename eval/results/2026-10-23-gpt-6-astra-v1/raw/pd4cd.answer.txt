@@ -1,0 +1,106 @@
+```json
+{
+  "version": 1,
+  "name": "Two-storey house",
+  "units": "m",
+  "meta": {
+    "source": "image",
+    "scale_note": "No dimensions or room areas are printed. Scale estimated from a standard 0.85 m door: the approximately 100-pixel-wide upper-floor Bedroom 1 doorway gives 0.0085 m/pixel. Both floor drawings use the same scale and are aligned to their respective top-left outer-wall corners.",
+    "notes": "Hand-drawn wall waviness has been regularized to straight centerlines. Door widths vary slightly in the drawing. Floor-to-floor elevation and stair rise are assumed to be 3.0 m; neither is specified. Stair tread count is approximate. No printed room areas are present."
+  },
+  "levels": [
+    {
+      "id": "L0",
+      "elevation": 0,
+      "walls": [
+        {"id":"g1","from":[0.15,0.16],"to":[4.0,0.16],"kind":"exterior","thickness":0.28},
+        {"id":"g2","from":[4.0,0.16],"to":[5.88,0.16],"kind":"exterior","thickness":0.28},
+        {"id":"g3","from":[5.88,0.16],"to":[9.42,0.16],"kind":"exterior","thickness":0.28},
+        {"id":"g4","from":[9.42,0.16],"to":[9.42,2.24],"kind":"exterior","thickness":0.28},
+        {"id":"g5","from":[9.42,2.24],"to":[9.42,6.22],"kind":"exterior","thickness":0.28},
+        {"id":"g6","from":[0.15,6.22],"to":[6.21,6.22],"kind":"exterior","thickness":0.28},
+        {"id":"g7","from":[6.21,6.22],"to":[9.42,6.22],"kind":"exterior","thickness":0.28},
+        {"id":"g8","from":[0.15,0.16],"to":[0.15,2.24],"kind":"exterior","thickness":0.28},
+        {"id":"g9","from":[0.15,2.24],"to":[0.15,6.22],"kind":"exterior","thickness":0.28},
+        {"id":"g10","from":[4.0,0.16],"to":[4.0,2.24],"kind":"interior","thickness":0.11},
+        {"id":"g11","from":[5.88,0.16],"to":[5.88,2.24],"kind":"interior","thickness":0.11},
+        {"id":"g12","from":[0.15,2.24],"to":[4.0,2.24],"kind":"interior","thickness":0.11},
+        {"id":"g13","from":[4.0,2.24],"to":[5.88,2.24],"kind":"interior","thickness":0.11},
+        {"id":"g14","from":[5.88,2.24],"to":[6.21,2.24],"kind":"interior","thickness":0.11},
+        {"id":"g15","from":[6.21,2.24],"to":[9.42,2.24],"kind":"interior","thickness":0.11},
+        {"id":"g16","from":[6.21,2.24],"to":[6.21,6.22],"kind":"interior","thickness":0.11}
+      ],
+      "openings": [
+        {"id":"gd1","wall":"g3","type":"door","offset":0.93,"width":0.88},
+        {"id":"gd2","wall":"g13","type":"door","offset":0.59,"width":0.77},
+        {"id":"gd3","wall":"g15","type":"door","offset":0.74,"width":0.88},
+        {"id":"gp1","wall":"g12","type":"passage","offset":1.05,"width":1.8},
+        {"id":"gp2","wall":"g16","type":"passage","offset":1.17,"width":1.58},
+        {"id":"gw1","wall":"g1","type":"window","offset":1.15,"width":1.55},
+        {"id":"gw2","wall":"g2","type":"window","offset":0.66,"width":0.55},
+        {"id":"gw3","wall":"g3","type":"window","offset":2.15,"width":0.58},
+        {"id":"gw4","wall":"g8","type":"window","offset":0.44,"width":1.23},
+        {"id":"gw5","wall":"g9","type":"window","offset":1.41,"width":1.14},
+        {"id":"gw6","wall":"g5","type":"window","offset":1.19,"width":1.58},
+        {"id":"gw7","wall":"g6","type":"window","offset":0.93,"width":1.15},
+        {"id":"gw8","wall":"g6","type":"window","offset":3.72,"width":1.68},
+        {"id":"gw9","wall":"g7","type":"window","offset":1.0,"width":1.28}
+      ],
+      "rooms": [
+        {"id":"gr1","name":"Kitchen","polygon":[[0.15,0.16],[4.0,0.16],[4.0,2.24],[0.15,2.24]]},
+        {"id":"gr2","name":"WC","polygon":[[4.0,0.16],[5.88,0.16],[5.88,2.24],[4.0,2.24]]},
+        {"id":"gr3","name":"Hall","polygon":[[5.88,0.16],[9.42,0.16],[9.42,2.24],[6.21,2.24],[5.88,2.24]]},
+        {"id":"gr4","name":"Living room","polygon":[[0.15,2.24],[4.0,2.24],[5.88,2.24],[6.21,2.24],[6.21,6.22],[0.15,6.22]]},
+        {"id":"gr5","name":"Dining room","polygon":[[6.21,2.24],[9.42,2.24],[9.42,6.22],[6.21,6.22]]}
+      ],
+      "stairs": [
+        {"id":"gs1","from":[1.0,5.8],"to":[1.0,2.75],"width":0.96,"steps":14,"to_level":"L1","rise":3.0}
+      ]
+    },
+    {
+      "id": "L1",
+      "elevation": 3.0,
+      "walls": [
+        {"id":"u1","from":[0.15,0.16],"to":[1.85,0.16],"kind":"exterior","thickness":0.28},
+        {"id":"u2","from":[1.85,0.16],"to":[9.42,0.16],"kind":"exterior","thickness":0.28},
+        {"id":"u3","from":[9.42,0.16],"to":[9.42,2.24],"kind":"exterior","thickness":0.28},
+        {"id":"u4","from":[9.42,2.24],"to":[9.42,6.22],"kind":"exterior","thickness":0.28},
+        {"id":"u5","from":[0.15,6.22],"to":[3.55,6.22],"kind":"exterior","thickness":0.28},
+        {"id":"u6","from":[3.55,6.22],"to":[9.42,6.22],"kind":"exterior","thickness":0.28},
+        {"id":"u7","from":[0.15,0.16],"to":[0.15,2.24],"kind":"exterior","thickness":0.28},
+        {"id":"u8","from":[0.15,2.24],"to":[0.15,6.22],"kind":"exterior","thickness":0.28},
+        {"id":"u9","from":[1.85,0.16],"to":[1.85,2.24],"kind":"interior","thickness":0.11},
+        {"id":"u10","from":[0.15,2.24],"to":[1.85,2.24],"kind":"interior","thickness":0.11},
+        {"id":"u11","from":[1.85,2.24],"to":[3.55,2.24],"kind":"interior","thickness":0.11},
+        {"id":"u12","from":[3.55,2.24],"to":[9.42,2.24],"kind":"interior","thickness":0.11},
+        {"id":"u13","from":[3.55,2.24],"to":[3.55,6.22],"kind":"interior","thickness":0.11}
+      ],
+      "openings": [
+        {"id":"ud1","wall":"u10","type":"door","offset":0.47,"width":0.79},
+        {"id":"ud2","wall":"u11","type":"door","offset":0.48,"width":0.85},
+        {"id":"ud3","wall":"u13","type":"door","offset":1.04,"width":0.85},
+        {"id":"uw1","wall":"u2","type":"window","offset":1.2,"width":1.36},
+        {"id":"uw2","wall":"u2","type":"window","offset":5.01,"width":1.33},
+        {"id":"uw3","wall":"u3","type":"window","offset":0.44,"width":1.23},
+        {"id":"uw4","wall":"u4","type":"window","offset":1.24,"width":1.51},
+        {"id":"uw5","wall":"u7","type":"window","offset":0.78,"width":0.55},
+        {"id":"uw6","wall":"u5","type":"window","offset":1.42,"width":0.58},
+        {"id":"uw7","wall":"u6","type":"window","offset":0.85,"width":1.23},
+        {"id":"uw8","wall":"u6","type":"window","offset":3.73,"width":1.33}
+      ],
+      "rooms": [
+        {"id":"ur1","name":"Bathroom","polygon":[[0.15,0.16],[1.85,0.16],[1.85,2.24],[0.15,2.24]]},
+        {"id":"ur2","name":"Bedroom 1","polygon":[[1.85,0.16],[9.42,0.16],[9.42,2.24],[3.55,2.24],[1.85,2.24]]},
+        {"id":"ur3","name":"Landing","polygon":[[0.15,2.24],[1.85,2.24],[3.55,2.24],[3.55,6.22],[0.15,6.22]]},
+        {"id":"ur4","name":"Bedroom 2","polygon":[[3.55,2.24],[9.42,2.24],[9.42,6.22],[3.55,6.22]]}
+      ],
+      "stairs": [
+        {"id":"us1","from":[1.0,2.75],"to":[1.0,5.8],"width":0.96,"steps":14,"to_level":"L0","rise":-3.0}
+      ]
+    }
+  ]
+}
+```
+Scale: estimated using a 0.85 m door; no printed dimensions or areas.
+Upper-floor elevation and stair rise assumed to be 3.0 m.
+Hand-drawn geometry and stair count are approximate.

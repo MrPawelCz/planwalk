@@ -1,0 +1,26 @@
+{
+  "code": "pc9c8",
+  "model": "openai/gpt-6-astra",
+  "status": "ok",
+  "finishedAt": "2026-10-23 22:47:13",
+  "ms": 52154,
+  "answerChars": 5467,
+  "bare": false,
+  "fenceBlocks": 1,
+  "charsBeforeBlock": 0,
+  "charsAfterBlock": 128,
+  "extractOk": true,
+  "repairs": [
+    "took the code block"
+  ],
+  "planFile": "readings-sketch-zoom/pc9c8.plan.json",
+  "call": {},
+  "attempts": [
+    {
+      "n": 1,
+      "at": "2026-10-23 22:47:13",
+      "ms": 52154,
+      "ok": true
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+```json
+{
+  "version": 1,
+  "name": "Two bedrooms, hall, living room, kitchen and bathroom",
+  "units": "m",
+  "meta": {
+    "source": "image",
+    "scale_note": "The plan has no printed dimensions or room areas. I used a standard door of 0.85 m as the scale. The hall door chord and the front door chord both measure about 85 px, so the scale is about 100 px per metre. Confidence is medium. The scale rests on one assumption, and the hand-drawn lines are wobbly.",
+    "notes": "Wall thickness is about 0.3 m for exterior walls and about 0.1 m for interior walls. I did not set thickness fields. Living room and Kitchen are open to each other. The two short wall stubs at x=5.85 leave a wide gap, which I treated as open with no wall. Door hinge sides and swing directions were not set. No furniture is drawn. Window and door positions are estimated from pixels. Bathroom and Kitchen are joined by a door in the wall at x=8.72."
+  },
+  "levels": [
+    {
+      "id": "L0",
+      "walls": [
+        { "id": "w1", "from": [0.15, 0.15], "to": [6.5, 0.15], "kind": "exterior" },
+        { "id": "w2", "from": [6.5, 0.15], "to": [6.5, 3.55], "kind": "exterior" },
+        { "id": "w3", "from": [6.5, 3.55], "to": [10.82, 3.55], "kind": "exterior" },
+        { "id": "w4", "from": [10.82, 3.55], "to": [10.82, 7.58], "kind": "exterior" },
+        { "id": "w5", "from": [10.82, 7.58], "to": [0.15, 7.58], "kind": "exterior" },
+        { "id": "w6", "from": [0.15, 7.58], "to": [0.15, 0.15], "kind": "exterior" },
+        { "id": "w7", "from": [3.04, 0.15], "to": [3.04, 3.55], "kind": "interior" },
+        { "id": "w8", "from": [0.15, 3.55], "to": [6.5, 3.55], "kind": "interior" },
+        { "id": "w9", "from": [2.42, 3.55], "to": [2.42, 7.58], "kind": "interior" },
+        { "id": "w10", "from": [5.85, 3.55], "to": [5.85, 4.97], "kind": "interior" },
+        { "id": "w11", "from": [5.85, 6.58], "to": [5.85, 7.58], "kind": "interior" },
+        { "id": "w12", "from": [8.72, 3.55], "to": [8.72, 7.58], "kind": "interior" }
+      ],
+      "openings": [
+        { "id": "d1", "wall": "w8", "type": "door", "offset": 0.95, "width": 0.85 },
+        { "id": "d2", "wall": "w8", "type": "door", "offset": 3.54, "width": 0.83 },
+        { "id": "d3", "wall": "w9", "type": "door", "offset": 1.9, "width": 0.85 },
+        { "id": "d4", "wall": "w12", "type": "door", "offset": 1.63, "width": 0.8 },
+        { "id": "d5", "wall": "w5", "type": "door", "offset": 9.25, "width": 0.85 },
+        { "id": "win1", "wall": "w1", "type": "window", "offset": 0.82, "width": 1.3 },
+        { "id": "win2", "wall": "w1", "type": "window", "offset": 3.82, "width": 1.57 },
+        { "id": "win3", "wall": "w6", "type": "window", "offset": 4.88, "width": 1.65 },
+        { "id": "win4", "wall": "w6", "type": "window", "offset": 1.73, "width": 0.53 },
+        { "id": "win5", "wall": "w2", "type": "window", "offset": 1.03, "width": 1.34 },
+        { "id": "win6", "wall": "w3", "type": "window", "offset": 0.52, "width": 1.17 },
+        { "id": "win7", "wall": "w5", "type": "window", "offset": 5.82, "width": 1.7 },
+        { "id": "win8", "wall": "w5", "type": "window", "offset": 2.9, "width": 1.25 },
+        { "id": "win9", "wall": "w5", "type": "window", "offset": 0.78, "width": 0.57 }
+      ],
+      "rooms": [
+        { "id": "r1", "name": "Bedroom 1", "polygon": [[0.15, 0.15], [3.04, 0.15], [3.04, 3.55], [0.15, 3.55]] },
+        { "id": "r2", "name": "Bedroom 2", "polygon": [[3.04, 0.15], [6.5, 0.15], [6.5, 3.55], [3.04, 3.55]] },
+        { "id": "r3", "name": "Hall", "polygon": [[0.15, 3.55], [2.42, 3.55], [2.42, 7.58], [0.15, 7.58]] },
+        { "id": "r4", "name": "Living room", "polygon": [[2.42, 3.55], [5.85, 3.55], [5.85, 7.58], [2.42, 7.58]] },
+        { "id": "r5", "name": "Kitchen", "polygon": [[5.85, 3.55], [8.72, 3.55], [8.72, 7.58], [5.85, 7.58]] },
+        { "id": "r6", "name": "Bathroom", "polygon": [[8.72, 3.55], [10.82, 3.55], [10.82, 7.58], [8.72, 7.58]] }
+      ]
+    }
+  ]
+}
+```
+
+- Scale: there are no printed dimensions or areas, so I used the standard 0.85 m door (about 100 px per metre). I'm moderately sure of it.
+- The Living room and Kitchen are open to each other, and I left out the gap between the two wall stubs at x=5.85.
+- No furniture is drawn. I didn't set door hinge sides, and window and door positions are estimated from pixels.

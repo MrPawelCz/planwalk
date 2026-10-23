@@ -1,0 +1,26 @@
+{
+  "code": "p6b7c",
+  "model": "openai/gpt-6-astra",
+  "status": "ok",
+  "finishedAt": "2026-10-23 22:45:04",
+  "ms": 61009,
+  "answerChars": 8469,
+  "bare": false,
+  "fenceBlocks": 1,
+  "charsBeforeBlock": 0,
+  "charsAfterBlock": 157,
+  "extractOk": true,
+  "repairs": [
+    "took the code block"
+  ],
+  "planFile": "readings/p6b7c.plan.json",
+  "call": {},
+  "attempts": [
+    {
+      "n": 1,
+      "at": "2026-10-23 22:45:04",
+      "ms": 61009,
+      "ok": true
+    }
+  ]
+}

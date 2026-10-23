@@ -1,0 +1,53 @@
+```json
+{
+  "version": 1,
+  "name": "Apartment",
+  "units": "m",
+  "meta": {
+    "source": "image",
+    "scale_note": "Calculated from printed width (9.35 m) and room areas. Solving: (19.4+9.2)/top_h = 9.35, (6+6+16)/bot_h = 9.35 gives top_h=3.06 m, bot_h=2.99 m.",
+    "notes": "Wall layout simplified to grid based on room dimensions. Door positions estimated visually from arc symbols."
+  },
+  "levels": [
+    {
+      "id": "L0",
+      "walls": [
+        { "id": "w_top", "from": [0, 0], "to": [9.35, 0], "kind": "exterior" },
+        { "id": "w_right", "from": [9.35, 0], "to": [9.35, 6.05], "kind": "exterior" },
+        { "id": "w_bottom", "from": [9.35, 6.05], "to": [0, 6.05], "kind": "exterior" },
+        { "id": "w_left", "from": [0, 6.05], "to": [0, 0], "kind": "exterior" },
+        { "id": "w1", "from": [6.34, 0], "to": [6.34, 3.06], "kind": "interior" },
+        { "id": "w2", "from": [0, 3.06], "to": [2.01, 3.06], "kind": "interior" },
+        { "id": "w3", "from": [6.34, 3.06], "to": [9.35, 3.06], "kind": "interior" },
+        { "id": "w4", "from": [2.01, 3.06], "to": [2.01, 6.05], "kind": "interior" },
+        { "id": "w5", "from": [4.02, 3.06], "to": [4.02, 6.05], "kind": "interior" }
+      ],
+      "openings": [
+        { "id": "d1", "wall": "w1", "type": "door", "offset": 1.5, "width": 0.9 },
+        { "id": "d2", "wall": "w2", "type": "passage", "offset": 1.0, "width": 1.0 },
+        { "id": "d3", "wall": "w3", "type": "passage", "offset": 1.5, "width": 1.0 },
+        { "id": "d4", "wall": "w4", "type": "door", "offset": 1.5, "width": 0.9 },
+        { "id": "d5", "wall": "w5", "type": "door", "offset": 1.5, "width": 0.9 },
+        { "id": "win1", "wall": "w_top", "type": "window", "offset": 2.5, "width": 1.5 },
+        { "id": "win2", "wall": "w_right", "type": "window", "offset": 1.0, "width": 0.8 },
+        { "id": "win3", "wall": "w_right", "type": "window", "offset": 3.8, "width": 0.8 },
+        { "id": "win4", "wall": "w_bottom", "type": "window", "offset": 8.15, "width": 0.9 },
+        { "id": "win5", "wall": "w_bottom", "type": "window", "offset": 6.15, "width": 0.9 },
+        { "id": "win6", "wall": "w_bottom", "type": "window", "offset": 4.15, "width": 0.9 },
+        { "id": "win7", "wall": "w_left", "type": "window", "offset": 5.05, "width": 0.8 },
+        { "id": "win8", "wall": "w_left", "type": "window", "offset": 2.05, "width": 0.8 }
+      ],
+      "rooms": [
+        { "id": "r_lr", "name": "Living room", "polygon": [[0, 0], [6.34, 0], [6.34, 3.06], [0, 3.06]], "area": 19.4 },
+        { "id": "r_br", "name": "Bedroom", "polygon": [[6.34, 0], [9.35, 0], [9.35, 3.06], [6.34, 3.06]], "area": 9.2 },
+        { "id": "r_h", "name": "Hall", "polygon": [[0, 3.06], [2.01, 3.06], [2.01, 6.05], [0, 6.05]], "area": 6.0 },
+        { "id": "r_b", "name": "Bathroom", "polygon": [[2.01, 3.06], [4.02, 3.06], [4.02, 6.05], [2.01, 6.05]], "area": 6.0 },
+        { "id": "r_k", "name": "Kitchen", "polygon": [[4.02, 3.06], [9.35, 3.06], [9.35, 6.05], [4.02, 6.05]], "area": 16.0 }
+      ]
+    }
+  ]
+}
+```
+
+Scale: Derived from printed 9.35 m width and five room areas (19.4, 9.2, 6.0, 6.0, 16.0 m²), solving for consistent room heights.
+Uncertainties: Door swing directions, exact window positions, and wall jogs estimated from visual arcs and gaps in the floor plan.

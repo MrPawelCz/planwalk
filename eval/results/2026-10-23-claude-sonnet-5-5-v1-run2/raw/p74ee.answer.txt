@@ -1,0 +1,56 @@
+```json
+{
+  "version": 1,
+  "name": "Small apartment",
+  "units": "m",
+  "meta": {
+    "source": "image",
+    "scale_note": "Printed overall dimension of 9.25 m. The dimension line is about 740 px long, so the scale is about 80 px/m. I used it for the outer wall centerline width. The drawing is rotated about 1.5 degrees and I straightened it.",
+    "notes": "Opening positions are estimated from the pixels. Wall thickness is assumed to be 0.3 m for exterior walls and 0.15 m for interior walls. The printed room areas are copied as shown."
+  },
+  "levels": [
+    {
+      "id": "L0",
+      "walls": [
+        { "id": "w_top", "from": [0.15, 0.15], "to": [9.4, 0.15], "kind": "exterior", "thickness": 0.3 },
+        { "id": "w_right", "from": [9.4, 0.15], "to": [9.4, 7.1], "kind": "exterior", "thickness": 0.3 },
+        { "id": "w_bottom", "from": [0.15, 7.1], "to": [9.4, 7.1], "kind": "exterior", "thickness": 0.3 },
+        { "id": "w_left", "from": [0.15, 0.15], "to": [0.15, 7.1], "kind": "exterior", "thickness": 0.3 },
+        { "id": "w_h1", "from": [0.15, 3.65], "to": [9.4, 3.65], "kind": "interior", "thickness": 0.15 },
+        { "id": "w_bed", "from": [6.44, 0.15], "to": [6.44, 3.65], "kind": "interior", "thickness": 0.15 },
+        { "id": "w_bath", "from": [2.25, 3.65], "to": [2.25, 7.1], "kind": "interior", "thickness": 0.15 },
+        { "id": "w_kit", "from": [4.29, 3.65], "to": [4.29, 7.1], "kind": "interior", "thickness": 0.15 }
+      ],
+      "openings": [
+        { "id": "win_t1", "wall": "w_top", "type": "window", "offset": 0.8, "width": 1.5 },
+        { "id": "win_t2", "wall": "w_top", "type": "window", "offset": 4.0, "width": 1.3 },
+        { "id": "win_t3", "wall": "w_top", "type": "window", "offset": 6.9, "width": 1.7 },
+        { "id": "win_r1", "wall": "w_right", "type": "window", "offset": 1.0, "width": 1.35 },
+        { "id": "win_r2", "wall": "w_right", "type": "window", "offset": 4.3, "width": 1.5 },
+        { "id": "win_b1", "wall": "w_bottom", "type": "window", "offset": 2.85, "width": 0.6 },
+        { "id": "win_b2", "wall": "w_bottom", "type": "window", "offset": 4.65, "width": 1.6 },
+        { "id": "win_b3", "wall": "w_bottom", "type": "window", "offset": 7.35, "width": 1.5 },
+        { "id": "win_l1", "wall": "w_left", "type": "window", "offset": 1.2, "width": 1.4 },
+        { "id": "win_l2", "wall": "w_left", "type": "window", "offset": 5.05, "width": 0.55 },
+        { "id": "d_front", "wall": "w_bottom", "type": "door", "offset": 0.6, "width": 0.9, "hinge": "start", "opens_to": "left" },
+        { "id": "d_hall", "wall": "w_h1", "type": "door", "offset": 0.58, "width": 0.9, "hinge": "end", "opens_to": "left" },
+        { "id": "d_kitchen", "wall": "w_h1", "type": "door", "offset": 4.79, "width": 0.85, "hinge": "start", "opens_to": "right" },
+        { "id": "d_bed", "wall": "w_bed", "type": "door", "offset": 1.0, "width": 0.85, "hinge": "end", "opens_to": "left" },
+        { "id": "d_bath", "wall": "w_bath", "type": "door", "offset": 1.2, "width": 0.85, "hinge": "start", "opens_to": "right" }
+      ],
+      "rooms": [
+        { "id": "r_living", "name": "Living room", "polygon": [[0.15, 0.15], [6.44, 0.15], [6.44, 3.65], [0.15, 3.65]], "area": 21.3 },
+        { "id": "r_bed", "name": "Bedroom", "polygon": [[6.44, 0.15], [9.4, 0.15], [9.4, 3.65], [6.44, 3.65]], "area": 10.2 },
+        { "id": "r_hall", "name": "Hall", "polygon": [[0.15, 3.65], [2.25, 3.65], [2.25, 7.1], [0.15, 7.1]], "area": 6.7 },
+        { "id": "r_bath", "name": "Bathroom", "polygon": [[2.25, 3.65], [4.29, 3.65], [4.29, 7.1], [2.25, 7.1]], "area": 6.7 },
+        { "id": "r_kitchen", "name": "Kitchen", "polygon": [[4.29, 3.65], [9.4, 3.65], [9.4, 7.1], [4.29, 7.1]], "area": 17.6 }
+      ]
+    }
+  ]
+}
+```
+
+- Scale: the printed 9.25 m dimension line. I took it as the outer wall centerline width.
+- I straightened the roughly 1.5° rotation of the drawing, so opening positions are approximate.
+- Wall thicknesses, door hinge sides and swing directions are my estimates.
+- The 7.1 m centerline depth comes from the same 80 px/m scale.

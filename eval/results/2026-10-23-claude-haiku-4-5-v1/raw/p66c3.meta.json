@@ -1,0 +1,32 @@
+{
+  "code": "p66c3",
+  "model": "claude-haiku-4-5",
+  "status": "ok",
+  "finishedAt": "2026-10-23 22:50:29",
+  "ms": 63659,
+  "answerChars": 3800,
+  "bare": false,
+  "fenceBlocks": 1,
+  "charsBeforeBlock": 0,
+  "charsAfterBlock": 239,
+  "extractOk": true,
+  "repairs": [
+    "took the code block"
+  ],
+  "planFile": "readings/p66c3.plan.json",
+  "call": {
+    "turns": 2,
+    "costUsdList": 0.054455,
+    "inputTokens": 2809,
+    "outputTokens": 8520,
+    "subtype": "success"
+  },
+  "attempts": [
+    {
+      "n": 1,
+      "at": "2026-10-23 22:50:29",
+      "ms": 63659,
+      "ok": true
+    }
+  ]
+}

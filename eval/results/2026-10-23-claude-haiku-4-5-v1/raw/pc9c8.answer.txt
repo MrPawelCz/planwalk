@@ -1,0 +1,194 @@
+```json
+{
+  "version": 1,
+  "name": "2-Bedroom Apartment",
+  "units": "m",
+  "meta": {
+    "source": "image",
+    "scale_note": "No printed dimensions or areas visible. Scale derived from standard door width of 0.85 m by measuring door openings in the floor plan; estimated overall apartment dimensions ~10.5 m × 7.5 m.",
+    "notes": "Upper-left room is unlabeled; assumed to be a study or alcove. Exact wall thicknesses and some interior wall intersections estimated visually. Door swing directions estimated based on typical residential layouts."
+  },
+  "levels": [
+    {
+      "id": "L0",
+      "walls": [
+        {
+          "id": "w1",
+          "from": [0, 0],
+          "to": [10.5, 0],
+          "kind": "exterior"
+        },
+        {
+          "id": "w2",
+          "from": [0, 0],
+          "to": [0, 7.5],
+          "kind": "exterior"
+        },
+        {
+          "id": "w3",
+          "from": [10.5, 0],
+          "to": [10.5, 7.5],
+          "kind": "exterior"
+        },
+        {
+          "id": "w4",
+          "from": [0, 7.5],
+          "to": [10.5, 7.5],
+          "kind": "exterior"
+        },
+        {
+          "id": "w5",
+          "from": [0, 3.6],
+          "to": [4.25, 3.6],
+          "kind": "interior"
+        },
+        {
+          "id": "w6",
+          "from": [4.25, 0],
+          "to": [4.25, 3.6],
+          "kind": "interior"
+        },
+        {
+          "id": "w7",
+          "from": [2.25, 3.6],
+          "to": [2.25, 5],
+          "kind": "interior"
+        },
+        {
+          "id": "w8",
+          "from": [2.25, 5],
+          "to": [4.25, 5],
+          "kind": "interior"
+        },
+        {
+          "id": "w9",
+          "from": [4.25, 5],
+          "to": [6.25, 5],
+          "kind": "interior"
+        },
+        {
+          "id": "w10",
+          "from": [6.25, 0],
+          "to": [6.25, 5],
+          "kind": "interior"
+        },
+        {
+          "id": "w11",
+          "from": [4.25, 5],
+          "to": [4.25, 7.5],
+          "kind": "interior"
+        }
+      ],
+      "openings": [
+        {
+          "id": "d1",
+          "wall": "w5",
+          "type": "door",
+          "offset": 1.8,
+          "width": 0.85,
+          "hinge": "start",
+          "opens_to": "right"
+        },
+        {
+          "id": "d2",
+          "wall": "w7",
+          "type": "door",
+          "offset": 0.3,
+          "width": 0.85,
+          "hinge": "start",
+          "opens_to": "right"
+        },
+        {
+          "id": "d3",
+          "wall": "w8",
+          "type": "door",
+          "offset": 0.3,
+          "width": 0.85,
+          "hinge": "end",
+          "opens_to": "left"
+        },
+        {
+          "id": "d4",
+          "wall": "w9",
+          "type": "door",
+          "offset": 1.2,
+          "width": 0.85,
+          "hinge": "end",
+          "opens_to": "left"
+        },
+        {
+          "id": "d5",
+          "wall": "w10",
+          "type": "door",
+          "offset": 1.5,
+          "width": 0.85,
+          "hinge": "start",
+          "opens_to": "right"
+        },
+        {
+          "id": "wd1",
+          "wall": "w1",
+          "type": "window",
+          "offset": 1,
+          "width": 1.2
+        },
+        {
+          "id": "wd2",
+          "wall": "w3",
+          "type": "window",
+          "offset": 1,
+          "width": 1.2
+        },
+        {
+          "id": "wd3",
+          "wall": "w3",
+          "type": "window",
+          "offset": 3,
+          "width": 1.2
+        }
+      ],
+      "rooms": [
+        {
+          "id": "r1",
+          "polygon": [[0, 0], [4.25, 0], [4.25, 3.6], [0, 3.6]],
+          "area": 15.3
+        },
+        {
+          "id": "r2",
+          "name": "Living room",
+          "polygon": [[4.25, 0], [6.25, 0], [6.25, 5], [4.25, 5], [4.25, 3.6], [2.25, 3.6], [2.25, 5], [4.25, 5]],
+          "area": 20
+        },
+        {
+          "id": "r3",
+          "name": "Bedroom",
+          "polygon": [[6.25, 0], [10.5, 0], [10.5, 5], [6.25, 5]],
+          "area": 21.25
+        },
+        {
+          "id": "r4",
+          "name": "Hall",
+          "polygon": [[0, 3.6], [2.25, 3.6], [2.25, 5], [0, 5]],
+          "area": 3.15
+        },
+        {
+          "id": "r5",
+          "name": "Bathroom",
+          "polygon": [[2.25, 5], [4.25, 5], [4.25, 7.5], [2.25, 7.5]],
+          "area": 5
+        },
+        {
+          "id": "r6",
+          "name": "Kitchen",
+          "polygon": [[4.25, 5], [10.5, 5], [10.5, 7.5], [4.25, 7.5]],
+          "area": 15.625
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Scale source:** Standard door width (0.85 m) — no printed dimensions or room areas visible in the floor plan.
+
+**Uncertainties:** Upper-left room is unlabeled (assumed study/alcove). Exact wall centerlines estimated visually from line drawings; rooms' polygon coordinates approximate due to hand-drawn lines. Hall area appears smaller than typical; may be connected more openly to living room than strict polygon suggests.

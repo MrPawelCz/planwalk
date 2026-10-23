@@ -1,0 +1,56 @@
+```json
+{
+  "version": 1,
+  "name": "Small apartment",
+  "units": "m",
+  "meta": {
+    "source": "image",
+    "scale_note": "Printed dimension 8.90 m, measured between the centerlines of the left and right exterior walls (712 px, about 80 px per m). The origin is the outer top-left corner of the walls, so the centerlines start at 0.15 m.",
+    "notes": "Wall thickness is about 0.3 m. Door and window positions were measured from the picture and are approximate. The bathroom door hinge side and the swing directions are my best reading."
+  },
+  "levels": [
+    {
+      "id": "L0",
+      "walls": [
+        { "id": "w1", "from": [0.15, 0.15], "to": [9.05, 0.15], "kind": "exterior", "thickness": 0.3 },
+        { "id": "w2", "from": [9.05, 0.15], "to": [9.05, 6.5], "kind": "exterior", "thickness": 0.3 },
+        { "id": "w3", "from": [0.15, 6.5], "to": [9.05, 6.5], "kind": "exterior", "thickness": 0.3 },
+        { "id": "w4", "from": [0.15, 0.15], "to": [0.15, 6.5], "kind": "exterior", "thickness": 0.3 },
+        { "id": "w5", "from": [0.15, 3.35], "to": [9.05, 3.35], "kind": "interior", "thickness": 0.15 },
+        { "id": "w6", "from": [6.04, 0.15], "to": [6.04, 3.35], "kind": "interior", "thickness": 0.15 },
+        { "id": "w7", "from": [4.14, 3.35], "to": [4.14, 6.5], "kind": "interior", "thickness": 0.15 },
+        { "id": "w8", "from": [2.14, 3.35], "to": [2.14, 6.5], "kind": "interior", "thickness": 0.15 }
+      ],
+      "openings": [
+        { "id": "win1", "wall": "w1", "type": "window", "offset": 0.66, "width": 1.69 },
+        { "id": "win2", "wall": "w1", "type": "window", "offset": 3.56, "width": 1.74 },
+        { "id": "win3", "wall": "w1", "type": "window", "offset": 6.72, "width": 1.43 },
+        { "id": "win4", "wall": "w2", "type": "window", "offset": 1.0, "width": 1.2 },
+        { "id": "win5", "wall": "w2", "type": "window", "offset": 4.2, "width": 1.2 },
+        { "id": "win6", "wall": "w3", "type": "window", "offset": 2.71, "width": 0.59 },
+        { "id": "win7", "wall": "w3", "type": "window", "offset": 4.55, "width": 1.3 },
+        { "id": "win8", "wall": "w3", "type": "window", "offset": 6.95, "width": 1.44 },
+        { "id": "win9", "wall": "w4", "type": "window", "offset": 1.0, "width": 1.2 },
+        { "id": "win10", "wall": "w4", "type": "window", "offset": 4.5, "width": 0.6 },
+        { "id": "d1", "wall": "w3", "type": "door", "offset": 0.45, "width": 0.9, "hinge": "start", "opens_to": "left" },
+        { "id": "d2", "wall": "w5", "type": "door", "offset": 0.66, "width": 0.85, "hinge": "start", "opens_to": "left" },
+        { "id": "d3", "wall": "w5", "type": "door", "offset": 4.55, "width": 0.85, "hinge": "start", "opens_to": "left" },
+        { "id": "d4", "wall": "w6", "type": "door", "offset": 1.1, "width": 0.9, "hinge": "start", "opens_to": "left" },
+        { "id": "d5", "wall": "w8", "type": "door", "offset": 1.26, "width": 0.75, "hinge": "start", "opens_to": "left" }
+      ],
+      "rooms": [
+        { "id": "r1", "name": "Living room", "polygon": [[0.15, 0.15], [6.04, 0.15], [6.04, 3.35], [0.15, 3.35]], "area": 18.9 },
+        { "id": "r2", "name": "Bedroom", "polygon": [[6.04, 0.15], [9.05, 0.15], [9.05, 3.35], [6.04, 3.35]], "area": 9.6 },
+        { "id": "r3", "name": "Hall", "polygon": [[0.15, 3.35], [2.14, 3.35], [2.14, 6.5], [0.15, 6.5]], "area": 6.3 },
+        { "id": "r4", "name": "Bathroom", "polygon": [[2.14, 3.35], [4.14, 3.35], [4.14, 6.5], [2.14, 6.5]], "area": 6.3 },
+        { "id": "r5", "name": "Kitchen", "polygon": [[4.14, 3.35], [9.05, 3.35], [9.05, 6.5], [4.14, 6.5]], "area": 15.4 }
+      ]
+    }
+  ]
+}
+```
+
+- Scale source: the printed 8.90 m dimension. I took it as centerline to centerline, which gives about 80 px per m.
+- Door hinge sides and swing directions are my best reading of the arcs, so check them.
+- Opening offsets and widths were measured by eye from the image.
+- The bathroom door could be read as a passage, but I drew it as a door because it has an arc.

@@ -1,0 +1,64 @@
+```json
+{
+  "version": 1,
+  "name": "Three bedrooms, bathroom, corridor, hall, kitchen and living room",
+  "units": "m",
+  "meta": {
+    "source": "image",
+    "scale_note": "The plan has no printed dimensions or areas. I used a standard door of 0.85 m, which gives about 65 px per metre (the door chords measure about 52-55 px). The overall size is then about 10.8 x 8.2 m. This is an estimate, so confidence is low to medium.",
+    "notes": "Wall centerlines are placed about 0.1 m inside the outer corner, which I treated as the origin. Room areas are not printed, so none are given. The kitchen and living room have no wall between them, apart from two short stub walls at x=5.15, so they share an edge. The edge position is a guess. The window positions on the top wall are approximate. I left out a possible window near the bathroom on the top wall. I also left out the small marks on the right wall at the corridor. No furniture is clearly drawn, so I added none."
+  },
+  "levels": [
+    {
+      "id": "L0",
+      "walls": [
+        { "id": "w1", "from": [0, 0], "to": [10.8, 0], "kind": "exterior" },
+        { "id": "w2", "from": [10.8, 0], "to": [10.8, 8.2], "kind": "exterior" },
+        { "id": "w3", "from": [10.8, 8.2], "to": [0, 8.2], "kind": "exterior" },
+        { "id": "w4", "from": [0, 8.2], "to": [0, 0], "kind": "exterior" },
+        { "id": "w5", "from": [0, 3.42], "to": [10.8, 3.42], "kind": "interior" },
+        { "id": "w6", "from": [0, 4.54], "to": [10.8, 4.54], "kind": "interior" },
+        { "id": "w7", "from": [2.9, 0], "to": [2.9, 3.42], "kind": "interior" },
+        { "id": "w8", "from": [5.6, 0], "to": [5.6, 3.42], "kind": "interior" },
+        { "id": "w9", "from": [8.05, 0], "to": [8.05, 3.42], "kind": "interior" },
+        { "id": "w10", "from": [2.15, 4.54], "to": [2.15, 8.2], "kind": "interior" },
+        { "id": "w11", "from": [5.15, 4.54], "to": [5.15, 5.34], "kind": "interior" },
+        { "id": "w12", "from": [5.15, 6.5], "to": [5.15, 8.2], "kind": "interior" }
+      ],
+      "openings": [
+        { "id": "d1", "wall": "w5", "type": "door", "offset": 1.05, "width": 0.85 },
+        { "id": "d2", "wall": "w5", "type": "door", "offset": 4.09, "width": 0.85 },
+        { "id": "d3", "wall": "w5", "type": "door", "offset": 6.52, "width": 0.85 },
+        { "id": "d4", "wall": "w5", "type": "door", "offset": 8.71, "width": 0.8 },
+        { "id": "d5", "wall": "w6", "type": "door", "offset": 0.63, "width": 0.85 },
+        { "id": "d6", "wall": "w6", "type": "door", "offset": 3.28, "width": 0.8 },
+        { "id": "d7", "wall": "w6", "type": "door", "offset": 8.25, "width": 0.85 },
+        { "id": "d8", "wall": "w3", "type": "door", "offset": 9.45, "width": 0.85 },
+        { "id": "n1", "wall": "w4", "type": "window", "offset": 5.63, "width": 1.7 },
+        { "id": "n2", "wall": "w4", "type": "window", "offset": 1.55, "width": 0.55 },
+        { "id": "n3", "wall": "w1", "type": "window", "offset": 0.85, "width": 1.25 },
+        { "id": "n4", "wall": "w1", "type": "window", "offset": 3.45, "width": 1.65 },
+        { "id": "n5", "wall": "w1", "type": "window", "offset": 6.1, "width": 1.45 },
+        { "id": "n6", "wall": "w2", "type": "window", "offset": 5.7, "width": 0.8 },
+        { "id": "n7", "wall": "w3", "type": "window", "offset": 6.48, "width": 1.25 },
+        { "id": "n8", "wall": "w3", "type": "window", "offset": 3.63, "width": 1.25 },
+        { "id": "n9", "wall": "w3", "type": "window", "offset": 0.82, "width": 1.25 }
+      ],
+      "rooms": [
+        { "id": "r1", "name": "Bedroom 1", "polygon": [[0, 0], [2.9, 0], [2.9, 3.42], [0, 3.42]] },
+        { "id": "r2", "name": "Bedroom 2", "polygon": [[2.9, 0], [5.6, 0], [5.6, 3.42], [2.9, 3.42]] },
+        { "id": "r3", "name": "Bedroom 3", "polygon": [[5.6, 0], [8.05, 0], [8.05, 3.42], [5.6, 3.42]] },
+        { "id": "r4", "name": "Bathroom", "polygon": [[8.05, 0], [10.8, 0], [10.8, 3.42], [8.05, 3.42]] },
+        { "id": "r5", "name": "Corridor", "polygon": [[0, 3.42], [10.8, 3.42], [10.8, 4.54], [0, 4.54]] },
+        { "id": "r6", "name": "Hall", "polygon": [[0, 4.54], [2.15, 4.54], [2.15, 8.2], [0, 8.2]] },
+        { "id": "r7", "name": "Kitchen", "polygon": [[2.15, 4.54], [5.15, 4.54], [5.15, 8.2], [2.15, 8.2]] },
+        { "id": "r8", "name": "Living room", "polygon": [[5.15, 4.54], [10.8, 4.54], [10.8, 8.2], [5.15, 8.2]] }
+      ]
+    }
+  ]
+}
+```
+
+- Scale: I used a standard 0.85 m door because the plan has no printed dimensions or areas. Confidence is low to medium.
+- Unsure: the window positions and widths are estimates, and so is the kitchen/living room boundary at x=5.15.
+- Left out: a possible window on the top wall near the bathroom, small marks on the right wall at the corridor, and all furniture.

@@ -1,0 +1,32 @@
+{
+  "code": "p6530",
+  "model": "claude-sonnet-5-5",
+  "status": "ok",
+  "finishedAt": "2026-10-23 23:02:55",
+  "ms": 29227,
+  "answerChars": 4145,
+  "bare": false,
+  "fenceBlocks": 1,
+  "charsBeforeBlock": 0,
+  "charsAfterBlock": 330,
+  "extractOk": true,
+  "repairs": [
+    "took the code block"
+  ],
+  "planFile": "readings/p6530.plan.json",
+  "call": {
+    "turns": 2,
+    "costUsdList": 0.0496198,
+    "inputTokens": 4,
+    "outputTokens": 4158,
+    "subtype": "success"
+  },
+  "attempts": [
+    {
+      "n": 1,
+      "at": "2026-10-23 23:02:55",
+      "ms": 29227,
+      "ok": true
+    }
+  ]
+}

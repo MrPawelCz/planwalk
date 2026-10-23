@@ -1,0 +1,32 @@
+{
+  "code": "p6d0f",
+  "model": "claude-sonnet-5-5",
+  "status": "ok",
+  "finishedAt": "2026-10-23 23:04:08",
+  "ms": 21894,
+  "answerChars": 2896,
+  "bare": false,
+  "fenceBlocks": 1,
+  "charsBeforeBlock": 0,
+  "charsAfterBlock": 352,
+  "extractOk": true,
+  "repairs": [
+    "took the code block"
+  ],
+  "planFile": "readings/p6d0f.plan.json",
+  "call": {
+    "turns": 2,
+    "costUsdList": 0.0334898,
+    "inputTokens": 4,
+    "outputTokens": 2767,
+    "subtype": "success"
+  },
+  "attempts": [
+    {
+      "n": 1,
+      "at": "2026-10-23 23:04:08",
+      "ms": 21894,
+      "ok": true
+    }
+  ]
+}

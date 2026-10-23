@@ -1,0 +1,76 @@
+{
+  "p6530": {
+    "ok": true,
+    "errors": 0,
+    "warnings": 0,
+    "errorCodes": []
+  },
+  "p66c3": {
+    "ok": true,
+    "errors": 0,
+    "warnings": 0,
+    "errorCodes": []
+  },
+  "p69e9": {
+    "ok": true,
+    "errors": 0,
+    "warnings": 0,
+    "errorCodes": []
+  },
+  "p6b7c": {
+    "ok": false,
+    "errors": 4,
+    "warnings": 0,
+    "errorCodes": [
+      "E006"
+    ]
+  },
+  "p6d0f": {
+    "ok": true,
+    "errors": 0,
+    "warnings": 0,
+    "errorCodes": []
+  },
+  "p6ea2": {
+    "ok": true,
+    "errors": 0,
+    "warnings": 1,
+    "errorCodes": []
+  },
+  "p7035": {
+    "ok": true,
+    "errors": 0,
+    "warnings": 0,
+    "errorCodes": []
+  },
+  "p74ee": {
+    "ok": true,
+    "errors": 0,
+    "warnings": 4,
+    "errorCodes": []
+  },
+  "pc9c8": {
+    "ok": true,
+    "errors": 0,
+    "warnings": 0,
+    "errorCodes": []
+  },
+  "pcb5b": {
+    "ok": true,
+    "errors": 0,
+    "warnings": 0,
+    "errorCodes": []
+  },
+  "pccee": {
+    "ok": true,
+    "errors": 0,
+    "warnings": 0,
+    "errorCodes": []
+  },
+  "pd4cd": {
+    "ok": true,
+    "errors": 0,
+    "warnings": 0,
+    "errorCodes": []
+  }
+}

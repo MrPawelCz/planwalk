@@ -1,0 +1,32 @@
+{
+  "code": "p7035",
+  "model": "claude-sonnet-5-5",
+  "status": "ok",
+  "finishedAt": "2026-10-23 23:08:12",
+  "ms": 24030,
+  "answerChars": 4354,
+  "bare": false,
+  "fenceBlocks": 1,
+  "charsBeforeBlock": 0,
+  "charsAfterBlock": 383,
+  "extractOk": true,
+  "repairs": [
+    "took the code block"
+  ],
+  "planFile": "readings/p7035.plan.json",
+  "call": {
+    "turns": 2,
+    "costUsdList": 0.04268979999999999,
+    "inputTokens": 4,
+    "outputTokens": 3474,
+    "subtype": "success"
+  },
+  "attempts": [
+    {
+      "n": 1,
+      "at": "2026-10-23 23:08:12",
+      "ms": 24030,
+      "ok": true
+    }
+  ]
+}

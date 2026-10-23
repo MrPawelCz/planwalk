@@ -1,0 +1,90 @@
+{
+  "p6530": {
+    "ok": false,
+    "errors": 2,
+    "warnings": 4,
+    "errorCodes": [
+      "E006"
+    ]
+  },
+  "p66c3": {
+    "ok": true,
+    "errors": 0,
+    "warnings": 1,
+    "errorCodes": []
+  },
+  "p69e9": {
+    "ok": true,
+    "errors": 0,
+    "warnings": 3,
+    "errorCodes": []
+  },
+  "p6b7c": {
+    "ok": false,
+    "errors": 2,
+    "warnings": 7,
+    "errorCodes": [
+      "E002"
+    ]
+  },
+  "p6d0f": {
+    "ok": false,
+    "errors": 1,
+    "warnings": 2,
+    "errorCodes": [
+      "E006"
+    ]
+  },
+  "p6ea2": {
+    "ok": true,
+    "errors": 0,
+    "warnings": 6,
+    "errorCodes": []
+  },
+  "p7035": {
+    "ok": true,
+    "errors": 0,
+    "warnings": 1,
+    "errorCodes": []
+  },
+  "p74ee": {
+    "ok": false,
+    "errors": 1,
+    "warnings": 1,
+    "errorCodes": [
+      "E006"
+    ]
+  },
+  "pc9c8": {
+    "ok": false,
+    "errors": 1,
+    "warnings": 2,
+    "errorCodes": [
+      "E006"
+    ]
+  },
+  "pcb5b": {
+    "ok": false,
+    "errors": 1,
+    "warnings": 5,
+    "errorCodes": [
+      "E006"
+    ]
+  },
+  "pccee": {
+    "ok": false,
+    "errors": 3,
+    "warnings": 1,
+    "errorCodes": [
+      "E006"
+    ]
+  },
+  "pd4cd": {
+    "ok": false,
+    "errors": 2,
+    "warnings": 5,
+    "errorCodes": [
+      "E002"
+    ]
+  }
+}

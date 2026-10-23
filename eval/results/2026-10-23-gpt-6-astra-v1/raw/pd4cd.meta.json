@@ -1,0 +1,26 @@
+{
+  "code": "pd4cd",
+  "model": "openai/gpt-6-astra",
+  "status": "ok",
+  "finishedAt": "2026-10-23 22:49:25",
+  "ms": 85838,
+  "answerChars": 6965,
+  "bare": false,
+  "fenceBlocks": 1,
+  "charsBeforeBlock": 0,
+  "charsAfterBlock": 180,
+  "extractOk": true,
+  "repairs": [
+    "took the code block"
+  ],
+  "planFile": "readings-sketch-zoom/pd4cd.plan.json",
+  "call": {},
+  "attempts": [
+    {
+      "n": 1,
+      "at": "2026-10-23 22:49:25",
+      "ms": 85838,
+      "ok": true
+    }
+  ]
+}

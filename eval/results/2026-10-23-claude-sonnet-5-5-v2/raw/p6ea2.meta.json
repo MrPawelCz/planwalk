@@ -1,0 +1,32 @@
+{
+  "code": "p6ea2",
+  "model": "claude-sonnet-5-5",
+  "status": "ok",
+  "finishedAt": "2026-10-23 23:07:48",
+  "ms": 36566,
+  "answerChars": 4928,
+  "bare": false,
+  "fenceBlocks": 1,
+  "charsBeforeBlock": 0,
+  "charsAfterBlock": 523,
+  "extractOk": true,
+  "repairs": [
+    "took the code block"
+  ],
+  "planFile": "readings/p6ea2.plan.json",
+  "call": {
+    "turns": 2,
+    "costUsdList": 0.060177999999999995,
+    "inputTokens": 4,
+    "outputTokens": 5110,
+    "subtype": "success"
+  },
+  "attempts": [
+    {
+      "n": 1,
+      "at": "2026-10-23 23:07:48",
+      "ms": 36566,
+      "ok": true
+    }
+  ]
+}

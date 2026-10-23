@@ -1,0 +1,284 @@
+{
+  "version": 1,
+  "name": "Studio floor plan",
+  "units": "m",
+  "meta": {
+    "source": "image",
+    "scale_note": "No printed dimensions or room areas are visible. Scale estimated from the bottom entrance door, assuming its approximately 72-pixel opening is 0.85 m wide: 0.01181 m per pixel. Origin is the top-left corner of the traced exterior wall envelope. All dimensions are approximate.",
+    "notes": "The drawing is slightly irregular; wall centerlines have been straightened while preserving junctions. The wide opening between Studio and Hall is treated as a passage. No room areas are printed."
+  },
+  "levels": [
+    {
+      "id": "L0",
+      "walls": [
+        {
+          "id": "w1",
+          "from": [
+            0.15,
+            0.17
+          ],
+          "to": [
+            6.16,
+            0.17
+          ],
+          "kind": "exterior",
+          "thickness": 0.28
+        },
+        {
+          "id": "w2",
+          "from": [
+            6.16,
+            0.17
+          ],
+          "to": [
+            6.16,
+            2.54
+          ],
+          "kind": "exterior",
+          "thickness": 0.28
+        },
+        {
+          "id": "w3",
+          "from": [
+            6.16,
+            2.54
+          ],
+          "to": [
+            6.16,
+            4.6
+          ],
+          "kind": "exterior",
+          "thickness": 0.28
+        },
+        {
+          "id": "w4",
+          "from": [
+            4.09,
+            4.6
+          ],
+          "to": [
+            6.16,
+            4.6
+          ],
+          "kind": "exterior",
+          "thickness": 0.28
+        },
+        {
+          "id": "w5",
+          "from": [
+            0.15,
+            4.6
+          ],
+          "to": [
+            4.09,
+            4.6
+          ],
+          "kind": "exterior",
+          "thickness": 0.28
+        },
+        {
+          "id": "w6",
+          "from": [
+            0.15,
+            2.54
+          ],
+          "to": [
+            0.15,
+            4.6
+          ],
+          "kind": "exterior",
+          "thickness": 0.28
+        },
+        {
+          "id": "w7",
+          "from": [
+            0.15,
+            0.17
+          ],
+          "to": [
+            0.15,
+            2.54
+          ],
+          "kind": "exterior",
+          "thickness": 0.28
+        },
+        {
+          "id": "w8",
+          "from": [
+            0.15,
+            2.54
+          ],
+          "to": [
+            4.09,
+            2.54
+          ],
+          "kind": "interior",
+          "thickness": 0.12
+        },
+        {
+          "id": "w9",
+          "from": [
+            4.09,
+            2.54
+          ],
+          "to": [
+            6.16,
+            2.54
+          ],
+          "kind": "interior",
+          "thickness": 0.12
+        },
+        {
+          "id": "w10",
+          "from": [
+            4.09,
+            2.54
+          ],
+          "to": [
+            4.09,
+            4.6
+          ],
+          "kind": "interior",
+          "thickness": 0.12
+        }
+      ],
+      "openings": [
+        {
+          "id": "win1",
+          "wall": "w1",
+          "type": "window",
+          "offset": 0.67,
+          "width": 1.68
+        },
+        {
+          "id": "win2",
+          "wall": "w1",
+          "type": "window",
+          "offset": 3.89,
+          "width": 1.29
+        },
+        {
+          "id": "win3",
+          "wall": "w2",
+          "type": "window",
+          "offset": 0.44,
+          "width": 1.49
+        },
+        {
+          "id": "win4",
+          "wall": "w7",
+          "type": "window",
+          "offset": 0.63,
+          "width": 1.12
+        },
+        {
+          "id": "win5",
+          "wall": "w5",
+          "type": "window",
+          "offset": 2.36,
+          "width": 0.58
+        },
+        {
+          "id": "win6",
+          "wall": "w4",
+          "type": "window",
+          "offset": 0.77,
+          "width": 0.58
+        },
+        {
+          "id": "d1",
+          "wall": "w5",
+          "type": "door",
+          "offset": 1.06,
+          "width": 0.85
+        },
+        {
+          "id": "d2",
+          "wall": "w10",
+          "type": "door",
+          "offset": 0.8,
+          "width": 0.73
+        },
+        {
+          "id": "p1",
+          "wall": "w8",
+          "type": "passage",
+          "offset": 1.75,
+          "width": 1.3
+        }
+      ],
+      "rooms": [
+        {
+          "id": "r1",
+          "name": "Studio",
+          "polygon": [
+            [
+              0.15,
+              0.17
+            ],
+            [
+              6.16,
+              0.17
+            ],
+            [
+              6.16,
+              2.54
+            ],
+            [
+              4.09,
+              2.54
+            ],
+            [
+              0.15,
+              2.54
+            ]
+          ]
+        },
+        {
+          "id": "r2",
+          "name": "Hall",
+          "polygon": [
+            [
+              0.15,
+              2.54
+            ],
+            [
+              4.09,
+              2.54
+            ],
+            [
+              4.09,
+              4.6
+            ],
+            [
+              0.15,
+              4.6
+            ]
+          ]
+        },
+        {
+          "id": "r3",
+          "name": "Bathroom",
+          "polygon": [
+            [
+              4.09,
+              2.54
+            ],
+            [
+              6.16,
+              2.54
+            ],
+            [
+              6.16,
+              4.6
+            ],
+            [
+              4.09,
+              4.6
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

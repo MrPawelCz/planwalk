@@ -1,0 +1,12 @@
+{
+  "model": "openai/gpt-6-astra",
+  "route": "openclaw infer model run (picture attached)",
+  "promptSpec": "git:a959169:docs/PROMPT.md",
+  "promptMode": "code block under \"## Prompt\"",
+  "promptBranchTip": "a9591698d34d",
+  "promptFileCommit": "a959169",
+  "promptSha256": "c00a80f4aa550ee27d3106640cfa74fa6b329a941df5547e43073e3e965fca58",
+  "promptChars": 3104,
+  "extractor": "src/core/extract-json.js (the viewer's extractor, first version)",
+  "createdAt": "2026-10-23 22:42:15"
+}

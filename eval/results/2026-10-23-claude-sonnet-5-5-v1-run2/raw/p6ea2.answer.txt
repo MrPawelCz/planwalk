@@ -1,0 +1,59 @@
+```json
+{
+  "version": 1,
+  "name": "Two-bedroom plan",
+  "units": "m",
+  "meta": {
+    "source": "image",
+    "scale_note": "Printed overall dimension 11.75 m, which spans 940 px on the drawing's dimension line, giving about 80 px/m. Printed room areas were not used for scale.",
+    "notes": "Coordinates are approximate, read from the image. The sheet is slightly skewed. The open gap in the Living room/Kitchen wall (y 5.3 to 7.0) is left as open space with no opening. Door hinge sides are not specified."
+  },
+  "levels": [
+    {
+      "id": "L0",
+      "walls": [
+        { "id": "w1", "from": [0, 0], "to": [6.7, 0], "kind": "exterior" },
+        { "id": "w2", "from": [6.7, 0], "to": [6.7, 3.7], "kind": "exterior" },
+        { "id": "w3", "from": [6.7, 3.7], "to": [11.7, 3.7], "kind": "exterior" },
+        { "id": "w4", "from": [11.7, 3.7], "to": [11.7, 7.8], "kind": "exterior" },
+        { "id": "w5", "from": [11.7, 7.8], "to": [0, 7.8], "kind": "exterior" },
+        { "id": "w6", "from": [0, 0], "to": [0, 7.8], "kind": "exterior" },
+        { "id": "i1", "from": [0, 3.7], "to": [6.7, 3.7], "kind": "interior" },
+        { "id": "i2", "from": [3, 0], "to": [3, 3.7], "kind": "interior" },
+        { "id": "i3", "from": [2.3, 3.7], "to": [2.3, 7.8], "kind": "interior" },
+        { "id": "i4", "from": [6.5, 3.7], "to": [6.5, 5.3], "kind": "interior" },
+        { "id": "i5", "from": [6.5, 7.0], "to": [6.5, 7.8], "kind": "interior" },
+        { "id": "i6", "from": [9.4, 3.7], "to": [9.4, 7.8], "kind": "interior" }
+      ],
+      "openings": [
+        { "id": "win1", "wall": "w1", "type": "window", "offset": 0.8, "width": 1.5 },
+        { "id": "win2", "wall": "w1", "type": "window", "offset": 4.3, "width": 1.3 },
+        { "id": "win3", "wall": "w6", "type": "window", "offset": 1.05, "width": 1.45 },
+        { "id": "win4", "wall": "w6", "type": "window", "offset": 5.4, "width": 0.6 },
+        { "id": "win5", "wall": "w2", "type": "window", "offset": 1.2, "width": 1.5 },
+        { "id": "win6", "wall": "w3", "type": "window", "offset": 0.78, "width": 1.2 },
+        { "id": "win7", "wall": "w5", "type": "window", "offset": 6.6, "width": 1.45 },
+        { "id": "win8", "wall": "w5", "type": "window", "offset": 3.1, "width": 1.3 },
+        { "id": "win9", "wall": "w5", "type": "window", "offset": 0.86, "width": 0.6 },
+        { "id": "d1", "wall": "w5", "type": "door", "offset": 10.29, "width": 0.95 },
+        { "id": "d2", "wall": "i1", "type": "door", "offset": 0.8, "width": 0.9 },
+        { "id": "d3", "wall": "i1", "type": "door", "offset": 4.8, "width": 0.85 },
+        { "id": "d4", "wall": "i3", "type": "door", "offset": 1.75, "width": 0.87 },
+        { "id": "d5", "wall": "i6", "type": "door", "offset": 1.95, "width": 0.8 }
+      ],
+      "rooms": [
+        { "id": "r1", "name": "Bedroom 1", "polygon": [[0, 0], [3, 0], [3, 3.7], [0, 3.7]], "area": 11.0 },
+        { "id": "r2", "name": "Bedroom 2", "polygon": [[3, 0], [6.7, 0], [6.7, 3.7], [3, 3.7]], "area": 13.0 },
+        { "id": "r3", "name": "Hall", "polygon": [[0, 3.7], [2.3, 3.7], [2.3, 7.8], [0, 7.8]], "area": 10.1 },
+        { "id": "r4", "name": "Living room", "polygon": [[2.3, 3.7], [6.5, 3.7], [6.5, 7.8], [2.3, 7.8]], "area": 17.4 },
+        { "id": "r5", "name": "Kitchen", "polygon": [[6.5, 3.7], [9.4, 3.7], [9.4, 7.8], [6.5, 7.8]], "area": 12.6 },
+        { "id": "r6", "name": "Bathroom", "polygon": [[9.4, 3.7], [11.7, 3.7], [11.7, 7.8], [9.4, 7.8]], "area": 9.2 }
+      ]
+    }
+  ]
+}
+```
+
+- Scale source: the printed 11.75 m dimension line, about 80 px/m.
+- The Living room and Kitchen are open to each other through a gap in the partition, so they share an edge.
+- Door hinge sides are not set, and the plan is slightly skewed, so positions are approximate.

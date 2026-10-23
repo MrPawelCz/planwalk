@@ -1,0 +1,57 @@
+```json
+{
+  "version": 1,
+  "name": "2-Bedroom Apartment",
+  "units": "m",
+  "meta": {
+    "source": "image",
+    "scale_note": "Scale determined using standard door width of 0.85m as reference. Doors in plan measure approximately 35-40 pixels, yielding scale of ~0.023 m/pixel. Total dimensions approximately 15.5m × 6.4m.",
+    "notes": "Kitchen and bathroom areas are relatively compact. Window widths and some opening widths estimated from visual inspection."
+  },
+  "levels": [
+    {
+      "id": "L0",
+      "walls": [
+        { "id": "w1", "from": [0, 0], "to": [13.5, 0], "kind": "exterior" },
+        { "id": "w2", "from": [13.5, 0], "to": [15.5, 0], "kind": "exterior" },
+        { "id": "w3", "from": [15.5, 0], "to": [15.5, 6.4], "kind": "exterior" },
+        { "id": "w4", "from": [15.5, 6.4], "to": [0, 6.4], "kind": "exterior" },
+        { "id": "w5", "from": [0, 6.4], "to": [0, 0], "kind": "exterior" },
+        { "id": "w6", "from": [5.6, 0], "to": [5.6, 5.1], "kind": "interior" },
+        { "id": "w7", "from": [0, 5.1], "to": [13.5, 5.1], "kind": "interior" },
+        { "id": "w8", "from": [4.1, 5.1], "to": [4.1, 6.4], "kind": "interior" },
+        { "id": "w9", "from": [12.0, 5.1], "to": [12.0, 6.4], "kind": "interior" },
+        { "id": "w10", "from": [13.5, 5.1], "to": [13.5, 6.4], "kind": "interior" }
+      ],
+      "openings": [
+        { "id": "d1", "wall": "w7", "type": "door", "offset": 3.0, "width": 0.9, "opens_to": "left" },
+        { "id": "d2", "wall": "w7", "type": "door", "offset": 7.8, "width": 0.9, "opens_to": "left" },
+        { "id": "d3", "wall": "w5", "type": "door", "offset": 0.7, "width": 0.7, "opens_to": "left" },
+        { "id": "d4", "wall": "w5", "type": "door", "offset": 3.3, "width": 0.7, "opens_to": "left" },
+        { "id": "d5", "wall": "w9", "type": "door", "offset": 0.5, "width": 0.65, "opens_to": "left" },
+        { "id": "d6", "wall": "w10", "type": "door", "offset": 0.5, "width": 0.65, "opens_to": "left" },
+        { "id": "win1", "wall": "w1", "type": "window", "offset": 1.0, "width": 2.2 },
+        { "id": "win2", "wall": "w1", "type": "window", "offset": 4.5, "width": 2.0 },
+        { "id": "win3", "wall": "w1", "type": "window", "offset": 8.0, "width": 2.5 },
+        { "id": "win4", "wall": "w1", "type": "window", "offset": 11.3, "width": 2.0 },
+        { "id": "win5", "wall": "w5", "type": "window", "offset": 2.2, "width": 1.5 },
+        { "id": "win6", "wall": "w5", "type": "window", "offset": 4.7, "width": 1.5 },
+        { "id": "win7", "wall": "w4", "type": "window", "offset": 5.6, "width": 1.5 },
+        { "id": "win8", "wall": "w4", "type": "window", "offset": 9.1, "width": 1.5 }
+      ],
+      "rooms": [
+        { "id": "r1", "name": "Bedroom 1", "polygon": [[0, 0], [5.6, 0], [5.6, 5.1], [0, 5.1]], "area": 28.6 },
+        { "id": "r2", "name": "Bedroom 2", "polygon": [[5.6, 0], [13.5, 0], [13.5, 5.1], [5.6, 5.1]], "area": 40.3 },
+        { "id": "r3", "name": "Hall", "polygon": [[0, 5.1], [4.1, 5.1], [4.1, 6.4], [0, 6.4]], "area": 5.3 },
+        { "id": "r4", "name": "Living room", "polygon": [[4.1, 5.1], [12.0, 5.1], [12.0, 6.4], [4.1, 6.4]], "area": 10.3 },
+        { "id": "r5", "name": "Kitchen", "polygon": [[12.0, 5.1], [13.5, 5.1], [13.5, 6.4], [12.0, 6.4]], "area": 2.0 },
+        { "id": "r6", "name": "Bathroom", "polygon": [[13.5, 5.1], [15.5, 5.1], [15.5, 6.4], [13.5, 6.4]], "area": 2.6 }
+      ]
+    }
+  ]
+}
+```
+
+**Scale source:** Standard door width (0.85m) estimated from plan proportions; doors measure ~35–40 pixels, giving 0.023 m/pixel.
+
+**Uncertainties:** Kitchen and bathroom are quite compact; window dimensions and some door widths estimated visually; no printed dimensions or areas on plan to verify scale precisely.

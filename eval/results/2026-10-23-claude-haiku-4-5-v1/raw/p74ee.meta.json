@@ -1,0 +1,32 @@
+{
+  "code": "p74ee",
+  "model": "claude-haiku-4-5",
+  "status": "ok",
+  "finishedAt": "2026-10-23 23:00:32",
+  "ms": 191673,
+  "answerChars": 3858,
+  "bare": false,
+  "fenceBlocks": 1,
+  "charsBeforeBlock": 0,
+  "charsAfterBlock": 236,
+  "extractOk": true,
+  "repairs": [
+    "took the code block"
+  ],
+  "planFile": "readings/p74ee.plan.json",
+  "call": {
+    "turns": 2,
+    "costUsdList": 0.15752,
+    "inputTokens": 2808,
+    "outputTokens": 29292,
+    "subtype": "success"
+  },
+  "attempts": [
+    {
+      "n": 1,
+      "at": "2026-10-23 23:00:32",
+      "ms": 191673,
+      "ok": true
+    }
+  ]
+}

@@ -1,0 +1,413 @@
+{
+  "version": 1,
+  "name": "Apartment",
+  "units": "m",
+  "meta": {
+    "source": "image",
+    "scale_note": "No dimensions or areas printed on plan. Scale estimated using standard door width of 0.85m; total apartment estimated at ~11m × 8m based on door proportions and typical layout.",
+    "notes": "No printed dimensions or room areas provided. Exact wall positions and door locations estimated from proportions. Wall positions are approximate. Door widths estimated as standard 0.85m."
+  },
+  "levels": [
+    {
+      "id": "L0",
+      "walls": [
+        {
+          "id": "w_top",
+          "from": [
+            0,
+            0
+          ],
+          "to": [
+            11,
+            0
+          ],
+          "kind": "exterior"
+        },
+        {
+          "id": "w_right",
+          "from": [
+            11,
+            0
+          ],
+          "to": [
+            11,
+            8
+          ],
+          "kind": "exterior"
+        },
+        {
+          "id": "w_bottom",
+          "from": [
+            11,
+            8
+          ],
+          "to": [
+            0,
+            8
+          ],
+          "kind": "exterior"
+        },
+        {
+          "id": "w_left",
+          "from": [
+            0,
+            8
+          ],
+          "to": [
+            0,
+            0
+          ],
+          "kind": "exterior"
+        },
+        {
+          "id": "w_bed1_2",
+          "from": [
+            2.4,
+            0
+          ],
+          "to": [
+            2.4,
+            3.6
+          ],
+          "kind": "interior"
+        },
+        {
+          "id": "w_bed2_3",
+          "from": [
+            5.5,
+            0
+          ],
+          "to": [
+            5.5,
+            3.6
+          ],
+          "kind": "interior"
+        },
+        {
+          "id": "w_bed3_bath",
+          "from": [
+            8.6,
+            0
+          ],
+          "to": [
+            8.6,
+            3.6
+          ],
+          "kind": "interior"
+        },
+        {
+          "id": "w_beds_corr",
+          "from": [
+            0,
+            3.6
+          ],
+          "to": [
+            11,
+            3.6
+          ],
+          "kind": "interior"
+        },
+        {
+          "id": "w_corr_lower",
+          "from": [
+            0,
+            5.4
+          ],
+          "to": [
+            11,
+            5.4
+          ],
+          "kind": "interior"
+        },
+        {
+          "id": "w_hall_kit",
+          "from": [
+            2.8,
+            5.4
+          ],
+          "to": [
+            2.8,
+            8
+          ],
+          "kind": "interior"
+        },
+        {
+          "id": "w_kit_liv",
+          "from": [
+            6.3,
+            5.4
+          ],
+          "to": [
+            6.3,
+            8
+          ],
+          "kind": "interior"
+        }
+      ],
+      "openings": [
+        {
+          "id": "d_bed1",
+          "wall": "w_beds_corr",
+          "type": "door",
+          "offset": 1.2,
+          "width": 0.85
+        },
+        {
+          "id": "d_bed2",
+          "wall": "w_beds_corr",
+          "type": "door",
+          "offset": 3.95,
+          "width": 0.85
+        },
+        {
+          "id": "d_bed3",
+          "wall": "w_beds_corr",
+          "type": "door",
+          "offset": 7.05,
+          "width": 0.85
+        },
+        {
+          "id": "d_bath",
+          "wall": "w_beds_corr",
+          "type": "door",
+          "offset": 9.3,
+          "width": 0.85
+        },
+        {
+          "id": "d_hall_kit",
+          "wall": "w_hall_kit",
+          "type": "door",
+          "offset": 0.3,
+          "width": 0.85
+        },
+        {
+          "id": "d_kit_corr",
+          "wall": "w_corr_lower",
+          "type": "door",
+          "offset": 3.5,
+          "width": 0.85
+        },
+        {
+          "id": "d_kit_liv",
+          "wall": "w_kit_liv",
+          "type": "door",
+          "offset": 0.3,
+          "width": 0.85
+        },
+        {
+          "id": "d_liv_corr",
+          "wall": "w_corr_lower",
+          "type": "door",
+          "offset": 8.8,
+          "width": 0.85
+        },
+        {
+          "id": "win_top1",
+          "wall": "w_top",
+          "type": "window",
+          "offset": 1.2,
+          "width": 1.2
+        },
+        {
+          "id": "win_top2",
+          "wall": "w_top",
+          "type": "window",
+          "offset": 4,
+          "width": 1.2
+        },
+        {
+          "id": "win_top3",
+          "wall": "w_top",
+          "type": "window",
+          "offset": 6.8,
+          "width": 1.2
+        },
+        {
+          "id": "win_top4",
+          "wall": "w_top",
+          "type": "window",
+          "offset": 9.3,
+          "width": 1.2
+        }
+      ],
+      "rooms": [
+        {
+          "id": "r_bed1",
+          "name": "Bedroom 1",
+          "polygon": [
+            [
+              0,
+              0
+            ],
+            [
+              2.4,
+              0
+            ],
+            [
+              2.4,
+              3.6
+            ],
+            [
+              0,
+              3.6
+            ]
+          ]
+        },
+        {
+          "id": "r_bed2",
+          "name": "Bedroom 2",
+          "polygon": [
+            [
+              2.4,
+              0
+            ],
+            [
+              5.5,
+              0
+            ],
+            [
+              5.5,
+              3.6
+            ],
+            [
+              2.4,
+              3.6
+            ]
+          ]
+        },
+        {
+          "id": "r_bed3",
+          "name": "Bedroom 3",
+          "polygon": [
+            [
+              5.5,
+              0
+            ],
+            [
+              8.6,
+              0
+            ],
+            [
+              8.6,
+              3.6
+            ],
+            [
+              5.5,
+              3.6
+            ]
+          ]
+        },
+        {
+          "id": "r_bath",
+          "name": "Bathroom",
+          "polygon": [
+            [
+              8.6,
+              0
+            ],
+            [
+              11,
+              0
+            ],
+            [
+              11,
+              3.6
+            ],
+            [
+              8.6,
+              3.6
+            ]
+          ]
+        },
+        {
+          "id": "r_corr",
+          "name": "Corridor",
+          "polygon": [
+            [
+              0,
+              3.6
+            ],
+            [
+              11,
+              3.6
+            ],
+            [
+              11,
+              5.4
+            ],
+            [
+              0,
+              5.4
+            ]
+          ]
+        },
+        {
+          "id": "r_hall",
+          "name": "Hall",
+          "polygon": [
+            [
+              0,
+              5.4
+            ],
+            [
+              2.8,
+              5.4
+            ],
+            [
+              2.8,
+              8
+            ],
+            [
+              0,
+              8
+            ]
+          ]
+        },
+        {
+          "id": "r_kit",
+          "name": "Kitchen",
+          "polygon": [
+            [
+              2.8,
+              5.4
+            ],
+            [
+              6.3,
+              5.4
+            ],
+            [
+              6.3,
+              8
+            ],
+            [
+              2.8,
+              8
+            ]
+          ]
+        },
+        {
+          "id": "r_liv",
+          "name": "Living room",
+          "polygon": [
+            [
+              6.3,
+              5.4
+            ],
+            [
+              11,
+              5.4
+            ],
+            [
+              11,
+              8
+            ],
+            [
+              6.3,
+              8
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,102 @@
+{
+  "run": "2026-10-23-claude-haiku-4-5-v1",
+  "model": "claude-haiku-4-5",
+  "label": "Claude Haiku 4.5",
+  "prompt": "v1",
+  "promptFileCommit": "a959169",
+  "promptBranchTip": "a9591698d34d",
+  "route": "claude -p (Read tool only, no session, no project files)",
+  "plans": 12,
+  "plansRead": 12,
+  "plansExtracted": 12,
+  "plansLoadingWithoutErrors": 4,
+  "meanComposite": 34.4,
+  "lowest": 0,
+  "lowestCode": "p6b7c",
+  "highest": 73,
+  "bareJson": 0,
+  "cleanPaste": 12,
+  "extractionRepairs": {
+    "took the code block": 12
+  },
+  "fenceBlocksTotal": 12,
+  "answersWithTextBeforeBlock": 0,
+  "meanSeconds": 139,
+  "listCostUsd": 1.39,
+  "validatorWarningsTotal": 38,
+  "validatorErrorsTotal": 13,
+  "perCode": [
+    {
+      "code": "p69e9",
+      "style": "cad",
+      "composite": 73,
+      "present": true
+    },
+    {
+      "code": "p6530",
+      "style": "hatched",
+      "composite": 47.7,
+      "present": true
+    },
+    {
+      "code": "p66c3",
+      "style": "sketch",
+      "composite": 64.7,
+      "present": true
+    },
+    {
+      "code": "p6ea2",
+      "style": "scan",
+      "composite": 16.8,
+      "present": true
+    },
+    {
+      "code": "p7035",
+      "style": "cad",
+      "composite": 63.9,
+      "present": true
+    },
+    {
+      "code": "p6b7c",
+      "style": "hatched",
+      "composite": 0,
+      "present": true
+    },
+    {
+      "code": "p6d0f",
+      "style": "sketch",
+      "composite": 24.2,
+      "present": true
+    },
+    {
+      "code": "p74ee",
+      "style": "scan",
+      "composite": 71.4,
+      "present": true
+    },
+    {
+      "code": "pccee",
+      "style": "sketch",
+      "composite": 34.3,
+      "present": true
+    },
+    {
+      "code": "pcb5b",
+      "style": "sketch",
+      "composite": 1,
+      "present": true
+    },
+    {
+      "code": "pc9c8",
+      "style": "sketch",
+      "composite": 15.7,
+      "present": true
+    },
+    {
+      "code": "pd4cd",
+      "style": "sketch",
+      "composite": 0,
+      "present": true
+    }
+  ]
+}

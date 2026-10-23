@@ -1,0 +1,102 @@
+{
+  "run": "2026-10-23-claude-sonnet-5-5-v1-run1",
+  "model": "claude-sonnet-5-5",
+  "label": "Claude Sonnet 5.5",
+  "prompt": "v1",
+  "promptFileCommit": "a959169",
+  "promptBranchTip": "a9591698d34d",
+  "route": "claude -p (Read tool only, no session, no project files)",
+  "plans": 12,
+  "plansRead": 12,
+  "plansExtracted": 12,
+  "plansLoadingWithoutErrors": 11,
+  "meanComposite": 92.4,
+  "lowest": 66.3,
+  "lowestCode": "p7035",
+  "highest": 99.8,
+  "bareJson": 0,
+  "cleanPaste": 12,
+  "extractionRepairs": {
+    "took the code block": 12
+  },
+  "fenceBlocksTotal": 12,
+  "answersWithTextBeforeBlock": 0,
+  "meanSeconds": 31,
+  "listCostUsd": 0.63,
+  "validatorWarningsTotal": 5,
+  "validatorErrorsTotal": 4,
+  "perCode": [
+    {
+      "code": "p69e9",
+      "style": "cad",
+      "composite": 99.8,
+      "present": true
+    },
+    {
+      "code": "p6530",
+      "style": "hatched",
+      "composite": 98.1,
+      "present": true
+    },
+    {
+      "code": "p66c3",
+      "style": "sketch",
+      "composite": 98.4,
+      "present": true
+    },
+    {
+      "code": "p6ea2",
+      "style": "scan",
+      "composite": 95.5,
+      "present": true
+    },
+    {
+      "code": "p7035",
+      "style": "cad",
+      "composite": 66.3,
+      "present": true
+    },
+    {
+      "code": "p6b7c",
+      "style": "hatched",
+      "composite": 84.1,
+      "present": true
+    },
+    {
+      "code": "p6d0f",
+      "style": "sketch",
+      "composite": 92.2,
+      "present": true
+    },
+    {
+      "code": "p74ee",
+      "style": "scan",
+      "composite": 98.6,
+      "present": true
+    },
+    {
+      "code": "pccee",
+      "style": "sketch",
+      "composite": 97.7,
+      "present": true
+    },
+    {
+      "code": "pcb5b",
+      "style": "sketch",
+      "composite": 91.4,
+      "present": true
+    },
+    {
+      "code": "pc9c8",
+      "style": "sketch",
+      "composite": 91.9,
+      "present": true
+    },
+    {
+      "code": "pd4cd",
+      "style": "sketch",
+      "composite": 94.3,
+      "present": true
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+```json
+{
+  "version": 1,
+  "name": "Apartment",
+  "units": "m",
+  "meta": {
+    "source": "image",
+    "scale_note": "Width dimension marked on plan as 9.80 m; height estimated from aspect ratio as approximately 7.5 m based on visual proportions",
+    "notes": "Wall thicknesses estimated; door opening widths estimated from standard door/passage sizes; some wall segments within corridor not fully detailed due to image clarity"
+  },
+  "levels": [
+    {
+      "id": "L0",
+      "walls": [
+        {"id": "w_top", "from": [0, 0], "to": [9.8, 0], "kind": "exterior"},
+        {"id": "w_right", "from": [9.8, 0], "to": [9.8, 7.5], "kind": "exterior"},
+        {"id": "w_bottom", "from": [9.8, 7.5], "to": [0, 7.5], "kind": "exterior"},
+        {"id": "w_left", "from": [0, 7.5], "to": [0, 0], "kind": "exterior"},
+        {"id": "w_br1_br2", "from": [3.2, 0], "to": [3.2, 3.6], "kind": "interior"},
+        {"id": "w_br2_bath", "from": [6.0, 0], "to": [6.0, 3.6], "kind": "interior"},
+        {"id": "w_br1_corr", "from": [0, 3.6], "to": [3.2, 3.6], "kind": "interior"},
+        {"id": "w_br2_corr", "from": [3.2, 3.6], "to": [6.0, 3.6], "kind": "interior"},
+        {"id": "w_bath_corr", "from": [6.0, 3.6], "to": [9.8, 3.6], "kind": "interior"},
+        {"id": "w_corr_lower", "from": [0, 4.85], "to": [9.8, 4.85], "kind": "interior"},
+        {"id": "w_hall_kit", "from": [2.5, 4.85], "to": [2.5, 7.5], "kind": "interior"},
+        {"id": "w_kit_liv", "from": [6.0, 4.85], "to": [6.0, 7.5], "kind": "interior"}
+      ],
+      "openings": [
+        {"id": "d_br1", "wall": "w_br1_corr", "type": "door", "offset": 2.7, "width": 0.85, "hinge": "start", "opens_to": "right"},
+        {"id": "d_br2", "wall": "w_br2_corr", "type": "door", "offset": 1.8, "width": 0.85, "hinge": "start", "opens_to": "right"},
+        {"id": "d_bath", "wall": "w_bath_corr", "type": "door", "offset": 1.0, "width": 0.85, "hinge": "end", "opens_to": "left"},
+        {"id": "d_hall_kit", "wall": "w_hall_kit", "type": "door", "offset": 1.95, "width": 0.85, "hinge": "start", "opens_to": "right"},
+        {"id": "d_kit_liv", "wall": "w_kit_liv", "type": "door", "offset": 1.2, "width": 0.95, "hinge": "start", "opens_to": "right"},
+        {"id": "d_corr_liv", "wall": "w_corr_lower", "type": "door", "offset": 8.0, "width": 1.0, "hinge": "start", "opens_to": "right"},
+        {"id": "win_br1", "wall": "w_top", "type": "window", "offset": 1.0, "width": 1.0},
+        {"id": "win_br2", "wall": "w_top", "type": "window", "offset": 4.5, "width": 1.0},
+        {"id": "win_bath_top", "wall": "w_top", "type": "window", "offset": 7.5, "width": 1.0},
+        {"id": "win_bath_right", "wall": "w_right", "type": "window", "offset": 1.5, "width": 1.0},
+        {"id": "win_liv", "wall": "w_right", "type": "window", "offset": 6.0, "width": 1.2}
+      ],
+      "rooms": [
+        {"id": "r_br1", "name": "Bedroom 1", "polygon": [[0, 0], [3.2, 0], [3.2, 3.6], [0, 3.6]], "area": 11.4},
+        {"id": "r_br2", "name": "Bedroom 2", "polygon": [[3.2, 0], [6.0, 0], [6.0, 3.6], [3.2, 3.6]], "area": 10.0},
+        {"id": "r_bath", "name": "Bathroom", "polygon": [[6.0, 0], [9.8, 0], [9.8, 3.6], [6.0, 3.6]], "area": 11.9},
+        {"id": "r_corr", "name": "Corridor", "polygon": [[0, 3.6], [9.8, 3.6], [9.8, 4.85], [0, 4.85]], "area": 11.8},
+        {"id": "r_hall", "name": "Hall", "polygon": [[0, 4.85], [2.5, 4.85], [2.5, 7.5], [0, 7.5]], "area": 7.7},
+        {"id": "r_kit", "name": "Kitchen", "polygon": [[2.5, 4.85], [6.0, 4.85], [6.0, 7.5], [2.5, 7.5]], "area": 11.2},
+        {"id": "r_liv", "name": "Living room", "polygon": [[6.0, 4.85], [9.8, 4.85], [9.8, 7.5], [6.0, 7.5]], "area": 13.9}
+      ]
+    }
+  ]
+}
+```
+
+**Scale source:** Printed dimension on plan shows 9.80 m width; height (~7.5 m) estimated from aspect ratio and room proportions.
+
+**Uncertainties:** Door offsets and widths estimated visually; hinge directions inferred from swing arc curves; some interior wall segments in corridor area unclear from image; Kitchen–Living room door opening width estimated slightly larger than bedroom doors.

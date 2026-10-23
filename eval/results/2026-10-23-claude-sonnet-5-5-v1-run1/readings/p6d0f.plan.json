@@ -1,0 +1,231 @@
+{
+  "version": 1,
+  "name": "Studio with hall and bathroom",
+  "units": "m",
+  "meta": {
+    "source": "image",
+    "scale_note": "No printed dimensions or areas. I used the standard 0.85 m door: the entrance door chord is about 71 px, which gives about 84 px/m.",
+    "notes": "Wall thickness is about 0.28 m. Window and door positions are approximate. The bathroom door is drawn with a curved leaf and I read it as swinging into the bathroom. The Hall and Studio are open to each other through a passage."
+  },
+  "levels": [
+    {
+      "id": "L0",
+      "walls": [
+        {
+          "id": "w1",
+          "from": [
+            0.14,
+            0.15
+          ],
+          "to": [
+            6.2,
+            0.15
+          ],
+          "kind": "exterior"
+        },
+        {
+          "id": "w2",
+          "from": [
+            6.2,
+            0.15
+          ],
+          "to": [
+            6.2,
+            4.63
+          ],
+          "kind": "exterior"
+        },
+        {
+          "id": "w3",
+          "from": [
+            0.14,
+            4.63
+          ],
+          "to": [
+            6.2,
+            4.63
+          ],
+          "kind": "exterior"
+        },
+        {
+          "id": "w4",
+          "from": [
+            0.14,
+            0.15
+          ],
+          "to": [
+            0.14,
+            4.63
+          ],
+          "kind": "exterior"
+        },
+        {
+          "id": "w5",
+          "from": [
+            0.14,
+            2.54
+          ],
+          "to": [
+            1.92,
+            2.54
+          ],
+          "kind": "interior"
+        },
+        {
+          "id": "w6",
+          "from": [
+            3.23,
+            2.54
+          ],
+          "to": [
+            6.2,
+            2.54
+          ],
+          "kind": "interior"
+        },
+        {
+          "id": "w7",
+          "from": [
+            4.12,
+            2.54
+          ],
+          "to": [
+            4.12,
+            4.63
+          ],
+          "kind": "interior"
+        }
+      ],
+      "openings": [
+        {
+          "id": "win1",
+          "wall": "w1",
+          "type": "window",
+          "offset": 0.68,
+          "width": 1.69
+        },
+        {
+          "id": "win2",
+          "wall": "w1",
+          "type": "window",
+          "offset": 3.92,
+          "width": 1.29
+        },
+        {
+          "id": "win3",
+          "wall": "w2",
+          "type": "window",
+          "offset": 0.12,
+          "width": 1.8
+        },
+        {
+          "id": "win4",
+          "wall": "w4",
+          "type": "window",
+          "offset": 0.18,
+          "width": 1.55
+        },
+        {
+          "id": "win5",
+          "wall": "w3",
+          "type": "window",
+          "offset": 2.37,
+          "width": 0.6
+        },
+        {
+          "id": "win6",
+          "wall": "w3",
+          "type": "window",
+          "offset": 4.75,
+          "width": 0.57
+        },
+        {
+          "id": "d1",
+          "wall": "w3",
+          "type": "door",
+          "offset": 1.09,
+          "width": 0.84,
+          "hinge": "start",
+          "opens_to": "left"
+        },
+        {
+          "id": "d2",
+          "wall": "w7",
+          "type": "door",
+          "offset": 0.81,
+          "width": 0.76,
+          "hinge": "start",
+          "opens_to": "left"
+        }
+      ],
+      "rooms": [
+        {
+          "id": "r1",
+          "name": "Studio",
+          "polygon": [
+            [
+              0.14,
+              0.15
+            ],
+            [
+              6.2,
+              0.15
+            ],
+            [
+              6.2,
+              2.54
+            ],
+            [
+              0.14,
+              2.54
+            ]
+          ]
+        },
+        {
+          "id": "r2",
+          "name": "Hall",
+          "polygon": [
+            [
+              0.14,
+              2.54
+            ],
+            [
+              4.12,
+              2.54
+            ],
+            [
+              4.12,
+              4.63
+            ],
+            [
+              0.14,
+              4.63
+            ]
+          ]
+        },
+        {
+          "id": "r3",
+          "name": "Bathroom",
+          "polygon": [
+            [
+              4.12,
+              2.54
+            ],
+            [
+              6.2,
+              2.54
+            ],
+            [
+              6.2,
+              4.63
+            ],
+            [
+              4.12,
+              4.63
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

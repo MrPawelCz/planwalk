@@ -1,0 +1,47 @@
+```json
+{
+  "version": 1,
+  "name": "Studio Apartment",
+  "units": "m",
+  "meta": {
+    "source": "image",
+    "scale_note": "Estimated using standard 0.85m door width as reference and typical studio apartment proportions. Drawing dimensions interpreted as approximately 8.5m wide × 4.5m deep.",
+    "notes": "No printed dimensions or areas visible. Exact positions of windows and door openings estimated from drawing proportions. Curved opening on left wall interpreted as passage to corridor."
+  },
+  "levels": [
+    {
+      "id": "L0",
+      "walls": [
+        { "id": "w1", "from": [0, 0], "to": [8.5, 0], "kind": "exterior" },
+        { "id": "w2", "from": [8.5, 0], "to": [8.5, 4.5], "kind": "exterior" },
+        { "id": "w3", "from": [8.5, 4.5], "to": [0, 4.5], "kind": "exterior" },
+        { "id": "w4", "from": [0, 4.5], "to": [0, 0], "kind": "exterior" },
+        { "id": "w5", "from": [0, 2.85], "to": [3.9, 2.85], "kind": "interior" },
+        { "id": "w6", "from": [4.8, 2.85], "to": [8.5, 2.85], "kind": "interior" },
+        { "id": "w7", "from": [4.0, 2.85], "to": [4.0, 4.5], "kind": "interior" }
+      ],
+      "openings": [
+        { "id": "win1", "wall": "w1", "type": "window", "offset": 1.5, "width": 0.3 },
+        { "id": "win2", "wall": "w1", "type": "window", "offset": 3.0, "width": 0.3 },
+        { "id": "win3", "wall": "w1", "type": "window", "offset": 4.7, "width": 0.3 },
+        { "id": "win4", "wall": "w1", "type": "window", "offset": 6.2, "width": 0.3 },
+        { "id": "win5", "wall": "w2", "type": "window", "offset": 1.1, "width": 0.25 },
+        { "id": "win6", "wall": "w2", "type": "window", "offset": 2.4, "width": 0.25 },
+        { "id": "win7", "wall": "w2", "type": "window", "offset": 3.9, "width": 0.25 },
+        { "id": "d1", "wall": "w5", "type": "door", "offset": 1.8, "width": 0.85 },
+        { "id": "d2", "wall": "w6", "type": "door", "offset": 0.7, "width": 0.85 },
+        { "id": "d3", "wall": "w7", "type": "door", "offset": 1.0, "width": 0.85 },
+        { "id": "pass1", "wall": "w4", "type": "passage", "offset": 1.2, "width": 0.8 },
+        { "id": "d4", "wall": "w3", "type": "door", "offset": 5.8, "width": 0.85 }
+      ],
+      "rooms": [
+        { "id": "r1", "name": "Studio", "polygon": [[0, 0], [8.5, 0], [8.5, 2.85], [0, 2.85]] },
+        { "id": "r2", "name": "Hall", "polygon": [[0, 2.85], [4.0, 2.85], [4.0, 4.5], [0, 4.5]] },
+        { "id": "r3", "name": "Bathroom", "polygon": [[4.0, 2.85], [8.5, 2.85], [8.5, 4.5], [4.0, 4.5]] }
+      ]
+    }
+  ]
+}
+```
+
+Scale estimated from typical studio apartment proportions (no printed dimensions visible). Building ~8.5m × 4.5m based on standard 0.85m door reference. Curved opening on left wall likely represents passage to corridor. Window positions approximate from drawing.

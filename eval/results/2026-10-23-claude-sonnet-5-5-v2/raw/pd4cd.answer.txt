@@ -1,0 +1,90 @@
+```json
+{
+  "version": 1,
+  "name": "Two-storey house: ground floor with kitchen, WC, hall, living and dining room; upper floor with bathroom, two bedrooms and landing",
+  "units": "m",
+  "meta": {
+    "source": "image",
+    "scale_note": "The plan has no printed dimensions or room areas. I used the last-resort method: the hall door chord measures about 77 px and I took it as roughly 0.9 m, which gives about 85 px per metre. The house comes out at about 9.8 x 6.5 m. Confidence is low to medium, and the true scale could be off by 15-20%.",
+    "notes": "The drawing is hand-sketched, so coordinates are approximate. Both floors are the same size and are placed in one frame with the origin at each floor's outer top-left corner. The L1 elevation of 3.0 m is a guess. Some small windows on the right wall were left out as unclear. Door hinge sides are guessed. The kitchen, living room and dining room are open to each other and share edges. The ground-floor front door is in the top wall of the hall. No furniture is clearly drawn, so none was added."
+  },
+  "levels": [
+    {
+      "id": "L0",
+      "elevation": 0,
+      "walls": [
+        { "id": "a1", "from": [0, 0], "to": [9.8, 0], "kind": "exterior" },
+        { "id": "a2", "from": [9.8, 0], "to": [9.8, 6.5], "kind": "exterior" },
+        { "id": "a3", "from": [0, 6.5], "to": [9.8, 6.5], "kind": "exterior" },
+        { "id": "a4", "from": [0, 0], "to": [0, 6.5], "kind": "exterior" },
+        { "id": "a5", "from": [0.14, 2.27], "to": [1.2, 2.27], "kind": "interior" },
+        { "id": "a6", "from": [3.08, 2.27], "to": [9.8, 2.27], "kind": "interior" },
+        { "id": "a7", "from": [4.07, 0], "to": [4.07, 2.27], "kind": "interior" },
+        { "id": "a8", "from": [6.0, 0], "to": [6.0, 2.27], "kind": "interior" },
+        { "id": "a9", "from": [6.36, 2.27], "to": [6.36, 3.5], "kind": "interior" },
+        { "id": "a10", "from": [6.36, 5.1], "to": [6.36, 6.5], "kind": "interior" }
+      ],
+      "openings": [
+        { "id": "ad1", "wall": "a1", "type": "door", "offset": 6.99, "width": 0.9 },
+        { "id": "aw1", "wall": "a1", "type": "window", "offset": 1.35, "width": 1.55 },
+        { "id": "aw2", "wall": "a1", "type": "window", "offset": 4.81, "width": 0.5 },
+        { "id": "aw3", "wall": "a1", "type": "window", "offset": 8.26, "width": 0.6 },
+        { "id": "aw4", "wall": "a3", "type": "window", "offset": 1.1, "width": 1.2 },
+        { "id": "aw5", "wall": "a3", "type": "window", "offset": 4.0, "width": 1.7 },
+        { "id": "aw6", "wall": "a3", "type": "window", "offset": 7.4, "width": 1.3 },
+        { "id": "aw7", "wall": "a4", "type": "window", "offset": 0.6, "width": 1.25 },
+        { "id": "aw8", "wall": "a4", "type": "window", "offset": 3.7, "width": 1.2 },
+        { "id": "ad2", "wall": "a6", "type": "door", "offset": 1.63, "width": 0.8 },
+        { "id": "ad3", "wall": "a6", "type": "door", "offset": 4.06, "width": 0.9 }
+      ],
+      "rooms": [
+        { "id": "r1", "name": "Kitchen", "polygon": [[0, 0], [4.07, 0], [4.07, 2.27], [0, 2.27]] },
+        { "id": "r2", "name": "WC", "polygon": [[4.07, 0], [6.0, 0], [6.0, 2.27], [4.07, 2.27]] },
+        { "id": "r3", "name": "Hall", "polygon": [[6.0, 0], [9.8, 0], [9.8, 2.27], [6.0, 2.27]] },
+        { "id": "r4", "name": "Living room", "polygon": [[0, 2.27], [6.36, 2.27], [6.36, 6.5], [0, 6.5]] },
+        { "id": "r5", "name": "Dining room", "polygon": [[6.36, 2.27], [9.8, 2.27], [9.8, 6.5], [6.36, 6.5]] }
+      ],
+      "stairs": [
+        { "id": "s0", "from": [1.02, 5.96], "to": [1.02, 2.8], "width": 1.0, "steps": 14, "to_level": "L1" }
+      ]
+    },
+    {
+      "id": "L1",
+      "elevation": 3.0,
+      "walls": [
+        { "id": "b1", "from": [0, 0], "to": [9.8, 0], "kind": "exterior" },
+        { "id": "b2", "from": [9.8, 0], "to": [9.8, 6.5], "kind": "exterior" },
+        { "id": "b3", "from": [0, 6.5], "to": [9.8, 6.5], "kind": "exterior" },
+        { "id": "b4", "from": [0, 0], "to": [0, 6.5], "kind": "exterior" },
+        { "id": "b5", "from": [0.17, 2.27], "to": [9.8, 2.27], "kind": "interior" },
+        { "id": "b6", "from": [1.87, 0], "to": [1.87, 2.27], "kind": "interior" },
+        { "id": "b7", "from": [3.64, 2.27], "to": [3.64, 6.5], "kind": "interior" }
+      ],
+      "openings": [
+        { "id": "bw1", "wall": "b1", "type": "window", "offset": 3.14, "width": 1.4 },
+        { "id": "bw2", "wall": "b1", "type": "window", "offset": 7.06, "width": 1.4 },
+        { "id": "bw3", "wall": "b3", "type": "window", "offset": 1.6, "width": 0.6 },
+        { "id": "bw4", "wall": "b3", "type": "window", "offset": 4.5, "width": 1.25 },
+        { "id": "bw5", "wall": "b3", "type": "window", "offset": 7.5, "width": 1.3 },
+        { "id": "bw6", "wall": "b4", "type": "window", "offset": 0.9, "width": 0.6 },
+        { "id": "bd1", "wall": "b5", "type": "door", "offset": 0.47, "width": 0.82 },
+        { "id": "bd2", "wall": "b5", "type": "door", "offset": 2.23, "width": 0.88 },
+        { "id": "bd3", "wall": "b7", "type": "door", "offset": 1.08, "width": 0.87 }
+      ],
+      "rooms": [
+        { "id": "u1", "name": "Bathroom", "polygon": [[0, 0], [1.87, 0], [1.87, 2.27], [0, 2.27]] },
+        { "id": "u2", "name": "Bedroom 1", "polygon": [[1.87, 0], [9.8, 0], [9.8, 2.27], [1.87, 2.27]] },
+        { "id": "u3", "name": "Landing", "polygon": [[0, 2.27], [3.64, 2.27], [3.64, 6.5], [0, 6.5]] },
+        { "id": "u4", "name": "Bedroom 2", "polygon": [[3.64, 2.27], [9.8, 2.27], [9.8, 6.5], [3.64, 6.5]] }
+      ],
+      "stairs": [
+        { "id": "s1", "from": [1.02, 2.8], "to": [1.02, 5.96], "width": 1.0, "steps": 14, "to_level": "L0" }
+      ]
+    }
+  ]
+}
+```
+
+- Scale: there are no printed dimensions or areas, so I used the standard door width (hall door about 0.9 m). Confidence is low.
+- Unsure: the L1 elevation (3.0 m), the step count, and the door hinge sides are guesses. I left out the small right-wall windows because they were unclear.
+- Furniture: none is clearly drawn, so I added none.

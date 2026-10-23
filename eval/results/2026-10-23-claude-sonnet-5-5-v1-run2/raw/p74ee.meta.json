@@ -1,0 +1,32 @@
+{
+  "code": "p74ee",
+  "model": "claude-sonnet-5-5",
+  "status": "ok",
+  "finishedAt": "2026-10-23 23:05:09",
+  "ms": 31788,
+  "answerChars": 4094,
+  "bare": false,
+  "fenceBlocks": 1,
+  "charsBeforeBlock": 0,
+  "charsAfterBlock": 326,
+  "extractOk": true,
+  "repairs": [
+    "took the code block"
+  ],
+  "planFile": "readings/p74ee.plan.json",
+  "call": {
+    "turns": 2,
+    "costUsdList": 0.0502418,
+    "inputTokens": 4,
+    "outputTokens": 4275,
+    "subtype": "success"
+  },
+  "attempts": [
+    {
+      "n": 1,
+      "at": "2026-10-23 23:05:09",
+      "ms": 31788,
+      "ok": true
+    }
+  ]
+}
