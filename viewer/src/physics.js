@@ -159,7 +159,51 @@ export function stepPlayer(world, p, input = {}, dt = 1 / 60) {
   return p;
 }
 
-// Where Walk mode starts: the room with an exterior door, else the largest room (lowest level first).
+// How far a ray from (x, y) along the unit vector (dx, dy) travels before it meets a collider of the level, at most max (slab test
+// against each oriented rectangle). A start inside a collider gives 0.
+export function freeDistance(level, x, y, dx, dy, max = 40) {
+  let best = max;
+  for (const c of level.colliders) {
+    const ox = x - c.cx, oy = y - c.cy;
+    const lo = [ox * c.ux + oy * c.uy, -ox * c.uy + oy * c.ux], ld = [dx * c.ux + dy * c.uy, -dx * c.uy + dy * c.ux], half = [c.hx, c.hy];
+    let t0 = 0, t1 = best;
+    for (let k = 0; k < 2 && t0 <= t1; k++) {
+      if (Math.abs(ld[k]) < 1e-12) { if (Math.abs(lo[k]) > half[k]) t0 = Infinity; continue; }
+      const a = (-half[k] - lo[k]) / ld[k], b = (half[k] - lo[k]) / ld[k];
+      t0 = Math.max(t0, Math.min(a, b));
+      t1 = Math.min(t1, Math.max(a, b));
+    }
+    if (t0 <= t1 && t0 < best) best = t0;
+  }
+  return best;
+}
+
+const VIEW_RAYS = 72; // 5 degree steps: the work stays at 72 rays whatever the plan
+const VIEW_TIE = 0.05; // metres: views this close to the longest one count as equal
+
+// The yaw (degrees) with the longest free view from a point. A direction counts with the shorter of its own ray and its two
+// neighbours, so a slit between two obstacles does not win; rays that leave the model bounds stop at the edge, so an open door does
+// not make the street the longest view. Among equal views the one closest to preferDeg wins, so the answer is deterministic.
+export function longestView(level, x, y, bounds, preferDeg = 0) {
+  const dir = Array.from({ length: VIEW_RAYS }, (_, i) => [Math.cos((i / VIEW_RAYS) * Math.PI * 2), Math.sin((i / VIEW_RAYS) * Math.PI * 2)]);
+  const dist = dir.map(([dx, dy]) => {
+    let cap = 40;
+    if (bounds && x >= bounds.minX && x <= bounds.maxX && y >= bounds.minY && y <= bounds.maxY) {
+      if (Math.abs(dx) > 1e-9) cap = Math.min(cap, ((dx > 0 ? bounds.maxX : bounds.minX) - x) / dx);
+      if (Math.abs(dy) > 1e-9) cap = Math.min(cap, ((dy > 0 ? bounds.maxY : bounds.minY) - y) / dy);
+    }
+    return freeDistance(level, x, y, dx, dy, Math.max(0, cap));
+  });
+  const score = dist.map((d, i) => Math.min(dist[(i + VIEW_RAYS - 1) % VIEW_RAYS], d, dist[(i + 1) % VIEW_RAYS]));
+  const top = Math.max(...score);
+  const turn = (i) => Math.abs(((((i * 360) / VIEW_RAYS - preferDeg) % 360) + 540) % 360 - 180);
+  let pick = -1;
+  for (let i = 0; i < VIEW_RAYS; i++) if (score[i] >= top - VIEW_TIE && (pick < 0 || turn(i) < turn(pick))) pick = i;
+  const yaw = (pick * 360) / VIEW_RAYS;
+  return yaw > 180 ? yaw - 360 : yaw;
+}
+
+// Where Walk mode starts: the room with an exterior door, else the largest room (lowest level first), looking along its longest free view.
 export function defaultSpawn(model) {
   let found = null;
   for (const lv of model.levels) {
@@ -212,5 +256,5 @@ export function defaultSpawn(model) {
   const lookAt = found.door ?? [(b.minX + b.maxX) / 2, (b.minY + b.maxY) / 2];
   let yaw = Math.atan2(sy - lookAt[1], sx - lookAt[0]);
   if (Math.hypot(sx - lookAt[0], sy - lookAt[1]) < 0.05) yaw = 0;
-  return { level: found.level, roomId: found.room.id, x: sx, y: sy, yawDeg: (yaw * 180) / Math.PI };
+  return { level: found.level, roomId: found.room.id, x: sx, y: sy, yawDeg: longestView(lv, sx, sy, b, (yaw * 180) / Math.PI) };
 }
