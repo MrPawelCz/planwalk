@@ -84,10 +84,10 @@ Measured on the two examples (exported from the built viewer in headless Chrome)
 
 | File | Look | Size |
 | --- | --- | --- |
-| `duplex-1` (two levels, 115 m2) | clay | 120 KB |
+| `duplex-1` (two levels, 103 m2) | clay | 120 KB |
 | `duplex-1` | textured, colour maps only (default) | 1.2 MB |
 | `duplex-1` | textured with normal maps (`normalMaps: true`) | 1.8 MB before the soft shapes, not measured since |
-| `flat-1` (one level, 48 m2) | textured, colour maps only | 812 KB |
+| `flat-1` (one level, 42 m2) | textured, colour maps only | 812 KB |
 
 Before the soft shapes were added, the default exports passed the Khronos glTF validator with no errors and no warnings (only "unused object" notes for uv on untextured parts); the exports with the soft shapes have not been run through it yet. With normal maps the validator reports no errors but warns, once per mesh, that a tangent space is generated at runtime: glTF viewers compute it themselves, and results can differ slightly between them.
 

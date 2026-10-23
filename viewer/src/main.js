@@ -9,6 +9,8 @@ import { buildModel, roomAt, modelExtent, CUT_HEIGHT, PLAYER } from './geometry.
 import { PlanScene, Stage } from './scene.js';
 import { LOOKS, setTextureAnisotropy, withoutNormalMaps } from './materials.js';
 import { createWorld, createPlayer, teleport, stepPlayer, defaultSpawn } from './physics.js';
+import { createAbout, ABOUT_CSS } from './about.js';
+import { version as PW_VERSION } from '../../package.json'; // the one place the version lives; esbuild inlines just this field
 
 // All user-facing strings live here so a translation is one object.
 const T = {
@@ -107,7 +109,7 @@ function b64urlDecode(s) {
 
 function start() {
   const style = h('style', { 'data-pw': '1' });
-  style.textContent = CSS;
+  style.textContent = CSS + ABOUT_CSS;
   document.head.append(style);
 
   // ---------- DOM ----------
@@ -135,8 +137,9 @@ function start() {
   const texBox = h('input', { type: 'checkbox', onchange: (e) => api.setMaterials(e.target.checked ? 'textured' : 'clay') });
   const sampleSel = h('select', { title: T.examples, onchange: (e) => { if (e.target.value) api.load(samples[e.target.value]); e.target.value = ''; } });
   const nameEl = h('span', { class: 'pw-name' });
+  const about = createAbout(h, () => ({ plan, model, warnings: issues.warnings.length, version: PW_VERSION }));
   const bar = h('div', { class: 'pw-bar' },
-    h('span', { class: 'pw-brand' }, 'planwalk'), nameEl,
+    h('span', { class: 'pw-brand' }, 'planwalk'), nameEl, about.badge,
     h('div', { class: 'pw-seg' }, MODES.map((m) => modeBtns[m])),
     levelSel,
     h('label', {}, T.explode, explodeIn),
@@ -149,6 +152,7 @@ function start() {
     h('button', { type: 'button', onclick: () => api.exportGLB().then((buf) => download(new Blob([buf], { type: 'model/gltf-binary' }), `${slug()}.glb`)) }, T.exportGlb),
     h('button', { type: 'button', onclick: () => fetch(api.screenshot()).then((r) => r.blob()).then((b) => download(b, `${slug()}.png`)) }, T.exportPng),
     h('button', { type: 'button', title: T.standaloneTip, onclick: () => download(new Blob([standaloneHtml()], { type: 'text/html' }), `${slug()}.html`) }, T.standalone),
+    about.button,
     h('button', { type: 'button', onclick: () => openDialog(helpDlg) }, T.help));
   const card = h('div', { class: 'pw-card' }, h('p', { id: 'pw-card-text' }, T.empty), h('div', { id: 'pw-card-samples' }));
   const issuesEl = h('div', { class: 'pw-issues', hidden: '' });
@@ -164,7 +168,7 @@ function start() {
   const helpDlg = h('dialog', { class: 'pw-dlg' }, h('h2', {}, T.helpTitle),
     h('ol', {}, [T.help1, T.help2, T.help3, T.help4, T.help5].map((t) => h('li', {}, t))),
     h('form', { method: 'dialog' }, h('button', { type: 'submit' }, T.close)));
-  root.append(bar, card, issuesEl, hint, mini, pasteDlg, helpDlg);
+  root.append(bar, card, issuesEl, hint, mini, pasteDlg, helpDlg, about.dialog);
   card.append(notes.openFileButton(openPicked));
 
   // ---------- three.js ----------
@@ -254,6 +258,7 @@ function start() {
     mini.hidden = !walking || !model;
     card.hidden = !!model;
     nameEl.textContent = plan?.name || '';
+    about.update();
     issuesEl.hidden = !(issues.errors.length || issues.warnings.length);
   }
 
@@ -587,7 +592,7 @@ function start() {
   }
 
   const api = {
-    version: '0.1.0',
+    version: PW_VERSION,
     manualClock: false,
     load,
     setMode,

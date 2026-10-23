@@ -5,6 +5,7 @@ import { mat, floorMat, floorName, texScale } from './materials.js';
 import { buildFurniture, SCENE_MESHES } from './furniture.js';
 import { levelOffsets, modelExtent } from './geometry.js';
 import { boxGeometry, setBoxUV } from './uv.js';
+import { roomArea, formatArea } from './areas.js';
 
 const UNIT_BOX = new THREE.BoxGeometry(1, 1, 1);
 const TURNED = new Set(['leaf', 'stair']); // wood that runs across its box: a door grain is vertical, tread boards cross the stair
@@ -190,7 +191,9 @@ export class PlanScene {
       if (r.polygon.length < 3) continue;
       const rg = new THREE.Group();
       rg.name = `room:${r.id}`;
-      rg.userData.area = r.area;
+      const shown = roomArea(r, lv.walls);
+      rg.userData.area = shown.m2;
+      if (shown.estimated) rg.userData.areaEstimated = true;
       if (r.floor !== 'none') {
         const fname = floorName(r.floor);
         const floor = new THREE.Mesh(flatGeometry(r.polygon, r.floorHoles, 0, true, texScale(fname)), floorMat(r.floor));
@@ -217,7 +220,7 @@ export class PlanScene {
       g.add(rg);
       const xs = r.polygon.map((p) => p[0]), ys = r.polygon.map((p) => p[1]);
       const short = Math.min(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys));
-      const label = makeLabel(r.name || r.id, `${r.area.toFixed(1)} m²`, clamp(short * 0.75, 1.1, 2.4));
+      const label = makeLabel(r.name || r.id, formatArea(shown.m2, shown.estimated), clamp(short * 0.75, 1.1, 2.4));
       label.name = `label:${r.id}`;
       label.position.set(r.label[0], 0.9, r.label[1]);
       g.add(label);

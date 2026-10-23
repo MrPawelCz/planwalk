@@ -5,6 +5,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { drawPlanSvg, STYLES } from '../../eval/draw.mjs';
 import { generatePlan, FAMILIES } from '../../eval/gen/gen-plans.mjs';
+import { polygonArea } from '../../src/core/geom2d.js';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const load = (p) => JSON.parse(readFileSync(new URL(`../../${p}`, import.meta.url), 'utf8'));
@@ -20,7 +21,7 @@ test('the cad drawing has walls, one door arc per door, a triple line per window
   assert.ok(count(svg, /<polygon /g) >= l.walls.length, 'every wall is drawn');
   for (const r of l.rooms) {
     assert.ok(svg.includes(`>${r.name}</text>`), `label ${r.name}`);
-    assert.ok(svg.includes(`>${r.area.toFixed(1)} m²</text>`), `area of ${r.name}`);
+    assert.ok(svg.includes(`>${Math.abs(polygonArea(r.polygon)).toFixed(1)} m²</text>`), `area of ${r.name}`); // the drawing prints the polygon area
   }
   assert.equal(count(svg, /\d m<\/text>/g), 1, 'exactly one dimension text');
   assert.ok(!svg.includes(plan.name), 'the drawing does not print the plan name');
