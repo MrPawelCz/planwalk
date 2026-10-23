@@ -11,9 +11,10 @@ import { STRINGS as LANG } from '../../viewer/src/lang-switch.js';
 import { STRINGS as ABOUT } from '../../viewer/src/about.js';
 import { STRINGS as COMPACT } from '../../viewer/src/compact.js';
 import { STRINGS as SHARE } from '../../viewer/src/share.js';
+import { STRINGS as LOADED } from '../../viewer/src/loaded-note.js';
 import { DASHES, KEEP, englishLeft } from './pl-deny.mjs';
 
-const TABLES = { 'strings.js': MAIN, 'help.js': HELP, 'first-visit.js': VISIT, 'load-errors.js': ERRORS, 'lang-switch.js': LANG, 'about.js': ABOUT, 'compact.js': COMPACT, 'share.js': SHARE };
+const TABLES = { 'strings.js': MAIN, 'help.js': HELP, 'first-visit.js': VISIT, 'load-errors.js': ERRORS, 'lang-switch.js': LANG, 'about.js': ABOUT, 'compact.js': COMPACT, 'share.js': SHARE, 'loaded-note.js': LOADED };
 const slots = (s) => [...new Set(s.match(/\{\w+\}/g) || [])].sort(); // a plural list repeats {n} in every form
 // Polish text that may equal the English text: a word that is the same in both languages, a tool name, a number or a symbol only.
 const SAME_WORDS = ['Plan', 'Menu'];
@@ -46,7 +47,7 @@ for (const [file, table] of Object.entries(TABLES)) {
   });
 }
 
-// REVIEW-B: "Poproś AI, żeby wysłało" leaves the reader unsure about the gender of "AI"; the text says "czat" and the verb follows it.
+// "Poproś AI, żeby wysłało" leaves the reader unsure about the gender of "AI"; the text says "czat" and the verb follows it.
 test('Polish strings ask the chat, not "AI", to do something (no neuter verb after "AI, żeby")', () => {
   const found = [];
   for (const [file, table] of Object.entries(TABLES)) for (const [key, pl] of Object.entries(table.pl)) if (/\bAI,? żeby \p{L}+(ło|ła)\b/u.test(pl)) found.push(`${file} ${key}: ${pl}`);
