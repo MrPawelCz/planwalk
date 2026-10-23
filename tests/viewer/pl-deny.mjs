@@ -1,11 +1,11 @@
 // The deny list of the Polish audit (not a test itself): English words that must not be left in the text of a Polish page, and
 // the tool names that are fine in Polish text. Kept by hand: when the audit finds a new leftover, add its word here.
-// Words that are also Polish (to, on, do, by, as, most, model, plan, link, menu, start) are deliberately not in the list.
+// Words that are also Polish (to, on, do, by, as, we, most, model, plan, link, menu, start) are deliberately not in the list.
 export const KEEP = ['GLB', 'PNG', 'JSON', 'HTML', 'PDF', 'AI', 'WASD', 'Shift', 'Esc', 'WebGL', 'planwalk', 'prompt', 'Safari', 'Chrome', 'Firefox', 'Menu', 'CAD', 'URL', 'iPhone', 'PL', 'EN'];
 
 export const ENGLISH_WORDS = [
   // articles, pronouns, little words
-  'the', 'and', 'or', 'of', 'in', 'is', 'are', 'was', 'be', 'it', 'its', 'you', 'your', 'we', 'our', 'with', 'without', 'from', 'into',
+  'the', 'and', 'or', 'of', 'in', 'is', 'are', 'was', 'be', 'it', 'its', 'you', 'your', 'our', 'with', 'without', 'from', 'into',
   'here', 'there', 'please', 'this', 'that', 'these', 'those', 'not', 'cannot', 'could', 'should', 'would', 'will', 'has', 'have',
   'when', 'what', 'how', 'then', 'than', 'more', 'every', 'each', 'nothing', 'everything', 'whole', 'again', 'now', 'next',
   // verbs of the interface
