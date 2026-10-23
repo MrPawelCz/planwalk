@@ -72,9 +72,9 @@ test('the phone Menu holds the language switch in its title row: 44 px buttons, 
   const back = await read();
   assert.equal(back.lang, 'en');
   assert.ok(back.labels.includes('Copy link'));
-  // the Help dialog keeps its own switch (built when it opens), and the toolbar behind the Menu holds none
+  // one switch in the Menu's title row, none in the toolbar behind it (the Help dialog has its own)
   assert.equal(await p.evaluate(`document.querySelectorAll('.pw-bar .pw-lang').length`), 0);
-  assert.equal(await p.evaluate(`document.querySelectorAll('.pw-lang').length`), 1);
+  assert.equal(await p.evaluate(`document.querySelectorAll('.pw-sheet-head .pw-lang').length`), 1);
 }));
 
 test('the language switch is not in the desktop toolbar and the Polish start shows PL pressed in the Menu', { skip, timeout: 90000 }, async () => {
@@ -137,8 +137,7 @@ test('phone on its side: the Menu title row keeps the language switch and the cr
     const c = await p.evaluate(`(() => { const r = document.querySelector('.pw-visit').getBoundingClientRect(), b = document.querySelector('.pw-bar').getBoundingClientRect(); return { top: r.top, bottom: r.bottom, barBottom: b.bottom, vh: innerHeight, scroll: getComputedStyle(document.querySelector('.pw-visit')).overflowY }; })()`);
     assert.ok(c.top >= c.barBottom && c.bottom <= c.vh && c.scroll === 'auto', JSON.stringify(c));
     await shot(p, 'land-card-open.jpg');
-    await p.tap('.pw-visit-open').catch(() => {});
-    await loadPlan(p);
+    await loadPlan(p); // a loaded plan puts the card away
     // Walk on the short screen: the hint sits low in the middle, the minimap under the bar at the right, no overlap
     await p.evaluate(`window.planwalk.setMode('walk'); window.planwalk.advanceTime(100)`);
     const w = await p.evaluate(`(() => { const r = (s) => { const b = document.querySelector(s).getBoundingClientRect(); return { l: b.left, t: b.top, r: b.right, b: b.bottom }; }; return { hint: r('.pw-touchhint'), mini: r('.pw-mini'), bar: r('.pw-bar'), vw: innerWidth, vh: innerHeight }; })()`);
