@@ -99,7 +99,7 @@ const skip = (kind, id, path, why, reason = 'invalid') => ({ kind, id, path, why
 test('skippedMessage: the count in the banner, with the plural forms of each language', () => {
   const list = (n) => Array.from({ length: n }, (_, i) => skip('wall', `w${i}`, `levels[0].walls[${i}]`, 'x'));
   setLang('en');
-  assert.match(skippedMessage(list(1)), /^1 element skipped\. The rest of the plan is shown\. To get them back, press "Copy fix request"/);
+  assert.match(skippedMessage(list(1)), /^1 element skipped\. The rest of the plan is shown\. Press "Copy fix request" and paste it into the AI chat/);
   assert.match(skippedMessage(list(2)), /^2 elements skipped\. The rest of the plan is shown\./);
   assert.match(skippedMessage(list(12)), /^12 elements skipped\./);
   setLang('pl');
@@ -111,7 +111,7 @@ test('skippedMessage: the count in the banner, with the plural forms of each lan
   assert.equal(pl(12), 'Pominięto 12 elementów');
   assert.equal(pl(22), 'Pominięto 22 elementy');
   assert.equal(pl(25), 'Pominięto 25 elementów');
-  assert.match(skippedMessage(list(3)), /reszta planu jest widoczna\. Żeby je odzyskać, kliknij „Kopiuj prośbę o poprawkę”/);
+  assert.match(skippedMessage(list(3)), /reszta planu jest widoczna\. Kliknij „Kopiuj prośbę o poprawkę” i wklej ją do czatu z AI/);
   setLang('en');
 });
 

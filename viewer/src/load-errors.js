@@ -7,7 +7,7 @@ import { MAX_PLAN_CHARS } from '../../src/core/limits.js';
 export const strings = {
   en: {
     skipped: '{n} element skipped. The rest of the plan is shown.|{n} elements skipped. The rest of the plan is shown.',
-    skippedHelp: 'To get them back, press "Copy fix request" and paste it into the AI chat.',
+    skippedHelp: 'Press "Copy fix request" and paste it into the AI chat to get the plan corrected.',
     skippedWall: 'its wall was skipped',
     skippedMore: 'and {n} more',
     kindWall: 'wall',
@@ -43,7 +43,7 @@ export const strings = {
   },
   pl: {
     skipped: 'Pominięto {n} element, reszta planu jest widoczna.|Pominięto {n} elementy, reszta planu jest widoczna.|Pominięto {n} elementów, reszta planu jest widoczna.',
-    skippedHelp: 'Żeby je odzyskać, kliknij „Kopiuj prośbę o poprawkę” i wklej ją do czatu z AI.',
+    skippedHelp: 'Kliknij „Kopiuj prośbę o poprawkę” i wklej ją do czatu z AI, żeby poprawił plan.',
     skippedWall: 'jego ściana została pominięta',
     skippedMore: 'i jeszcze {n}',
     kindWall: 'ściana',
