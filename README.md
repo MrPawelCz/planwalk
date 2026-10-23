@@ -10,7 +10,7 @@
 
 <p align="center"><a href="https://mrpawelcz.github.io/planwalk/">Open the viewer</a> · <a href="docs/PROMPT.md">Use it in a chat</a> · <a href="skill/planwalk/SKILL.md">Agent skill</a> · <a href="docs/SPEC.md">Format</a></p>
 
-<p align="center">Po polsku: <a href="README.pl.md">README.pl.md</a></p>
+<p align="center">Po polsku: <a href="https://mrpawelcz.github.io/planwalk/pl/">strona z aplikacją</a> · <a href="README.pl.md">README.pl.md</a></p>
 
 ---
 

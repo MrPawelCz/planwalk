@@ -105,6 +105,25 @@ test('running the tool twice gives identical bytes; it refuses wrong input inste
   assert.match(r.stderr, /canonical/);
 });
 
+test('docs/social-preview-pl.jpg is a 1200x630 JPEG under 150 KB that Pages publishes under the og:image name, with the headline the alt text names', () => {
+  const buf = readFileSync(join(root, 'docs/social-preview-pl.jpg'));
+  assert.ok(buf.length < 150000, `${buf.length} bytes`);
+  assert.deepEqual([...buf.subarray(0, 3)], [0xff, 0xd8, 0xff]);
+  let size = null;
+  for (let i = 2; i + 9 < buf.length && !size;) {
+    assert.equal(buf[i], 0xff, `marker at ${i}`);
+    const marker = buf[i + 1], len = buf.readUInt16BE(i + 2);
+    if (marker >= 0xc0 && marker <= 0xcf && ![0xc4, 0xc8, 0xcc].includes(marker)) size = { h: buf.readUInt16BE(i + 5), w: buf.readUInt16BE(i + 7) };
+    i += 2 + len;
+  }
+  assert.deepEqual(size, { w: 1200, h: 630 });
+  const m = metas(headOf(pl)), name = new URL(m['og:image']).pathname.split('/').pop();
+  assert.equal(name, 'social-preview-pl.jpg');
+  assert.match(readFileSync(join(root, '.github/workflows/pages.yml'), 'utf8'), new RegExp(`cp docs/${name.replace('.', '\\.')} site/${name.replace('.', '\\.')}\\b`));
+  const line = /pl: \{ file: 'social-preview-pl\.jpg', line: '([^']+)'/.exec(readFileSync(join(root, 'tools/make-social-preview.mjs'), 'utf8'))[1];
+  assert.ok(m['og:image:alt'].toLowerCase().endsWith(line.toLowerCase()), 'the alt text ends with the headline printed on the image');
+});
+
 test('detectLang: ?lang= wins, then the page default tag, then the browser language', () => {
   const doc = (lang) => ({ querySelector: (sel) => (sel === 'meta[name="planwalk-default-lang"]' ? { getAttribute: () => lang } : null) });
   assert.equal(detectLang('', { language: 'en-GB' }, doc('pl')), 'pl');
