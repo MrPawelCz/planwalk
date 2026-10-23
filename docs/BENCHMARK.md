@@ -91,6 +91,40 @@ Prompt versions: v1 is the text of `PROMPT.md` in release 0.1.0. v2 is a rewrite
 
 "Plans read" is pictures with an answer out of 12. "Bare JSON" is answers that were strict JSON and nothing else; the prompt asks for a code block, so 0 is what it asks for, and the notes say whether the JSON inside needed any change. "Loads" is plans with no validator error. Run folders (`eval/results/<date>-<model>-<prompt>/`) hold the prompt as sent (`prompt.txt`), the answers as received (`raw/`), the extracted plans, `readings*.sha256` and `FROZEN*.txt` (written before `key.json` and `truth/` were opened), the scores and the validator counts.
 
+**Loads in the viewer.** The "Loads" column above counts plans with no validator error under the strict rule: a property that the schema does not know (for example a `furniture` list inside a room) is an error. That is what a perfect answer achieves, and it is the rule that `eval/score.mjs` uses for the 10 "valid" points, so no composite score in this document has changed. The viewer is more forgiving, and what a person meets is whether a model appears on the screen. The table below counts that. "Loads in the viewer" is the plans for which the viewer shows a model. They split into four kinds:
+
+- Clean: a model, no errors, no warnings.
+- Warnings only: a model and warnings, no errors. This includes a property that the schema does not know: it is now warning W116 and is left out of the model.
+- Errors listed: a model with the errors listed next to it. The geometry could still be built, for example with two windows that overlap (E006) or a root `name` of more than 120 characters (E002).
+- Partial: some elements fail the schema (an opening of width 0, stairs without `steps`), so no whole plan can be built. The viewer builds the model from the rest and shows a banner that lists the skipped elements, which are counted in the last column. Before the validator change named below, such a plan was not shown at all.
+
+| Model, prompt | Run folder | Plans read | Loads (strict) | Loads in the viewer | Clean | Warnings only | Errors listed | Partial | Skipped elements |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| Claude Sonnet 5.5, v1 (agent session, runs A and B, 21.10) | `2026-10-21-claude-sonnet-5-5` | 12 | 12/12 | 12/12 | 12 | 0 | 0 | 0 | 0 |
+| Claude Sonnet 5.5, v1, run 1 | `2026-10-23-claude-sonnet-5-5-v1-run1` | 12 | 11/12 | 12/12 | 9 | 2 | 1 | 0 | 0 |
+| Claude Sonnet 5.5, v1, run 2 | `2026-10-23-claude-sonnet-5-5-v1-run2` | 12 | 12/12 | 12/12 | 10 | 2 | 0 | 0 | 0 |
+| OpenAI gpt-6-astra, v1 | `2026-10-23-gpt-6-astra-v1` | 12 | 11/12 | 12/12 | 10 | 1 | 0 | 1 | 2 (stair 2) |
+| Claude Haiku 4.5, v1 | `2026-10-23-claude-haiku-4-5-v1` | 12 | 4/12 | 12/12 | 0 | 4 | 6 | 2 | 4 (stair 4) |
+| Claude Sonnet 5.5, v2 | `2026-10-23-claude-sonnet-5-5-v2` | 12 | 10/12 | 12/12 | 9 | 1 | 2 | 0 | 0 |
+| OpenAI gpt-6-astra, v3 | `2026-10-23-gpt-6-astra-v3` | 12 | 12/12 | 12/12 | 11 | 1 | 0 | 0 | 0 |
+| Claude Sonnet 5.5, v3 | `2026-10-23-claude-sonnet-5-5-v3` | 12 | 9/12 | 12/12 | 7 | 3 | 1 | 1 | 1 (opening 1) |
+| Claude Sonnet 5.5, v4 | `2026-10-23-claude-sonnet-5-5-v4` | 12 | 11/12 | 12/12 | 9 | 2 | 1 | 0 | 0 |
+| OpenAI gpt-6-astra, v4 (7 plans read) | `2026-10-23-gpt-6-astra-v4` | 7 | 7/7 | 7/7 | 6 | 1 | 0 | 0 | 0 |
+
+The rows where the two columns differ, and why:
+
+- Claude Sonnet 5.5, v3 (9/12 strict, 12/12 in the viewer): p6530 had four unknown property errors (a `furniture` list inside four rooms); they are now four W116 warnings and the model shows with no error. p6b7c had an opening of width 0 (E002): the plan now shows as a partial model with that one opening (p9) skipped. pc9c8 (two overlapping windows, E006) shows with the error listed.
+- Claude Haiku 4.5 (4/12 against 12/12): six plans have E006 and show with the errors listed. Both duplexes (p6b7c, pd4cd) have stairs without `steps` and show as partial models without their stairs (4 stairs skipped).
+- OpenAI gpt-6-astra, v1 (11/12 against 12/12): p6b7c has stairs without `steps` and shows as a partial model without its 2 stairs.
+- Claude Sonnet 5.5, v1 run 1 (p6b7c), v2 (p6b7c, pd4cd) and v4 (p74ee): the plans with an error that leaves the geometry buildable show with the error listed.
+- The other rows (the agent session, v1 run 2, gpt-6-astra v3 and v4) are the same in both columns.
+
+A model on the screen is not a right model. In every row the viewer shows a model for every plan that was read, so this column cannot tell a good answer from a bad one; the composite score and the strict column can. What it adds is what a person meets: for an answer with a problem they get a model and a list of what is wrong, not an empty screen.
+
+**Scores are unchanged.** `eval/score.mjs` calls the validator with `{ strict: true }`, which keeps the rule under which every stored score was made. Each stored run folder was scored again with the current code: the 10 folders hold 20 score files (`scores.md` and `scores-sketch-zoom.md`) and all 20 came out identical to the stored files, to the byte. Without the flag one stored plan score would have moved: Claude Sonnet 5.5, v3, p6530, from 85.5 to 95.5, because its four stray properties would be warnings and the 10 validity points would be given.
+
+**Validator used for the counts above:** planwalk 0.1.0 (`package.json`) at commit `ece25d4`, the commit that adds the `strict` option, warning W116 and partial plans to `src/core/validate.js`. To reproduce: `node eval/loads.mjs` prints these counts for every folder in `eval/results/` (add `--json` for the detail of each plan, or give one run folder to count that run only). `node --test tests/eval/loads.test.mjs` checks that the strict counts equal the "Loads" column, that this table equals the output of the script, and that the stored score files are reproduced by the current scorer.
+
 Limits of these rows:
 
 - 12 plans and one run per row (two for Sonnet 5.5 with prompt v1, to show how far two runs of the same model differ: 2.9 points in the mean and 25 points on one plan). Differences of a few points between rows are not evidence of a better model; only the v3 row of Sonnet 5.5 (7 to 10 points lower, with three named causes) is outside that spread.
@@ -122,6 +156,7 @@ node eval/make-benchmark.mjs --seed 501 --count 4 --styles sketch --zoom 0.7,1.4
 node eval/report.mjs eval/out/bench-401 eval/results/2026-10-21-claude-sonnet-5-5/readings
 node eval/report.mjs eval/out/bench-501 eval/results/2026-10-21-claude-sonnet-5-5/readings-sketch-zoom
 node eval/score.mjs <truth.json> <reading.json>                                             # one plan, readable output
+node eval/loads.mjs                                                                         # strict and viewer load counts of every folder in eval/results/
 ```
 
 PNG rendering needs Chrome or Chromium; SVG output does not, and `--no-png` skips the PNGs (enough to regenerate the truth and the keys). The generator, drawings and scores are deterministic for a given seed; PNG pixels can differ between Chrome versions and platforms (the sketch style names handwriting fonts that ship with macOS, so the pictures look different elsewhere). `eval/out/` is git-ignored.

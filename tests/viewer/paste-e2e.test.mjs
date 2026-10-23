@@ -57,9 +57,7 @@ test('every chat style pasted into the page shows the model; a paste without a p
     assert.deepEqual(await counts(page), flat, 'a plan with errors does not replace the model either');
     await page.evaluate('document.querySelector(".pw-banner-x").click()');
     const broken = JSON.parse(JSON.stringify(plan));
-    delete broken.levels[0].walls[0].to;
-    delete broken.levels[0].walls[1].to;
-    delete broken.levels[0].walls[2].to;
+    for (const wall of broken.levels[0].walls) delete wall.to; // nothing usable is left (a plan with only some bad elements opens, see partial-e2e)
     await paste(page, JSON.stringify(broken));
     assert.equal(await page.evaluate('document.querySelectorAll(".pw-banner-detail div").length'), 2, 'only the first two errors are shown');
     assert.match(await banner(page), /E002 levels\[0\]\.walls\[0\]/);

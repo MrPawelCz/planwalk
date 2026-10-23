@@ -2,9 +2,9 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
-import { validatePlan } from '../../src/core/validate.js';
+import { analyzePlan, validatePlan, modelOf } from '../../src/core/validate.js';
 import { extractJson } from '../../src/core/extract-json.js';
-import { createNotices, fetchPlanText, readPlanFile, reportCrash, loadMessage, downloadMessage, issueLines, severalPlansMessage, noWebglText } from './load-errors.js';
+import { createNotices, fetchPlanText, readPlanFile, reportCrash, loadMessage, downloadMessage, issueLines, severalPlansMessage, skippedMessage, skippedLines, noWebglText } from './load-errors.js';
 import { buildModel, roomAt, modelExtent, CUT_HEIGHT, PLAYER } from './geometry.js';
 import { PlanScene, Stage } from './scene.js';
 import { LOOKS, setTextureAnisotropy, withoutNormalMaps } from './materials.js';
@@ -406,22 +406,25 @@ function start() {
       }
       obj = found.value; repairs = found.repairs;
     }
-    const res = validatePlan(obj);
-    if (!res.normalized && model) {
-      const failed = { errors: res.errors, warnings: res.warnings };
-      notes.show(() => loadMessage('unusable'), notes.copyFixAction(() => fixRequest(obj && typeof obj === 'object' ? obj : null, typeof input === 'string' ? input : '', failed)), issueLines(res.errors));
-      return { ok: res.ok, errors: res.errors, warnings: res.warnings, repairs };
+    const res = analyzePlan(obj);
+    const built = modelOf(res); // the whole plan, or what is left of it when elements with errors were skipped (res.partial)
+    const failed = { errors: res.errors, warnings: res.warnings };
+    const fixAction = () => notes.copyFixAction(() => fixRequest(obj && typeof obj === 'object' ? obj : null, typeof input === 'string' ? input : '', failed));
+    if (!built && model) {
+      notes.show(() => loadMessage('unusable'), fixAction(), issueLines(res.errors));
+      return { ok: res.ok, partial: false, errors: res.errors, warnings: res.warnings, repairs, skipped: res.skipped };
     }
     notes.hide();
     const several = severalPlansMessage(repairs);
     if (several && res.normalized) notes.show(() => severalPlansMessage(repairs)); // never claim a load that did not happen
+    if (res.partial && res.skipped.length) notes.show(() => [skippedMessage(res.skipped), several && severalPlansMessage(repairs)].filter(Boolean).join(' '), fixAction(), () => skippedLines(res.skipped));
     visit.hide();
     rawText = typeof input === 'string' ? input : '';
     issues = { errors: res.errors, warnings: res.warnings };
     plan = obj && typeof obj === 'object' ? obj : null;
     clearModel();
-    if (res.normalized) {
-      model = buildModel(res.normalized);
+    if (built) {
+      model = buildModel(built);
       planScene = new PlanScene(model, materials);
       scene.add(planScene.group);
       world = createWorld(model);
@@ -438,12 +441,12 @@ function start() {
       frame();
       applyVisuals();
     }
-    cardKey = res.normalized ? '' : 'unusable';
+    cardKey = built ? '' : 'unusable';
     setCardText();
     renderIssues();
     syncUi();
     render();
-    return { ok: res.ok, errors: res.errors, warnings: res.warnings, repairs };
+    return { ok: res.ok, partial: res.partial, errors: res.errors, warnings: res.warnings, repairs, skipped: res.skipped };
   }
 
   // A shared link: '#plan=' (the plain form, read as before) or '#z=' (compressed). One that cannot be read says so in the banner and leaves

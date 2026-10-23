@@ -3,13 +3,15 @@ import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { MAX_PLAN_CHARS } from '../../src/core/limits.js';
 import { setLang } from '../../viewer/src/i18n.js';
-import { downloadMessage, fetchPlanText, issueLines, loadMessage, severalPlansMessage, strings } from '../../viewer/src/load-errors.js';
+import { downloadMessage, fetchPlanText, issueLines, loadMessage, severalPlansMessage, skippedLines, skippedMessage, strings } from '../../viewer/src/load-errors.js';
+
+const slots = (s) => [...new Set(s.match(/\{\w+\}/g) ?? [])].sort(); // plural forms repeat a slot, so a set
 
 test('every message exists in English and Polish, with the same placeholders and no long dashes', () => {
   assert.deepEqual(Object.keys(strings.pl).sort(), Object.keys(strings.en).sort());
   for (const key of Object.keys(strings.en)) {
     assert.ok(strings.en[key].length > 1 && strings.pl[key].length > 1, key);
-    assert.deepEqual(strings.pl[key].match(/\{\w+\}/g) ?? [], strings.en[key].match(/\{\w+\}/g) ?? [], key);
+    assert.deepEqual(slots(strings.pl[key]), slots(strings.en[key]), key);
     for (const lang of ['en', 'pl']) assert.ok(!/[\u2013\u2014]/.test(strings[lang][key]), `${lang}.${key} has a long dash`);
   }
 });
@@ -90,6 +92,63 @@ test('the invalid JSON message adds the decimal point hint only when the text ha
   assert.match(loadMessage('too-long'), /około 2 MB tekstu/);
   assert.doesNotMatch(loadMessage('invalid', undefined, other), /kropk/);
   setLang('en');
+});
+
+const skip = (kind, id, path, why, reason = 'invalid') => ({ kind, id, path, why, reason });
+
+test('skippedMessage: the count in the banner, with the plural forms of each language', () => {
+  const list = (n) => Array.from({ length: n }, (_, i) => skip('wall', `w${i}`, `levels[0].walls[${i}]`, 'x'));
+  setLang('en');
+  assert.match(skippedMessage(list(1)), /^1 element skipped\. The rest of the plan is shown\. Press "Copy fix request" and paste it into the AI chat/);
+  assert.match(skippedMessage(list(2)), /^2 elements skipped\. The rest of the plan is shown\./);
+  assert.match(skippedMessage(list(12)), /^12 elements skipped\./);
+  setLang('pl');
+  const pl = (n) => skippedMessage(list(n)).split(',')[0];
+  assert.equal(pl(1), 'Pominięto 1 element');
+  assert.equal(pl(2), 'Pominięto 2 elementy');
+  assert.equal(pl(4), 'Pominięto 4 elementy');
+  assert.equal(pl(5), 'Pominięto 5 elementów');
+  assert.equal(pl(12), 'Pominięto 12 elementów');
+  assert.equal(pl(22), 'Pominięto 22 elementy');
+  assert.equal(pl(25), 'Pominięto 25 elementów');
+  assert.match(skippedMessage(list(3)), /reszta planu jest widoczna\. Kliknij „Kopiuj prośbę o poprawkę” i wklej ją do czatu z AI/);
+  setLang('en');
+});
+
+test('skippedLines: what, which, where and why for the first ten, then how many more', () => {
+  const items = [
+    skip('opening', 'p9', 'levels[1].openings[8]', 'levels[1].openings[8].width is 0 but must be greater than 0'),
+    skip('opening', 'front', 'levels[0].openings[2]', 'its wall was skipped', 'wall-skipped'),
+    skip('wall', 'w3', 'levels[0].walls[2]', 'levels[0].walls[2].to must be a [x, y] pair of numbers but is the string "north"'),
+    skip('level', 'L2', 'levels[2]', 'levels[2].height is -3 but must be greater than 0'),
+    skip('furniture', undefined, 'levels[0].furniture[4]', 'it is not an object'),
+  ];
+  setLang('en');
+  assert.deepEqual(skippedLines(items), [
+    'opening "p9" (levels[1].openings[8]): width is 0 but must be greater than 0',
+    'opening "front" (levels[0].openings[2]): its wall was skipped',
+    'wall "w3" (levels[0].walls[2]): to must be a [x, y] pair of numbers but is the string "north"',
+    'level "L2" (levels[2]): height is -3 but must be greater than 0',
+    'furniture (levels[0].furniture[4]): it is not an object',
+  ]);
+  setLang('pl');
+  const pl = skippedLines(items);
+  assert.equal(pl[0], 'otwór "p9" (levels[1].openings[8]): width is 0 but must be greater than 0', 'the validator reason stays as written');
+  assert.equal(pl[1], 'otwór "front" (levels[0].openings[2]): jego ściana została pominięta');
+  assert.match(pl[2], /^ściana "w3"/);
+  assert.match(pl[3], /^piętro "L2"/);
+  assert.match(pl[4], /^mebel \(/);
+  setLang('en');
+  const many = Array.from({ length: 23 }, (_, i) => skip('room', `r${i}`, `levels[0].rooms[${i}]`, `levels[0].rooms[${i}] must be an object`));
+  const lines = skippedLines(many);
+  assert.equal(lines.length, 11);
+  assert.equal(lines[9], 'room "r9" (levels[0].rooms[9]): must be an object');
+  assert.equal(lines[10], 'and 13 more');
+  setLang('pl');
+  assert.equal(skippedLines(many)[10], 'i jeszcze 13');
+  setLang('en');
+  assert.equal(skippedLines(many, 3).length, 4);
+  assert.deepEqual(skippedLines([]), []);
 });
 
 test('severalPlansMessage speaks only when extractJson took the last of several plans', () => {

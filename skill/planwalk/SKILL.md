@@ -44,7 +44,7 @@ This folder holds the tools (`scripts/`) and the viewer (`assets/`). Below, `<sk
 
 - `reference/plan-format.md`: the JSON format with a worked example.
 - `reference/reading-plans.md`: how to read different drawing styles and photos.
-- `scripts/validate.mjs`: the validator, one file without dependencies. Exit code 0 ok, 1 errors, 2 usage; `--json`, `--strict` (also fails on warnings and on repairs).
+- `scripts/validate.mjs`: the validator, one file without dependencies. Exit code 0 ok, 1 errors, 2 usage; `--json`, `--strict` (also fails on warnings and on repairs, and makes a property the format does not know an error instead of the warning W116). A plan in which only some elements have errors exits 1 and the last line says how many elements the viewer would skip.
 - `scripts/capture.mjs`: renders the plan in headless Chrome: one PNG per view (`dollhouse`, `explode`, `top`, `walk`), `--glb FILE` for the 3D model (it carries the textures of the look in force), `--materials clay|textured` for plain colours or procedural textures (textured is the default), `--gif FILE` for a short clip (needs ffmpeg), `--start "x,y,levelId,yawDeg"` for where the walk view begins.
 - `scripts/embed.mjs`: writes the single-file viewer with the plan embedded (one file without dependencies, reads the plan as the validator does).
 - `assets/planwalk.html`: the viewer, one file with three.js inside, works offline.
