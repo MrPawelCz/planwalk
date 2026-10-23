@@ -107,7 +107,7 @@ When `window.planwalk.manualClock = true` the viewer must not advance by itself 
 
 GLB export: whole model (walls, floors, ceilings, stairs, furniture, doors, windows) as one scene with named nodes (`level:<id>`, `wall:<id>`, `room:<id>`, `opening:<id>`), metres, Y up, via three's GLTFExporter, material colours preserved. The textured look embeds its colour maps as JPEG (repeating samplers, metric `TEXCOORD_0`); normal maps stay out by default because they are large and compress badly (`normalMaps: true` adds them as PNG). The clay look embeds no images. The toolbar button exports the current look.
 
-## 7. Tools (Node >= 18, ESM, zero runtime dependencies)
+## 7. Tools (Node >= 20, ESM, zero runtime dependencies)
 
 - `tools/validate.mjs`: see section 5.
 - `tools/build.mjs`: esbuild (dev dependency) bundles `viewer/src/main.js` with three.js into `dist/planwalk.html` (all JS inlined, minified) and embeds `examples/*.plan.json` as samples. Also writes `dist/planwalk-empty.html` (no samples). The built files are committed.
@@ -142,7 +142,7 @@ tests/                         node:test suites (core, tools, viewer, eval, skil
 
 ## 10. Conventions
 
-- JavaScript ES modules, Node >= 18, no TypeScript, no transpilers except the esbuild bundling step. Python is not used by the product.
+- JavaScript ES modules, Node >= 20, no TypeScript, no transpilers except the esbuild bundling step. Python is not used by the product.
 - Runtime dependencies: none. Dev dependencies: `esbuild` (build only) and `three` (vendored into the bundle). Anything else needs a written reason and a permissive licence (MIT, Apache-2.0, BSD).
 - Tests with `npm test` (`tools/test.mjs` runs `node --test` over every file in `tests/`); viewer end to end tests need Chrome and skip with a clear message when it is missing.
 - Code comments in English, concise, no em dashes or en dashes anywhere in code or docs (use commas, colons, parentheses).

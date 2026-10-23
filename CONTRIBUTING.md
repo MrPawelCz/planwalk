@@ -14,7 +14,7 @@ npm run build:skill   # writes dist/ and the generated files in skill/planwalk/ 
 npm test              # node --test; fails when a generated skill file is stale (CI also checks dist/)
 ```
 
-Code is plain ES modules, Node 18 or newer. Keep comments short and in English. Do not add runtime dependencies; a dev dependency needs a reason and a permissive licence (MIT, Apache-2.0, BSD).
+Code is plain ES modules, Node 20 or newer (the full test suite and the capture tool need Node 22). Keep comments short and in English. Do not add runtime dependencies; a dev dependency needs a reason and a permissive licence (MIT, Apache-2.0, BSD).
 
 ## Pull requests
 

@@ -1,17 +1,17 @@
 // Helper for the browser tests (not a test itself): starts headless Chrome on dist/planwalk-empty.html and gives a small
 // DevTools Protocol handle. Tests that use it must run through tools/chrome-lock.sh when other browsers may be running.
-import { spawn, spawnSync } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { chrome, chromeSkip } from '../helpers/chrome.mjs';
 
 export const root = fileURLToPath(new URL('../../', import.meta.url));
 export const viewerFile = join(root, 'dist/planwalk-empty.html');
-export const chrome = ['/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', ...['google-chrome', 'chromium', 'chromium-browser'].map((c) => (spawnSync('which', [c]).status === 0 ? c : null))]
-  .filter(Boolean).find((c) => !c.includes('/') || existsSync(c));
-export const skip = !chrome ? 'Chrome or Chromium not found' : !existsSync(viewerFile) ? 'dist/planwalk-empty.html missing, run npm run build' : typeof WebSocket === 'undefined' ? 'Node 22 or newer is needed for the global WebSocket' : false;
+export { chrome };
+export const skip = chromeSkip || (!existsSync(viewerFile) ? 'dist/planwalk-empty.html missing, run npm run build' : false);
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const freePort = () => new Promise((res, rej) => {

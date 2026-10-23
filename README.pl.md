@@ -19,7 +19,7 @@ Czym planwalk nie jest: nie jest pomiarem, projektem ani dokumentem do pozwoleni
 ## Twoje mieszkanie w 3D: trzy kroki
 
 1. Otwórz [stronę planwalk](https://mrpawelcz.github.io/planwalk/). Możesz też pobrać plik `planwalk.html` z [najnowszego wydania](https://github.com/MrPawelCz/planwalk/releases/latest) i otworzyć go dwukrotnym kliknięciem: działa bez internetu.
-2. Wyślij do czatu, który czyta obrazy, zdjęcie swojego rzutu razem z promptem z pliku [`docs/PROMPT.pl.md`](docs/PROMPT.pl.md) (skopiuj cały tekst i wklej go do rozmowy). Przed wysłaniem zasłoń lub przytnij imiona, adresy i numery telefonu widoczne na rysunku. Prompt jest przygotowany dla czatów, które czytają obrazy; przetestowano dotąd tylko Claude Sonnet 5.5, a wyniki innych modeli pojawią się w [`docs/BENCHMARK.md`](docs/BENCHMARK.md) (po angielsku), kiedy je przetestujemy.
+2. Wyślij do czatu, który czyta obrazy, zdjęcie swojego rzutu razem z promptem z pliku [`docs/PROMPT.pl.md`](docs/PROMPT.pl.md) (skopiuj cały tekst i wklej go do rozmowy). Przed wysłaniem zasłoń lub przytnij imiona, adresy i numery telefonu widoczne na rysunku. Prompt jest przygotowany dla czatów, które czytają obrazy. Sprawdzono go na modelach z tabeli „Runs by model” w [`docs/BENCHMARK.md`](docs/BENCHMARK.md) (po angielsku); inne czaty, które czytają obrazy, powinny działać, ale to oczekiwanie, a nie wynik (wyniki są mile widziane).
 3. Wklej odpowiedź na stronie (przycisk „Paste JSON”, interfejs jest na razie po angielsku) albo przeciągnij plik `.json` na stronę. Jeśli strona wypisze problemy, kliknij „Copy fix request”, wklej to do tej samej rozmowy i wczytaj poprawiony JSON. Powtarzaj, aż się otworzy.
 
 Chcesz tylko się rozejrzeć? Wybierz przykład z menu: jest mieszkanie z jedną sypialnią i dom z dwoma poziomami i schodami.
@@ -30,7 +30,7 @@ Chcesz tylko się rozejrzeć? Wybierz przykład z menu: jest mieszkanie z jedną
 - **Spacer**, w którym nie przejdziesz przez ściany, ale przejdziesz przez drzwi i wejdziesz schodami na inne piętro; jest też minimapa
 - **Dwa wyglądy**: tekstury tworzone w kodzie (podłogi, tynk, tkaniny; bez plików z obrazkami) albo jednolite kolory
 - **Eksport**: GLB, zdjęcie PNG oraz **samodzielny plik HTML** z Twoim planem w środku, który możesz komuś wysłać jako jeden plik
-- **Walidator**, który wyjaśnia każdy znaleziony błąd w geometrii planu słowami zrozumiałymi dla AI (wykryje błędy w geometrii, nie wykryje, że plan nie zgadza się z rysunkiem)
+- **Walidator**, który opisuje każdy znaleziony błąd tak, żeby czat mógł go poprawić (łapie błędy w geometrii planu, ale nie to, że plan różni się od rysunku)
 
 ## Prywatność
 
@@ -39,7 +39,7 @@ Sam planwalk niczego nie wysyła: strona nie ma kont, kluczy API, statystyk ani 
 ## Granice
 
 - Jakość odczytu zależy od modelu i od rysunku. Najlepiej działają czyste rysunki CAD z wpisanymi wymiarami; szkic bez żadnej skali to zgadywanie.
-- Test na 12 prostych planach syntetycznych (jeden model, jeden przebieg) pokazał, że cały potok działa. Nie dowodzi, że prawdziwe rzuty są czytane równie dobrze, bo prawdziwych rysunków jeszcze nie mierzono. Szczegóły i ograniczenia testu są w [`docs/BENCHMARK.md`](docs/BENCHMARK.md) (po angielsku).
+- Testy na prostych planach syntetycznych pokazały, że cały potok działa. Nie dowodzą, że prawdziwe rzuty są czytane równie dobrze, bo prawdziwych rysunków jeszcze nie mierzono. Szczegóły i ograniczenia testów są w [`docs/BENCHMARK.md`](docs/BENCHMARK.md) (po angielsku).
 - Tylko proste biegi schodowe; na rysunku jednej kondygnacji są pokazane jako stopnie, które nigdzie nie prowadzą. Bez dachów, terenu i otoczenia. Meble to tylko dekoracja.
 - To wizualizacja Twojego rysunku, nie pomiar. Sprawdź wymiary, zanim na nich zaczniesz polegać, i nie używaj modelu do pozwoleń ani do budowy.
 

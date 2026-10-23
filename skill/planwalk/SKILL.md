@@ -8,7 +8,7 @@ description: "Use when the user shares a floor plan (image, PDF, sketch, photo) 
 
 You read a floor plan, write it as a small JSON file (format in `reference/plan-format.md`), validate it, check the render against the source drawing, and deliver one self-contained HTML file that opens by double click (dollhouse, exploded levels, first-person walk, GLB export). Everything is local: no server, no API keys.
 
-This folder holds the tools (`scripts/`) and the viewer (`assets/`). Below, `<skill-dir>` is the folder that contains this SKILL.md. Node 18 or newer runs `validate` and `embed`; `capture` needs Node 22 and Chrome or Chromium. Nothing needs installing beyond those; `pdftoppm` (step 1, PDF pages) and ffmpeg (`capture --gif` only) are optional.
+This folder holds the tools (`scripts/`) and the viewer (`assets/`). Below, `<skill-dir>` is the folder that contains this SKILL.md. Node 20 or newer runs `validate` and `embed`; `capture` needs Node 22 and Chrome or Chromium. Nothing needs installing beyond those; `pdftoppm` (step 1, PDF pages) and ffmpeg (`capture --gif` only) are optional.
 
 ## Steps
 

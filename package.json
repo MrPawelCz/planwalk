@@ -16,7 +16,7 @@
   },
   "keywords": ["floor-plan", "3d", "three.js", "llm", "glb", "viewer", "real-estate", "architecture"],
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "scripts": {
     "test": "node tools/test.mjs",

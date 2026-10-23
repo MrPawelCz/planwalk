@@ -2,17 +2,16 @@
 // note, plan strings stay text, the version is the one in package.json, Polish labels. Skips when Chrome or dist is missing.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { spawn, spawnSync } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { chrome, chromeSkip } from '../helpers/chrome.mjs';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
-const chrome = ['/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', ...['google-chrome', 'chromium', 'chromium-browser'].map((c) => (spawnSync('which', [c]).status === 0 ? c : null))]
-  .filter(Boolean).find((c) => !c.includes('/') || existsSync(c));
-const skip = !chrome ? 'Chrome or Chromium not found' : !existsSync(join(root, 'dist/planwalk-empty.html')) ? 'dist/planwalk-empty.html missing, run npm run build' : typeof WebSocket === 'undefined' ? 'Node 22 or newer is needed for the global WebSocket' : false;
+const skip = chromeSkip || (!existsSync(join(root, 'dist/planwalk-empty.html')) ? 'dist/planwalk-empty.html missing, run npm run build' : false);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const freePort = () => new Promise((res, rej) => { const s = createServer(); s.listen(0, '127.0.0.1', () => { const { port } = s.address(); s.close(() => res(port)); }); s.on('error', rej); });
 

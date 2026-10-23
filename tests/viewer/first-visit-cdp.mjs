@@ -1,15 +1,15 @@
 // Small helper for the first-visit tests: a headless Chrome page driven over the DevTools Protocol (no dependencies,
 // Node 22 for the global WebSocket). Not a test file itself. Callers hold the chrome-lock when running it on a shared machine.
-import { spawn, spawnSync } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import { existsSync, mkdtempSync, rmSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { chrome as chromePath, chromeSkip } from '../helpers/chrome.mjs';
 
-export const chromePath = ['/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', ...['google-chrome', 'chromium', 'chromium-browser'].map((c) => (spawnSync('which', [c]).status === 0 ? c : null))]
-  .filter(Boolean).find((c) => !c.includes('/') || existsSync(c));
-export const skipReason = (...files) => !chromePath ? 'Chrome or Chromium not found' : typeof WebSocket === 'undefined' ? 'Node 22 or newer is needed for the global WebSocket' : files.find((f) => !existsSync(f)) ? `${files.find((f) => !existsSync(f))} is missing, run npm run build` : false;
+export { chromePath };
+export const skipReason = (...files) => chromeSkip || (files.find((f) => !existsSync(f)) ? `${files.find((f) => !existsSync(f))} is missing, run npm run build` : false);
 
 // The prompt of a docs/PROMPT*.md file: its longest fenced block (what tools/build.mjs embeds), found here with a second, line based reader.
 // The prompt is the whole file (docs/PROMPT*.md hold nothing but the prompt), the same normalisation as tools/build.mjs.
