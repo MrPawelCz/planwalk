@@ -12,7 +12,7 @@
 
 **The result looks wrong. What can I try?** Crop the image to the plan (keep a room table if the drawing has one), cover names and addresses in the title block, and send one floor per image if the drawing is busy. If the viewer lists problems, press "Copy fix request" and paste it back into the same chat. If walls do not meet or rooms look too big, tell the chat: "trace the centerline of the thick wall strips and make walls meet at shared corner points". Compare the result with your drawing: planwalk shows what the JSON says, not what the drawing meant.
 
-**Why no server or build step for users?** `dist/planwalk.html` is one file: double click it. Standalone export embeds your plan so you can send the 3D flat to someone as a single file.
+**Why no server or build step for users?** `dist/planwalk.html` is one file: double click it. Standalone export embeds your plan in one HTML file, to open on a computer; to send the flat to someone's phone use Copy link (the plan is stored inside the link, so whoever gets the link, and the app you send it through, can read it).
 
 **Does it run without a GPU?** Yes, in software rendering (we test headless Chrome with SwiftShader), just slowly. Frame rates with a real GPU have not been measured.
 

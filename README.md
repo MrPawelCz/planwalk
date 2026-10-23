@@ -35,7 +35,7 @@ Pick an example from the menu: a one-bedroom flat and a two-level house with a s
 - **Dollhouse** with cutaway walls and room names with areas (the area your drawing declares, otherwise an estimate net of the walls, marked with ~), **exploded levels**, top view, free orbit
 - **First-person walk** with collisions, doors you can pass through, stairs between levels, a minimap
 - **Two looks**: procedural textures (wood boards, tile, carpet, stone, plaster, fabric, linen, knit, rugs, leaves; generated in code, no image files, in real-world scale, details in [`docs/TEXTURES.md`](docs/TEXTURES.md)) on furniture with soft, rounded shapes, or plain clay colours, one click or `?materials=clay`
-- **GLB export** (named nodes for walls, rooms, openings, with the textures embedded), PNG snapshot, and a **standalone HTML file** with your plan embedded: send a 3D flat as a single file
+- **GLB export** (named nodes for walls, rooms, openings, with the textures embedded), PNG snapshot, a **link that holds the plan** (Copy link: the plan is stored inside the link, so whoever gets the link, and the app you send it through, can read it; it opens in a phone browser; the short link needs Safari 16.4, Chrome 103 or Firefox 113, older browsers use Copy long link), Share image for a picture of the current view, and a **standalone HTML file** with your plan embedded, to open on a computer
 - A **validator** that explains each structural mistake it finds in words an AI can act on (the repair loop; it cannot tell whether the plan matches your drawing)
 
 ## How it works

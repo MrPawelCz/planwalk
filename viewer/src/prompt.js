@@ -26,10 +26,12 @@ export async function copyText(text) {
     if (navigator.clipboard?.writeText) { await navigator.clipboard.writeText(text); return true; }
   } catch { /* refused: try the old way */ }
   const ta = document.createElement('textarea');
-  ta.style.cssText = 'position:fixed;opacity:0';
+  ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;font-size:16px'; // 16px: iOS zooms into smaller fields it focuses
+  ta.readOnly = true;
   ta.value = text;
   document.body.append(ta);
   ta.select();
+  ta.setSelectionRange(0, text.length); // iOS ignores select() alone
   let ok = false;
   try { ok = document.execCommand('copy'); } catch { /* clipboard not permitted */ }
   ta.remove();

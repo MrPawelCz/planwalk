@@ -4,6 +4,7 @@ import { getLang, makeT } from './i18n.js';
 import { copyText, defaultPromptLang, promptFor, promptLangs } from './prompt.js';
 import { openDialog } from './dialogs.js';
 import { createLangSwitch } from './lang-switch.js';
+import { shareHelp } from './share.js';
 
 const REPO = 'https://github.com/MrPawelCz/planwalk';
 
@@ -101,6 +102,7 @@ export function createHelp({ h, onLang }) {
       h('p', {}, t('controlsOrbit')), h('p', {}, t('controlsTop')), h('p', {}, t('controlsWalk')),
       h('h3', {}, t('privacyTitle')),
       h('p', {}, t('privacy')),
+      h('p', {}, shareHelp()),
       h('div', { class: 'pw-help-links' }, `${t('links')}:`, h('ul', {},
         h('li', {}, link(REPO, t('repo'))),
         h('li', {}, link(promptUrl(lang), t('prompt'))),

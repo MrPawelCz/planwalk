@@ -4,6 +4,11 @@ All notable changes to planwalk are listed here. The format follows [Keep a Chan
 
 ## [Unreleased]
 
+### Added
+
+- Copy link makes a short link that holds the plan (`#z=`, compressed, about 70 to 75 percent shorter than the `#plan=` form for the two examples); Copy long link makes the older `#plan=` form for browsers without compression. Older `#plan=` links keep opening. Share image hands the current view to the share sheet where the browser supports it, otherwise it downloads the PNG.
+- A damaged or oversized `#z=` link gives the plain banner and leaves the model on screen; a link typed into the address bar of an open tab is now read too.
+
 ## [0.1.0] - 2026-10-23
 
 First public version.

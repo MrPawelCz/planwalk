@@ -29,7 +29,7 @@ Chcesz tylko się rozejrzeć? Wybierz przykład z menu: jest mieszkanie z jedną
 - **Makieta** z odsłoniętymi ścianami oraz nazwami i powierzchniami pomieszczeń, **rozsunięte piętra**, widok z góry, swobodne obracanie
 - **Spacer**, w którym nie przejdziesz przez ściany, ale przejdziesz przez drzwi i wejdziesz schodami na inne piętro; jest też minimapa
 - **Dwa wyglądy**: tekstury tworzone w kodzie (podłogi, tynk, tkaniny; bez plików z obrazkami) albo jednolite kolory
-- **Eksport**: GLB, zdjęcie PNG oraz **samodzielny plik HTML** z Twoim planem w środku, który możesz komuś wysłać jako jeden plik
+- **Eksport i udostępnianie**: GLB, zdjęcie PNG, **link z planem w środku** (przycisk „Kopiuj link”: plan jest zapisany w samym linku, więc odczyta go każdy, kto dostanie link, także aplikacja, przez którą go wyślesz; krótki link wymaga Safari 16.4, Chrome 103 lub Firefoksa 113, w starszych przeglądarkach użyj „Kopiuj długi link”), „Udostępnij obraz” z widokiem, który masz na ekranie, oraz **samodzielny plik HTML** do otwarcia na komputerze
 - **Walidator**, który opisuje każdy znaleziony błąd tak, żeby czat mógł go poprawić (łapie błędy w geometrii planu, ale nie to, że plan różni się od rysunku)
 
 ## Prywatność

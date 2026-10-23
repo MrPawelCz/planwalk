@@ -20,6 +20,8 @@ import { refreshLangSwitches } from './lang-switch.js';
 import { openDialog, closeDialog } from './dialogs.js';
 import { fileSlug } from './slug.js';
 import { T, issuesHeading, fixRequestText } from './strings.js'; // every caption of this window, English and Polish
+import { createShare, linkProblem } from './share.js';
+import { decodeShort, parseHash } from './share-link.js';
 
 const MODES = ['dollhouse', 'orbit', 'top', 'walk'];
 const MODE_DEFAULTS = {
@@ -140,6 +142,7 @@ function start() {
   const about = createAbout(h, () => ({ plan, model, warnings: issues.warnings.length, version: PW_VERSION }));
   const visit = createFirstVisit({ h, onPaste: () => openDialog(pasteDlg) });
   const help = createHelp({ h, onLang: (l) => applyLang(l) });
+  const share = createShare({ h, getPlan: () => plan, getName: () => plan?.name || '', getSlug: () => slug(), getImage: () => api.screenshot(), download });
   const bar = h('div', { class: 'pw-bar' },
     h('span', { class: 'pw-brand' }, 'planwalk'), nameEl, about.badge, visit.tag,
     h('div', { class: 'pw-seg' }, MODES.map((m) => modeBtns[m])),
@@ -154,6 +157,7 @@ function start() {
     h('button', { type: 'button', onclick: () => api.exportGLB().then((buf) => download(new Blob([buf], { type: 'model/gltf-binary' }), `${slug()}.glb`)) }, T.exportGlb),
     h('button', { type: 'button', onclick: () => fetch(api.screenshot({ fit: true })).then((r) => r.blob()).then((b) => download(b, `${slug()}.png`)) }, T.exportPng),
     h('button', { type: 'button', title: T.standaloneTip, onclick: () => download(new Blob([standaloneHtml()], { type: 'text/html' }), `${slug()}.html`) }, T.standalone),
+    share.controls,
     about.button,
     h('button', { type: 'button', onclick: () => help.open() }, T.help));
   const card = h('div', { class: 'pw-card' }, h('p', { id: 'pw-card-text' }, T.empty), h('div', { id: 'pw-card-samples' }));
@@ -167,7 +171,7 @@ function start() {
         notes.openFileButton(openPicked),
         h('button', { type: 'submit', value: 'cancel' }, T.cancel),
         h('button', { type: 'button', onclick: () => { api.load(pasteArea.value); closeDialog(pasteDlg); } }, T.load))));
-  root.append(bar, card, visit.el, issuesEl, hint, mini, pasteDlg, help.el, about.dialog);
+  root.append(bar, card, visit.el, issuesEl, hint, mini, pasteDlg, help.el, about.dialog, share.dialog);
   card.append(notes.openFileButton(openPicked));
   const chooseFile = notes.openFileButton(openPicked); // kept out of the page: window.planwalk.openFile() and the phone Menu press it
   // Phone layout: moves the toolbar controls into a Menu sheet (compact.js). onLayout runs when the window changes kind.
@@ -264,6 +268,7 @@ function start() {
     card.hidden = !!model;
     nameEl.textContent = plan?.name || '';
     about.update();
+    share.update();
     visit.setExample(!!plan && Object.values(samples).includes(plan));
     compact.sync({ mode, hasModel: !!model, issues: issues.errors.length + issues.warnings.length, errors: issues.errors.length });
   }
@@ -438,6 +443,21 @@ function start() {
     return { ok: res.ok, errors: res.errors, warnings: res.warnings, repairs };
   }
 
+  // A shared link: '#plan=' (the plain form, read as before) or '#z=' (compressed). One that cannot be read says so in the banner and leaves
+  // the model on screen alone; when nothing is on screen yet, the bundled example comes up behind the banner.
+  async function openLink(link) {
+    let problem = null;
+    if (link.form === 'plan') {
+      try { api.load(b64urlDecode(link.value), 'link'); } catch { problem = linkProblem('base64'); }
+    } else {
+      const got = await decodeShort(link.value);
+      if (got.ok) api.load(got.text, 'link'); else problem = linkProblem(got.reason);
+    }
+    if (!problem && !model) problem = linkProblem('inflate'); // the text held no usable plan
+    if (problem && !model && Object.keys(samples).length) { api.load(Object.values(samples)[0]); visit.show(); }
+    if (problem) notes.show(problem);
+  }
+
   // A file the person chose or dropped.
   function openPicked(file) {
     if (pasteDlg.hasAttribute('open')) closeDialog(pasteDlg);
@@ -567,7 +587,7 @@ function start() {
     renderIssues();
     syncUi();
     refreshLangSwitches(); // before help.refresh(), which puts the focus on the pressed button
-    visit.refresh(); help.refresh(); about.refresh(); notes.refresh();
+    visit.refresh(); help.refresh(); about.refresh(); notes.refresh(); share.refresh();
     if (planScene) planScene.relabel();
     render();
     return getLang();
@@ -846,11 +866,13 @@ function start() {
   const embedded = document.getElementById('planwalk-plan');
   const q = new URLSearchParams(location.search);
   if (LOOKS.includes(q.get('materials'))) api.setMaterials(q.get('materials'));
-  const hash = /^#plan=([A-Za-z0-9_-]+)/.exec(location.hash);
-  if (embedded && embedded.textContent.trim()) api.load(embedded.textContent);
-  else if (hash) { try { api.load(b64urlDecode(hash[1]), 'link'); } catch { notes.show(() => loadMessage('invalid', 'link')); } }
+  const fixed = !!(embedded && embedded.textContent.trim());
+  const link = parseHash(location.hash);
+  if (fixed) api.load(embedded.textContent);
+  else if (link) openLink(link);
   else if (/^https?:\/\//i.test(q.get('plan') || '')) fetchPlanText(q.get('plan')).then((r) => (r.ok ? api.load(r.text, 'download') : notes.show(() => downloadMessage(r))));
   else if (sampleNames.length) { api.load(samples[sampleNames[0]]); visit.show(); refreshFrame(); render(); } // the card is up now, so frame the model above it
+  window.addEventListener('hashchange', () => { const next = parseHash(location.hash); if (next && !fixed) openLink(next); }); // a link pasted into this tab's address bar
   requestAnimationFrame(loop);
 }
 

@@ -89,7 +89,7 @@ test('every table: same keys in English and Polish, no empty text, same placehol
 });
 
 test('the Polish text differs from the English text, except for names that are the same in both', async () => {
-  const SAME = new Set(['name', 'src_pdf']); // "Plan" and "PDF" are the same word in both languages
+  const SAME = new Set(['name', 'src_pdf', 'menu']); // "Plan", "PDF" and "Menu" are the same word in both languages
   for (const m of await tableModules()) {
     for (const [, table] of m.tables) {
       for (const k of Object.keys(table.en)) if (!SAME.has(k)) assert.notEqual(table.pl[k], table.en[k], `${m.file} ${k} is not translated`);
