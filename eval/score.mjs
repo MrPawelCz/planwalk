@@ -95,11 +95,15 @@ function matchOpenings(truthOps, predOps) {
 
 const edgeKey = (a, b) => (a < b ? `${a}|${b}` : `${b}|${a}`);
 
+// The scorer measures what a perfect answer achieves, so it validates in strict mode: a property the schema does not know is an error here
+// (the viewer only warns about it). This keeps every stored score of eval/results/ as it was; eval/loads.mjs counts what the viewer would show.
+const STRICT = { strict: true };
+
 export function scorePlans(truthPlan, predPlan) {
-  const tv = validatePlan(truthPlan);
+  const tv = validatePlan(truthPlan, STRICT);
   if (!tv.normalized) throw new Error('The truth plan is not usable: ' + JSON.stringify(tv.errors[0]));
   const truth = tv.normalized;
-  const pv = validatePlan(predPlan);
+  const pv = validatePlan(predPlan, STRICT);
   const zero = { composite: 0, parsed: pv.normalized !== null, valid: false, levelsMatch: false, scaleErrorPct: null, rooms: { truth: truth.levels.reduce((n, l) => n + l.rooms.length, 0), pred: 0, matched: 0, precision: 0, recall: 0, f1: 0, meanIoU: 0, areaMapePct: null, areaScore: 0 }, wallLengthRatio: 0, openings: { f1: 0, doorF1: 0, windowF1: 0 }, connectivityF1: 0, errors: pv.errors.length, warnings: pv.warnings.length };
   if (!pv.normalized) return zero;
   const pred = pv.normalized;
