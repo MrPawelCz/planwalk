@@ -22,6 +22,7 @@ jobs:
         run: |
           mkdir site
           cp dist/planwalk.html site/index.html
+          cp docs/social-preview.jpg site/social-preview.jpg
           cp -r examples site/examples
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

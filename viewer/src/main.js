@@ -11,6 +11,9 @@ import { LOOKS, setTextureAnisotropy, withoutNormalMaps } from './materials.js';
 import { createWorld, createPlayer, teleport, stepPlayer, defaultSpawn } from './physics.js';
 import { createAbout, ABOUT_CSS } from './about.js';
 import { version as PW_VERSION } from '../../package.json'; // the one place the version lives; esbuild inlines just this field
+import { getLang } from './i18n.js';
+import { createFirstVisit } from './first-visit.js';
+import { createHelp } from './help.js';
 
 // All user-facing strings live here so a translation is one object.
 const T = {
@@ -25,13 +28,6 @@ const T = {
   copyFix: 'Copy fix request', copied: 'Copied', issues: 'Issues', fix: 'Fix',
   pastePrompt: 'Paste the plan JSON here',
   walkHint: 'Click to look around. WASD or arrows move, Shift runs, Esc goes back.',
-  helpTitle: 'How planwalk works',
-  help1: 'Give a picture of a floor plan and the prompt from github.com/MrPawelCz/planwalk (docs/PROMPT.md) to an AI that can see images.',
-  help2: 'Paste the JSON it returns here (Paste JSON), or drop the file on this page.',
-  help3: 'If problems are listed, press Copy fix request, paste it back into the same chat, and load the corrected JSON.',
-  help4: 'Dollhouse: drag to orbit, wheel to zoom. Top: drag to pan. Walk: WASD or arrows, mouse look (click first), touch: left half moves, right half looks.',
-  help5: 'Everything runs in this page. The plan never leaves your machine.',
-  close: 'Close',
 };
 
 const MODES = ['dollhouse', 'orbit', 'top', 'walk'];
@@ -108,6 +104,7 @@ function b64urlDecode(s) {
 }
 
 function start() {
+  document.documentElement.lang = getLang();
   const style = h('style', { 'data-pw': '1' });
   style.textContent = CSS + ABOUT_CSS;
   document.head.append(style);
@@ -138,8 +135,10 @@ function start() {
   const sampleSel = h('select', { title: T.examples, onchange: (e) => { if (e.target.value) api.load(samples[e.target.value]); e.target.value = ''; } });
   const nameEl = h('span', { class: 'pw-name' });
   const about = createAbout(h, () => ({ plan, model, warnings: issues.warnings.length, version: PW_VERSION }));
+  const visit = createFirstVisit({ h, onPaste: () => openDialog(pasteDlg) });
+  const help = createHelp({ h });
   const bar = h('div', { class: 'pw-bar' },
-    h('span', { class: 'pw-brand' }, 'planwalk'), nameEl, about.badge,
+    h('span', { class: 'pw-brand' }, 'planwalk'), nameEl, about.badge, visit.tag,
     h('div', { class: 'pw-seg' }, MODES.map((m) => modeBtns[m])),
     levelSel,
     h('label', {}, T.explode, explodeIn),
@@ -153,7 +152,7 @@ function start() {
     h('button', { type: 'button', onclick: () => fetch(api.screenshot()).then((r) => r.blob()).then((b) => download(b, `${slug()}.png`)) }, T.exportPng),
     h('button', { type: 'button', title: T.standaloneTip, onclick: () => download(new Blob([standaloneHtml()], { type: 'text/html' }), `${slug()}.html`) }, T.standalone),
     about.button,
-    h('button', { type: 'button', onclick: () => openDialog(helpDlg) }, T.help));
+    h('button', { type: 'button', onclick: () => help.open() }, T.help));
   const card = h('div', { class: 'pw-card' }, h('p', { id: 'pw-card-text' }, T.empty), h('div', { id: 'pw-card-samples' }));
   const issuesEl = h('div', { class: 'pw-issues', hidden: '' });
   const hint = h('div', { class: 'pw-hint', hidden: '' }, T.walkHint);
@@ -165,10 +164,7 @@ function start() {
         notes.openFileButton(openPicked),
         h('button', { type: 'submit', value: 'cancel' }, T.cancel),
         h('button', { type: 'button', onclick: () => { api.load(pasteArea.value); closeDialog(pasteDlg); } }, T.load))));
-  const helpDlg = h('dialog', { class: 'pw-dlg' }, h('h2', {}, T.helpTitle),
-    h('ol', {}, [T.help1, T.help2, T.help3, T.help4, T.help5].map((t) => h('li', {}, t))),
-    h('form', { method: 'dialog' }, h('button', { type: 'submit' }, T.close)));
-  root.append(bar, card, issuesEl, hint, mini, pasteDlg, helpDlg, about.dialog);
+  root.append(bar, card, visit.el, issuesEl, hint, mini, pasteDlg, help.el, about.dialog);
   card.append(notes.openFileButton(openPicked));
 
   // ---------- three.js ----------
@@ -259,6 +255,7 @@ function start() {
     card.hidden = !!model;
     nameEl.textContent = plan?.name || '';
     about.update();
+    visit.setExample(!!plan && Object.values(samples).includes(plan));
     issuesEl.hidden = !(issues.errors.length || issues.warnings.length);
   }
 
@@ -292,7 +289,7 @@ function start() {
 
   function standaloneHtml() {
     const doc = document.documentElement.cloneNode(true);
-    doc.querySelectorAll('#pw-app, #planwalk-plan, #planwalk-samples, style[data-pw]').forEach((n) => n.remove());
+    doc.querySelectorAll('#pw-app, #planwalk-plan, #planwalk-samples, style[data-pw], meta[property^="og:"], meta[name^="twitter:"]').forEach((n) => n.remove());
     const s = document.createElement('script');
     s.type = 'application/json'; s.id = 'planwalk-plan';
     s.textContent = JSON.stringify(plan ?? {}).replace(/</g, '\\u003c');
@@ -379,6 +376,7 @@ function start() {
       return { ok: res.ok, errors: res.errors, warnings: res.warnings, repairs };
     }
     notes.hide();
+    visit.hide();
     rawText = typeof input === 'string' ? input : '';
     issues = { errors: res.errors, warnings: res.warnings };
     plan = obj && typeof obj === 'object' ? obj : null;
@@ -432,6 +430,7 @@ function start() {
     applyModeDefaults(m);
     if (was === 'walk' && document.pointerLockElement === canvas) document.exitPointerLock?.();
     controls.enabled = m === 'dollhouse' || m === 'orbit';
+    if (m === 'walk') visit.hide();
     if (m === 'walk' && model) {
       explodeT = explodeV = 0;
       planScene.setExplode(0);
@@ -753,7 +752,7 @@ function start() {
   if (embedded && embedded.textContent.trim()) api.load(embedded.textContent);
   else if (hash) { try { api.load(b64urlDecode(hash[1]), 'link'); } catch { notes.show(loadMessage('invalid', 'link')); } }
   else if (/^https?:\/\//i.test(q.get('plan') || '')) fetchPlanText(q.get('plan')).then((r) => (r.ok ? api.load(r.text, 'download') : notes.show(downloadMessage(r))));
-  else if (sampleNames.length) api.load(samples[sampleNames[0]]);
+  else if (sampleNames.length) { api.load(samples[sampleNames[0]]); visit.show(); }
   requestAnimationFrame(loop);
 }
 
