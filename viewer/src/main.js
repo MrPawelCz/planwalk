@@ -310,7 +310,7 @@ function start() {
 
   function standaloneHtml() {
     const doc = document.documentElement.cloneNode(true);
-    doc.querySelectorAll('#pw-app, #planwalk-plan, #planwalk-samples, style[data-pw], meta[property^="og:"], meta[name^="twitter:"]').forEach((n) => n.remove());
+    doc.querySelectorAll('#pw-app, #planwalk-plan, #planwalk-samples, style[data-pw], meta[property^="og:"], meta[name^="twitter:"], link[rel="canonical"], link[rel="alternate"][hreflang]').forEach((n) => n.remove());
     const s = document.createElement('script');
     s.type = 'application/json'; s.id = 'planwalk-plan';
     s.textContent = JSON.stringify(plan ?? {}).replace(/</g, '\\u003c');
