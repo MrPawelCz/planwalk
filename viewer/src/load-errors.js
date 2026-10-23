@@ -1,11 +1,21 @@
 // Plain language for everything that can go wrong while a plan gets into the viewer, and the small pieces of UI that say so:
 // a dismissible banner, a card for a crash, and helpers that download or read a plan with a size cap and a timeout.
 // Strings stay in this module (see i18n.js); plan text only ever reaches the page as text nodes.
-import { makeT } from './i18n.js';
+import { makeT, getLang } from './i18n.js';
 import { MAX_PLAN_CHARS } from '../../src/core/limits.js';
 
 export const strings = {
   en: {
+    skipped: '{n} element skipped. The rest of the plan is shown.|{n} elements skipped. The rest of the plan is shown.',
+    skippedHelp: 'To get them back, press "Copy fix request" and paste it into the AI chat.',
+    skippedWall: 'its wall was skipped',
+    skippedMore: 'and {n} more',
+    kindWall: 'wall',
+    kindOpening: 'opening',
+    kindRoom: 'room',
+    kindStair: 'stair',
+    kindFurniture: 'furniture',
+    kindLevel: 'level',
     noPlan: 'That text does not contain a plan. Paste the whole answer from the AI chat, planwalk finds the JSON in it.',
     cutOff: 'The plan in that text stops before the end. Ask the AI to send the whole plan again.',
     invalid: 'planwalk found a plan in that text, but there is a mistake in the JSON, so it cannot be read. Ask the AI to send the plan again as one JSON block.',
@@ -32,6 +42,16 @@ export const strings = {
     noPlanFile: 'That file does not contain a plan. Open the file with the AI answer that holds the plan.',
   },
   pl: {
+    skipped: 'Pominięto {n} element, reszta planu jest widoczna.|Pominięto {n} elementy, reszta planu jest widoczna.|Pominięto {n} elementów, reszta planu jest widoczna.',
+    skippedHelp: 'Żeby je odzyskać, kliknij „Kopiuj prośbę o poprawkę” i wklej ją do czatu z AI.',
+    skippedWall: 'jego ściana została pominięta',
+    skippedMore: 'i jeszcze {n}',
+    kindWall: 'ściana',
+    kindOpening: 'otwór',
+    kindRoom: 'pokój',
+    kindStair: 'schody',
+    kindFurniture: 'mebel',
+    kindLevel: 'piętro',
     noPlan: 'W tym tekście nie ma planu. Wklej całą odpowiedź z czatu z AI, planwalk sam ją przeszuka. Jeśli czat napisał, że nie widzi zdjęcia, dodaj je jeszcze raz.',
     noPlanFile: 'W tym pliku nie ma planu. Otwórz plik z odpowiedzią AI, w której jest plan.',
     cutOff: 'Plan w tym tekście jest ucięty, brakuje końca. Poproś AI, żeby wysłało cały plan jeszcze raz.',
@@ -64,6 +84,7 @@ const CSS = `
 .pw-banner{position:absolute;left:50%;transform:translateX(-50%);z-index:5;box-sizing:border-box;width:max-content;max-width:min(560px,92vw);display:flex;gap:8px;align-items:center;padding:8px 8px 8px 12px;background:#fff6e5;color:#5b3a06;border:1px solid #e3b866;border-radius:10px;box-shadow:0 2px 10px rgba(60,50,40,.14)}
 .pw-banner button{font:inherit;color:inherit;background:#fbfaf7;border:1px solid rgba(80,72,62,.3);border-radius:7px;padding:3px 8px;cursor:pointer;white-space:nowrap}
 .pw-banner .pw-banner-x{border:0;background:none;font-size:20px;line-height:1;padding:0 6px}
+.pw-banner-detail{display:block;max-height:min(30vh,220px);overflow:auto}
 .pw-banner-detail div{margin-top:4px;font:12px/1.35 ui-monospace,Menlo,monospace;overflow-wrap:anywhere}
 .pw-dlg:not([open]){display:none}
 `;
@@ -93,6 +114,36 @@ export function issueLines(errors, max = 2, cut = 160) {
     const line = `${e.code}${e.path ? ` ${e.path}` : ''}: ${e.message}`;
     return line.length > cut ? `${line.slice(0, cut - 3)}...` : line;
   });
+}
+
+// The elements the validator left out of a model (result.skipped) as a banner: how many, and the first `max` as lines. The kind and the
+// sentence about a skipped wall follow the language; the id, the path and the validator's own reason stay as written (the fix request
+// goes to an AI).
+const KIND_KEY = { wall: 'kindWall', opening: 'kindOpening', room: 'kindRoom', stair: 'kindStair', furniture: 'kindFurniture', level: 'kindLevel' };
+
+// English: one | other. Polish: one | few (2 to 4 except 12 to 14) | many.
+function formIndex(n) {
+  if (n === 1) return 0;
+  if (getLang() !== 'pl') return 1;
+  return n % 10 >= 2 && n % 10 <= 4 && !(n % 100 >= 12 && n % 100 <= 14) ? 1 : 2;
+}
+
+export function skippedMessage(skipped) {
+  const forms = t('skipped').split('|');
+  const n = skipped.length;
+  return `${forms[Math.min(formIndex(n), forms.length - 1)].replace(/\{n\}/g, String(n))} ${t('skippedHelp')}`;
+}
+
+function skippedLine(s) {
+  const why = s.reason === 'wall-skipped' ? t('skippedWall') : String(s.why || '');
+  const reason = why.startsWith(s.path) ? why.slice(s.path.length).replace(/^[.\s]+/, '') : why; // the path is shown first, once
+  return `${t(KIND_KEY[s.kind] || 'kindWall')}${s.id ? ` "${s.id}"` : ''} (${s.path}): ${reason}`;
+}
+
+export function skippedLines(skipped, max = 10) {
+  const lines = skipped.slice(0, max).map(skippedLine);
+  if (skipped.length > max) lines.push(t('skippedMore', { n: skipped.length - max }));
+  return lines;
 }
 
 // extractJson says in its repairs when an answer held several plans and it took the last one; the person is told too.
@@ -158,13 +209,17 @@ export function createNotices(root, getBar) {
   const x = h('button', { type: 'button', class: 'pw-banner-x' }, '×');
   const el = h('div', { class: 'pw-banner', role: 'alert', hidden: '' }, h('span', {}, msg, detail), action, x);
   const openers = [];
-  let shown = null; // { text, act, lines } of the banner on screen; text may be a function, which is asked again after a change of language
+  let shown = null; // { text, act, lines } of the banner on screen; text and lines may be functions, which are asked again after a change of language
   const captions = () => { x.setAttribute('aria-label', t('close')); x.title = t('close'); for (const b of openers) b.textContent = t('openFile'); };
   const draw = () => {
     msg.textContent = typeof shown.text === 'function' ? shown.text() : shown.text;
-    detail.replaceChildren(...(shown.lines || []).map((line) => h('div', {}, line)));
+    detail.replaceChildren(...((typeof shown.lines === 'function' ? shown.lines() : shown.lines) || []).map((line) => h('div', {}, line)));
     action.hidden = !shown.act;
     if (shown.act) { action.textContent = shown.act.label; action.onclick = shown.act.run; }
+  };
+  const place = () => {
+    const bar = getBar && getBar();
+    el.style.top = `${bar ? Math.round(bar.getBoundingClientRect().bottom) + 8 : 10}px`;
   };
   captions();
   const fileIn = h('input', { type: 'file', accept: '.json,.txt,application/json,text/plain', hidden: '' });
@@ -180,18 +235,17 @@ export function createNotices(root, getBar) {
   return {
     hide,
     // text: the message, or a function that makes it (so the banner can follow a change of language); act: { label, run } or nothing;
-    // lines: extra detail lines (validator messages, English: they are written for the AI).
+    // lines: extra detail lines (validator messages, English: they are written for the AI), or a function that makes them.
     show(text, act, lines) {
       shown = { text, act, lines };
       draw();
-      const bar = getBar && getBar();
-      el.style.top = `${bar ? Math.round(bar.getBoundingClientRect().bottom) + 8 : 10}px`;
+      place();
       el.hidden = false;
     },
-    // Redraws every caption in the current language, the banner on screen included.
+    // Redraws every caption in the current language, the banner on screen included (the toolbar may wrap differently now).
     refresh() {
       captions();
-      if (shown && !el.hidden) draw();
+      if (shown && !el.hidden) { draw(); place(); }
     },
     // A button that opens the file picker; onFile(file) gets the chosen file. Several buttons share one picker.
     openFileButton(onFile) {
