@@ -1,5 +1,5 @@
 // The prompt on the page comes from docs/PROMPT.md (and docs/PROMPT.pl.md when it exists) at build time: the embedded
-// inert blocks equal the fenced prompt of each file after the same escaping, and a dangerous prompt cannot end the script element.
+// inert blocks equal the prompt file (the whole file) after the same escaping, and a dangerous prompt cannot end the script element.
 import test, { after, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
@@ -23,7 +23,7 @@ after(() => rmSync(out, { recursive: true, force: true }));
 for (const [lang, name] of [['en', 'PROMPT.md'], ['pl', 'PROMPT.pl.md']]) {
   test(`the embedded ${lang} prompt equals docs/${name}`, { skip: !existsSync(join(root, 'docs', name)) && lang !== 'en' ? `docs/${name} does not exist yet` : false }, () => {
     const expected = promptOfFile(readFileSync(join(root, 'docs', name), 'utf8'));
-    assert.ok(expected && expected.length > 1500, 'the file has a long fenced prompt block');
+    assert.ok(expected && expected.length > 1500, 'the file holds a long prompt');
     assert.match(expected, /"version"/, 'it is the JSON format prompt');
     for (const file of ['planwalk.html', 'planwalk-empty.html']) {
       const html = readFileSync(join(out, file), 'utf8');

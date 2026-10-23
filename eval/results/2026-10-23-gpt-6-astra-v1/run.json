@@ -1,6 +1,6 @@
 {
   "model": "openai/gpt-6-astra",
-  "route": "openclaw infer model run (picture attached)",
+  "route": "command line gateway to the OpenAI API (picture attached)",
   "promptSpec": "git:a959169:docs/PROMPT.md",
   "promptMode": "code block under \"## Prompt\"",
   "promptBranchTip": "a9591698d34d",

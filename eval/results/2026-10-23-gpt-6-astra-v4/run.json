@@ -1,6 +1,6 @@
 {
   "model": "openai/gpt-6-astra",
-  "route": "openclaw infer model run (picture attached)",
+  "route": "command line gateway to the OpenAI API (picture attached)",
   "promptSpec": "docs/PROMPT.md (revised prompt; the exact text that was sent is prompt.txt)",
   "promptMode": "whole file",
   "promptSha256": "0d6648ee56e1649d20bd63a1448cd8d8317ad8406e3a5e667c12ae214fe6b248",

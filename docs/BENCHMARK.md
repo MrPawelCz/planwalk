@@ -19,7 +19,7 @@ Claude Sonnet 5.5, reading by hand in an agent session, read 12 clean synthetic 
 
 1. `node eval/make-benchmark.mjs ...` generated the images and the truth. Nothing was printed except code and style.
 2. The reader looked at each PNG with an image viewer tool and wrote the JSON by hand following the rules in [`docs/PROMPT.md`](PROMPT.md) (scale from printed dimensions, else printed areas, else a standard 0.85 m door; walls as centerlines; skip furniture). For crowded two-level pictures it also looked at crops of the same PNG, which is what a person would do by zooming.
-3. Each reading was checked once with `node tools/validate.mjs`. All 12 had 0 errors and 0 warnings on the first try, so no repair round was used. The render-and-compare step of the agent skill was not used, so this measures the plain prompt route, not the full agent route.
+3. Each reading was checked once with `node tools/validate.mjs`. All 12 had 0 errors and 0 warnings on the first try, so no repair round was used. The render-and-compare step of the agent skill was not used, so this measures a reading by hand in an agent session, not the full agent route and not one pasted call (see "Runs by model" for one call).
 4. Before any truth was opened, the readings were frozen: `readings.sha256` and `FROZEN.txt` (timestamp) in the run folder. `key.json` and `truth/` were first read after that, by the scoring command.
 5. The scoring output is stored unchanged: `scores.md`, `scores-sketch-zoom.md`.
 

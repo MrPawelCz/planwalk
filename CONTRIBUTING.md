@@ -3,7 +3,7 @@
 Thanks for looking. The most useful contributions, in order:
 
 1. **Plans that break things.** If an AI misreads a drawing, or the viewer builds something wrong, open an issue with the JSON (see the templates). Redrawn or synthetic plans are welcome, please do not share drawings you are not allowed to share.
-2. **Reading quality.** Better prompts, better skill instructions, new styles in `eval/` (hatched, scanned, photographed), results from other models in `docs/BENCHMARK.md`. The prompt on the page (the Copy prompt buttons) is the fenced block of `docs/PROMPT.md`, and of `docs/PROMPT.pl.md` when that file exists, embedded by `npm run build`: edit the file, not the page.
+2. **Reading quality.** Better prompts, better skill instructions, new styles in `eval/` (hatched, scanned, photographed), results from other models in `docs/BENCHMARK.md`. The prompt on the page (the Copy prompt buttons) is the whole of `docs/PROMPT.md`, and of `docs/PROMPT.pl.md` when that file exists (the files hold nothing but the prompt), embedded by `npm run build`: edit the file, not the page.
 3. **Viewer features.** Open an issue first for anything that changes the plan format (`schema/plan.v1.schema.json`, `docs/SPEC.md`): the format is the contract between the AI, the validator and the viewer. Textures are procedural and deterministic (`viewer/src/textures.js`, how it works and how to add one in `docs/TEXTURES.md`): a new texture is a generator and a test, not an image file.
 
 ## Setup
