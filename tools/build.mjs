@@ -13,8 +13,10 @@ const dist = outIdx >= 0 ? resolve(process.argv[outIdx + 1]) : join(root, 'dist'
 const docsDir = docsIdx >= 0 ? resolve(process.argv[docsIdx + 1]) : join(root, 'docs'); // where PROMPT.md is read from (a test builds with its own)
 
 // The live site. Link previews need absolute addresses, so the address is one constant here; .github/workflows/pages.yml
-// publishes docs/social-preview.jpg next to index.html under the name used below.
+// publishes docs/social-preview.jpg next to index.html under the name used below, and the Polish copy of this page
+// (tools/localize-page.mjs) under pl/. The page carries canonical and hreflang links to both.
 const SITE = 'https://mrpawelcz.github.io/planwalk/';
+const SITE_PL = `${SITE}pl/`;
 const PREVIEW = `${SITE}social-preview.jpg`;
 const TITLE = 'planwalk: floor plan to walkable 3D';
 const DESCRIPTION = 'Turn a floor plan into a 3D flat you can walk through. Free, runs in your browser, your plan never leaves the page.';
@@ -70,6 +72,8 @@ const head = (withSamples) => [
   ...(withSamples ? [
     meta('property', 'og:type', 'website'),
     meta('property', 'og:site_name', 'planwalk'),
+    meta('property', 'og:locale', 'en_US'),
+    meta('property', 'og:locale:alternate', 'pl_PL'),
     meta('property', 'og:title', TITLE),
     meta('property', 'og:description', CARD_DESCRIPTION),
     meta('property', 'og:url', SITE),
@@ -83,6 +87,10 @@ const head = (withSamples) => [
     meta('name', 'twitter:description', CARD_DESCRIPTION),
     meta('name', 'twitter:image', PREVIEW),
     meta('name', 'twitter:image:alt', PREVIEW_ALT),
+    `<link rel="canonical" href="${SITE}">`,
+    `<link rel="alternate" hreflang="en" href="${SITE}">`,
+    `<link rel="alternate" hreflang="pl" href="${SITE_PL}">`,
+    `<link rel="alternate" hreflang="x-default" href="${SITE}">`,
   ] : []),
 ].join('\n');
 

@@ -1,7 +1,7 @@
 // The About sheet in Node: rows come from a pure function, the scale badge from a word check on the scale note.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { PLAN_SCHEMA, validatePlan } from '../../src/core/validate.js';
 import { buildModel } from '../../viewer/src/geometry.js';
 import { setLang } from '../../viewer/src/i18n.js';
@@ -108,12 +108,75 @@ test('scaleGuessed: the words of the prompt examples in English and Polish, not 
   ]) assert.equal(scaleGuessed(measured), false, String(measured));
 });
 
+// The 14 notes of review MINOR-5, each with the outcome the badge has to give: it states an estimated scale only when the
+// note says so about the scale itself (not about the wall thickness or the layout), and not when a printed basis is named.
+const MINOR5 = [
+  ['Wall thickness estimated, scale from the printed dimension 3.20 m', false],
+  ['Scale from printed dimensions (assumed wall thickness 0.12 m)', false],
+  ['Scale taken from printed room areas; wall thickness estimated from the drawing, scale is exact', false],
+  ['Printed dimensions, scale 1:50, exact', false],
+  ['No printed scale; derived from door widths', true],
+  ['Scale: unknown', true],
+  ['Sizes inferred from typical room proportions, no scale printed', true],
+  ['Skala przyjęta z wymiaru 3,20 m, grubość ścian szacowana', false],
+  ['Brak skali na rysunku, wymiary na oko', true],
+  ['Skala wzięta z szerokości drzwi', true],
+  ['Skala zgadnięta', true],
+  ['Scale estimated from door widths', true],
+  ['The scale is a guess, not a measurement', true],
+  ['I guessed the layout of the bathroom but the scale is printed', false],
+];
+test('scaleGuessed: the 14 cases of review MINOR-5, true only when the note says the scale itself is a guess', () => {
+  for (const [note, want] of MINOR5) assert.equal(scaleGuessed(note), want, `${want ? 'badge' : 'no badge'} expected for: ${note}`);
+});
+
+test('scaleGuessed: more notes in the same spirit, English and Polish', () => {
+  for (const [note, want] of [
+    ['Scale: 1:100 as printed; the room areas agree with the polygons', false],
+    ['No scale bar, but the scale comes from the printed overall width 9.25 m', false],
+    ['No scale bar; scale taken from the door widths', true],
+    ['Scale from a standard door 0.85 m', true],
+    ['Scale is exact (printed dimension line), wall thickness assumed', false],
+    ['I estimated the scale from the doors', true],
+    ['Approximate scale, door widths only', true],
+    ['Scale not printed, door widths used', true],
+    ['skala z wymiaru 9,25 m; grubość ścian na oko', false],
+    ['skala zgadza się z wymiarami na rysunku', false],
+    ['Brak skali, przyjęto szerokość drzwi 0,9 m', true],
+    ['Skala jest podana na rysunku, układ łazienki zgadnięty', false],
+    ['Skala: nieznana', true],
+    ['skala została oszacowana z drzwi', true],
+  ]) assert.equal(scaleGuessed(note), want, `${want ? 'badge' : 'no badge'} expected for: ${note}`);
+});
+
+// Real notes: the scale notes the models wrote in the benchmark readings (eval/results). A note that says the scale comes from
+// a printed dimension line gets no badge, a note that says it used a standard door as a last resort gets one.
+test('scaleGuessed on the scale notes of the benchmark readings: printed dimension lines no badge, door based scales a badge', () => {
+  const dir = new URL('../../eval/results/', import.meta.url).pathname;
+  const walk = (d) => readdirSync(d).flatMap((f) => { const p = `${d}/${f}`; return statSync(p).isDirectory() ? walk(p) : [p]; });
+  const notes = new Set();
+  if (existsSync(dir)) {
+    for (const f of walk(dir).filter((p) => /readings[^/]*\/[^/]+\.plan\.json$/.test(p))) {
+      const note = JSON.parse(readFileSync(f, 'utf8'))?.meta?.scale_note;
+      if (typeof note === 'string') notes.add(note);
+    }
+  }
+  let printed = 0, door = 0;
+  for (const note of notes) {
+    if (/^(Scale (comes )?from the printed|I used the printed)\b.{0,40}dimension line/i.test(note)) { printed++; assert.equal(scaleGuessed(note), false, note); }
+    if (/\bstandard\b[^.]{0,20}\bdoor\b|last.resort/i.test(note)) { door++; assert.equal(scaleGuessed(note), true, note); }
+  }
+  if (existsSync(dir)) assert.ok(printed >= 3 && door >= 5, `the benchmark readings should hold both kinds of notes (printed ${printed}, door ${door})`);
+});
+
 test('scaleGuessed stays fast on hostile notes: cut to the schema cap, every pattern linear', () => {
   const cap = PLAN_SCHEMA.properties.meta.properties.scale_note.maxLength;
   for (const note of [
     'szacow'.repeat(20000), 'przybli'.repeat(20000), 'typow'.repeat(40000), 'standardow'.repeat(20000), 'estimat'.repeat(20000), 'assum'.repeat(40000),
     'szacow '.repeat(20000), 'a'.repeat(120000) + 'szacow', 'szacow' + 'a'.repeat(120000), 'skal '.repeat(40000), 'scale '.repeat(40000),
     'szacow'.repeat(160) + ' skal', 'x'.repeat(2000000),
+    'no '.repeat(40000), 'brak '.repeat(40000), 'scale is '.repeat(40000), 'skala jest '.repeat(40000), 'from the '.repeat(40000), 'from the a typical '.repeat(20000),
+    'no a b '.repeat(40000), 'brak aa bb '.repeat(40000), 'scale '.repeat(500) + 'is'.repeat(300), 'oszacowan '.repeat(40000), `${'a '.repeat(498)}no scale`,
   ]) {
     const t0 = performance.now();
     assert.equal(scaleGuessed(note), false, note.slice(0, 24));

@@ -67,6 +67,16 @@ test('every action in ci, release and pages is pinned to a full commit sha with 
   }
 });
 
+test('pages publishes the Polish page and both preview images next to the English ones; the release ships the English page only', () => {
+  const pages = read('.github/workflows/pages.yml');
+  assert.match(pages, /cp dist\/planwalk\.html site\/index\.html/);
+  assert.match(pages, /node tools\/localize-page\.mjs dist\/planwalk\.html site\/pl\/index\.html/);
+  assert.match(pages, /cp docs\/social-preview\.jpg site\/social-preview\.jpg/);
+  assert.match(pages, /cp docs\/social-preview-pl\.jpg site\/social-preview-pl\.jpg/);
+  assert.ok(pages.indexOf('localize-page.mjs') < pages.indexOf('upload-pages-artifact'), 'the Polish page is assembled before the site folder is uploaded');
+  assert.doesNotMatch(release, /localize-page|social-preview|site\/pl/);
+});
+
 test('dependabot updates npm and github-actions weekly, grouped', () => {
   for (const eco of ['npm', 'github-actions']) {
     const block = dependabot.slice(dependabot.indexOf(`package-ecosystem: ${eco}`));
