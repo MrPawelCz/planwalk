@@ -1,0 +1,59 @@
+```json
+{
+  "version": 1,
+  "name": "Two bedrooms, hall, living room, kitchen and bathroom",
+  "units": "m",
+  "meta": {
+    "source": "image",
+    "scale_note": "Scale from the printed overall dimension of 11.75 m. The dimension line spans about 940 px, which gives about 80 px/m. I applied it to the wall centerlines, so the overall centerline width is 11.65 m. Fairly sure (about 5% error). The drawing is slightly skewed and the printed room areas were not used.",
+    "notes": "The plan is slightly skewed, so I straightened it. I used one y of 3.7 for the horizontal wall under the bedrooms and for the kitchen's top wall. I used x = 6.6 for the bedroom block's right wall and the living room/kitchen divider. The living room and kitchen are open to each other between y 5.3 and 7.0, so they share an edge. Wall thickness is a guess of 0.25 m. Door hinge and swing sides are not set. I left out furniture because none is drawn."
+  },
+  "levels": [
+    {
+      "id": "L0",
+      "walls": [
+        { "id": "w1", "from": [0, 0], "to": [6.6, 0], "kind": "exterior", "thickness": 0.25 },
+        { "id": "w2", "from": [6.6, 0], "to": [6.6, 3.7], "kind": "exterior", "thickness": 0.25 },
+        { "id": "w3", "from": [6.6, 3.7], "to": [11.65, 3.7], "kind": "exterior", "thickness": 0.25 },
+        { "id": "w4", "from": [11.65, 3.7], "to": [11.65, 7.8], "kind": "exterior", "thickness": 0.25 },
+        { "id": "w5", "from": [11.65, 7.8], "to": [0, 7.8], "kind": "exterior", "thickness": 0.25 },
+        { "id": "w6", "from": [0, 7.8], "to": [0, 0], "kind": "exterior", "thickness": 0.25 },
+        { "id": "w7", "from": [3.0, 0], "to": [3.0, 3.7], "kind": "interior", "thickness": 0.2 },
+        { "id": "w8", "from": [0, 3.7], "to": [6.6, 3.7], "kind": "interior", "thickness": 0.2 },
+        { "id": "w9", "from": [2.3, 3.7], "to": [2.3, 7.8], "kind": "interior", "thickness": 0.2 },
+        { "id": "w10", "from": [6.6, 3.7], "to": [6.6, 5.3], "kind": "interior", "thickness": 0.2 },
+        { "id": "w11", "from": [6.6, 7.0], "to": [6.6, 7.8], "kind": "interior", "thickness": 0.2 },
+        { "id": "w12", "from": [9.45, 3.7], "to": [9.45, 7.8], "kind": "interior", "thickness": 0.2 }
+      ],
+      "openings": [
+        { "id": "win1", "wall": "w1", "type": "window", "offset": 0.78, "width": 1.5 },
+        { "id": "win2", "wall": "w1", "type": "window", "offset": 4.25, "width": 1.3 },
+        { "id": "win3", "wall": "w6", "type": "window", "offset": 5.3, "width": 1.45 },
+        { "id": "win4", "wall": "w6", "type": "window", "offset": 1.85, "width": 0.6 },
+        { "id": "win5", "wall": "w2", "type": "window", "offset": 1.2, "width": 1.5 },
+        { "id": "win6", "wall": "w3", "type": "window", "offset": 0.76, "width": 1.2 },
+        { "id": "win7", "wall": "w5", "type": "window", "offset": 6.55, "width": 1.5 },
+        { "id": "win8", "wall": "w5", "type": "window", "offset": 3.1, "width": 1.3 },
+        { "id": "win9", "wall": "w5", "type": "window", "offset": 0.9, "width": 0.55 },
+        { "id": "d1", "wall": "w5", "type": "door", "offset": 10.27, "width": 0.95 },
+        { "id": "d2", "wall": "w8", "type": "door", "offset": 0.75, "width": 0.9 },
+        { "id": "d3", "wall": "w8", "type": "door", "offset": 4.74, "width": 0.85 },
+        { "id": "d4", "wall": "w9", "type": "door", "offset": 1.75, "width": 0.9 },
+        { "id": "d5", "wall": "w12", "type": "door", "offset": 1.95, "width": 0.8 }
+      ],
+      "rooms": [
+        { "id": "r1", "name": "Bedroom 1", "polygon": [[0, 0], [3.0, 0], [3.0, 3.7], [0, 3.7]], "area": 11.0 },
+        { "id": "r2", "name": "Bedroom 2", "polygon": [[3.0, 0], [6.6, 0], [6.6, 3.7], [3.0, 3.7]], "area": 13.0 },
+        { "id": "r3", "name": "Hall", "polygon": [[0, 3.7], [2.3, 3.7], [2.3, 7.8], [0, 7.8]], "area": 10.1 },
+        { "id": "r4", "name": "Living room", "polygon": [[2.3, 3.7], [6.6, 3.7], [6.6, 7.8], [2.3, 7.8]], "area": 17.4 },
+        { "id": "r5", "name": "Kitchen", "polygon": [[6.6, 3.7], [9.45, 3.7], [9.45, 7.8], [6.6, 7.8]], "area": 12.6 },
+        { "id": "r6", "name": "Bathroom", "polygon": [[9.45, 3.7], [11.65, 3.7], [11.65, 7.8], [9.45, 7.8]], "area": 9.2 }
+      ]
+    }
+  ]
+}
+```
+
+- Scale: the printed 11.75 m overall dimension. I'm fairly sure of it, to within about 5%.
+- Unsure: the plan is skewed, so wall positions are approximate, and the printed areas don't match my polygons exactly.
+- Left out: furniture, because none is clearly drawn.

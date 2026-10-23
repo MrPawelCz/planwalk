@@ -1,0 +1,11 @@
+{
+  "code": "pd4cd",
+  "model": "openai/gpt-6-astra",
+  "status": "failed",
+  "attempts": [
+    {
+      "n": 1,
+      "error": "stopped at the cap of 30 OpenAI attempts"
+    }
+  ]
+}

@@ -1,0 +1,288 @@
+{
+  "version": 1,
+  "name": "Studio with hall and bathroom",
+  "units": "m",
+  "meta": {
+    "source": "image",
+    "scale_note": "No dimensions or room areas are printed. Scale estimated from the hall entrance door, assuming its approximately 73-pixel opening is 0.85 m wide, giving approximately 86 pixels per metre. Confidence is low to moderate; all dimensions depend on this assumed door width.",
+    "notes": "Origin is the top-left extent of the traced exterior walls. Irregular hand-drawn walls were simplified to straight centerlines. The broad opening between Studio and Hall is interpreted as a passage. Thin parallel lines in exterior walls are interpreted as windows. No clearly identifiable furniture or stairs are drawn. Room areas are omitted because none are printed."
+  },
+  "levels": [
+    {
+      "id": "L0",
+      "walls": [
+        {
+          "id": "w1",
+          "from": [
+            0.15,
+            0.16
+          ],
+          "to": [
+            6.06,
+            0.16
+          ],
+          "kind": "exterior",
+          "thickness": 0.28
+        },
+        {
+          "id": "w2",
+          "from": [
+            6.06,
+            0.16
+          ],
+          "to": [
+            6.06,
+            2.49
+          ],
+          "kind": "exterior",
+          "thickness": 0.28
+        },
+        {
+          "id": "w3",
+          "from": [
+            6.06,
+            2.49
+          ],
+          "to": [
+            6.06,
+            4.53
+          ],
+          "kind": "exterior",
+          "thickness": 0.28
+        },
+        {
+          "id": "w4",
+          "from": [
+            0.15,
+            4.53
+          ],
+          "to": [
+            4.03,
+            4.53
+          ],
+          "kind": "exterior",
+          "thickness": 0.28
+        },
+        {
+          "id": "w5",
+          "from": [
+            4.03,
+            4.53
+          ],
+          "to": [
+            6.06,
+            4.53
+          ],
+          "kind": "exterior",
+          "thickness": 0.28
+        },
+        {
+          "id": "w6",
+          "from": [
+            0.15,
+            0.16
+          ],
+          "to": [
+            0.15,
+            2.49
+          ],
+          "kind": "exterior",
+          "thickness": 0.28
+        },
+        {
+          "id": "w7",
+          "from": [
+            0.15,
+            2.49
+          ],
+          "to": [
+            0.15,
+            4.53
+          ],
+          "kind": "exterior",
+          "thickness": 0.28
+        },
+        {
+          "id": "w8",
+          "from": [
+            0.15,
+            2.49
+          ],
+          "to": [
+            4.03,
+            2.49
+          ],
+          "kind": "interior",
+          "thickness": 0.11
+        },
+        {
+          "id": "w9",
+          "from": [
+            4.03,
+            2.49
+          ],
+          "to": [
+            6.06,
+            2.49
+          ],
+          "kind": "interior",
+          "thickness": 0.11
+        },
+        {
+          "id": "w10",
+          "from": [
+            4.03,
+            2.49
+          ],
+          "to": [
+            4.03,
+            4.53
+          ],
+          "kind": "interior",
+          "thickness": 0.12
+        }
+      ],
+      "openings": [
+        {
+          "id": "win1",
+          "wall": "w1",
+          "type": "window",
+          "offset": 0.66,
+          "width": 1.66
+        },
+        {
+          "id": "win2",
+          "wall": "w1",
+          "type": "window",
+          "offset": 3.83,
+          "width": 1.27
+        },
+        {
+          "id": "win3",
+          "wall": "w2",
+          "type": "window",
+          "offset": 0.43,
+          "width": 1.48
+        },
+        {
+          "id": "win4",
+          "wall": "w6",
+          "type": "window",
+          "offset": 0.61,
+          "width": 1.12
+        },
+        {
+          "id": "d1",
+          "wall": "w4",
+          "type": "door",
+          "offset": 1.03,
+          "width": 0.85,
+          "hinge": "start",
+          "opens_to": "left"
+        },
+        {
+          "id": "win5",
+          "wall": "w4",
+          "type": "window",
+          "offset": 2.33,
+          "width": 0.57
+        },
+        {
+          "id": "win6",
+          "wall": "w5",
+          "type": "window",
+          "offset": 0.75,
+          "width": 0.57
+        },
+        {
+          "id": "p1",
+          "wall": "w8",
+          "type": "passage",
+          "offset": 1.72,
+          "width": 1.28
+        },
+        {
+          "id": "d2",
+          "wall": "w10",
+          "type": "door",
+          "offset": 0.8,
+          "width": 0.73,
+          "hinge": "start",
+          "opens_to": "left"
+        }
+      ],
+      "rooms": [
+        {
+          "id": "r1",
+          "name": "Studio",
+          "polygon": [
+            [
+              0.15,
+              0.16
+            ],
+            [
+              6.06,
+              0.16
+            ],
+            [
+              6.06,
+              2.49
+            ],
+            [
+              4.03,
+              2.49
+            ],
+            [
+              0.15,
+              2.49
+            ]
+          ]
+        },
+        {
+          "id": "r2",
+          "name": "Hall",
+          "polygon": [
+            [
+              0.15,
+              2.49
+            ],
+            [
+              4.03,
+              2.49
+            ],
+            [
+              4.03,
+              4.53
+            ],
+            [
+              0.15,
+              4.53
+            ]
+          ]
+        },
+        {
+          "id": "r3",
+          "name": "Bathroom",
+          "polygon": [
+            [
+              4.03,
+              2.49
+            ],
+            [
+              6.06,
+              2.49
+            ],
+            [
+              6.06,
+              4.53
+            ],
+            [
+              4.03,
+              4.53
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

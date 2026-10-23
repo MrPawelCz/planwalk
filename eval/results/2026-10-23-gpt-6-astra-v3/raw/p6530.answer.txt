@@ -1,0 +1,343 @@
+```json
+{
+  "version": 1,
+  "name": "Two-bedroom single-floor layout",
+  "units": "m",
+  "meta": {
+    "source": "image",
+    "scale_note": "Used the printed 9.80 m horizontal dimension, spanning approximately 784 pixels between exterior wall centerlines, giving 80 pixels per metre. High confidence in the scale; coordinates are approximate image measurements.",
+    "notes": "Origin is the top-left outside corner of the exterior wall. Room polygons follow wall centerlines, and printed areas are copied without adjustment. The kitchen and living room share a partition with a large leafless opening. Crossed rectangular bedroom symbols are interpreted as wardrobes. Several small or ambiguous furniture symbols, including the circular hall symbol and the narrow diagonal-marked living-room rectangle, were omitted. Bathroom fixtures are interpreted as a basin, toilet and bathtub; the kitchen double-outline rectangle is interpreted as a sink. No stairs or additional floors are shown."
+  },
+  "levels": [
+    {
+      "id": "L0",
+      "walls": [
+        {
+          "id": "w_top",
+          "from": [0.15, 0.15],
+          "to": [9.95, 0.15],
+          "kind": "exterior",
+          "thickness": 0.3
+        },
+        {
+          "id": "w_right",
+          "from": [9.95, 0.15],
+          "to": [9.95, 8.1],
+          "kind": "exterior",
+          "thickness": 0.3
+        },
+        {
+          "id": "w_bottom",
+          "from": [0.15, 8.1],
+          "to": [9.95, 8.1],
+          "kind": "exterior",
+          "thickness": 0.3
+        },
+        {
+          "id": "w_left",
+          "from": [0.15, 0.15],
+          "to": [0.15, 8.1],
+          "kind": "exterior",
+          "thickness": 0.3
+        },
+        {
+          "id": "w_bedrooms",
+          "from": [3.5, 0.15],
+          "to": [3.5, 3.55],
+          "kind": "interior",
+          "thickness": 0.125
+        },
+        {
+          "id": "w_bathroom",
+          "from": [6.45, 0.15],
+          "to": [6.45, 3.55],
+          "kind": "interior",
+          "thickness": 0.125
+        },
+        {
+          "id": "w_bed1_corridor",
+          "from": [0.15, 3.55],
+          "to": [3.5, 3.55],
+          "kind": "interior",
+          "thickness": 0.125
+        },
+        {
+          "id": "w_bed2_corridor",
+          "from": [3.5, 3.55],
+          "to": [6.45, 3.55],
+          "kind": "interior",
+          "thickness": 0.125
+        },
+        {
+          "id": "w_bath_corridor",
+          "from": [6.45, 3.55],
+          "to": [9.95, 3.55],
+          "kind": "interior",
+          "thickness": 0.125
+        },
+        {
+          "id": "w_hall_corridor",
+          "from": [0.15, 4.75],
+          "to": [2.45, 4.75],
+          "kind": "interior",
+          "thickness": 0.125
+        },
+        {
+          "id": "w_kitchen_corridor",
+          "from": [2.45, 4.75],
+          "to": [5.8, 4.75],
+          "kind": "interior",
+          "thickness": 0.125
+        },
+        {
+          "id": "w_living_corridor",
+          "from": [5.8, 4.75],
+          "to": [9.95, 4.75],
+          "kind": "interior",
+          "thickness": 0.125
+        },
+        {
+          "id": "w_hall_kitchen",
+          "from": [2.45, 4.75],
+          "to": [2.45, 8.1],
+          "kind": "interior",
+          "thickness": 0.125
+        },
+        {
+          "id": "w_kitchen_living",
+          "from": [5.8, 4.75],
+          "to": [5.8, 8.1],
+          "kind": "interior",
+          "thickness": 0.125
+        }
+      ],
+      "openings": [
+        {
+          "id": "win_bed1_top",
+          "wall": "w_top",
+          "type": "window",
+          "offset": 1.05,
+          "width": 1.3
+        },
+        {
+          "id": "win_bed2",
+          "wall": "w_top",
+          "type": "window",
+          "offset": 4.15,
+          "width": 1.35
+        },
+        {
+          "id": "win_bath",
+          "wall": "w_top",
+          "type": "window",
+          "offset": 7.75,
+          "width": 0.6
+        },
+        {
+          "id": "win_bed1_left",
+          "wall": "w_left",
+          "type": "window",
+          "offset": 0.95,
+          "width": 1.5
+        },
+        {
+          "id": "win_hall",
+          "wall": "w_left",
+          "type": "window",
+          "offset": 6.0,
+          "width": 0.6
+        },
+        {
+          "id": "win_living_right",
+          "wall": "w_right",
+          "type": "window",
+          "offset": 5.65,
+          "width": 1.25
+        },
+        {
+          "id": "win_kitchen",
+          "wall": "w_bottom",
+          "type": "window",
+          "offset": 3.25,
+          "width": 1.5
+        },
+        {
+          "id": "win_living_bottom",
+          "wall": "w_bottom",
+          "type": "window",
+          "offset": 6.9,
+          "width": 1.7
+        },
+        {
+          "id": "d_entry",
+          "wall": "w_bottom",
+          "type": "door",
+          "offset": 0.55,
+          "width": 0.9
+        },
+        {
+          "id": "d_bed1",
+          "wall": "w_bed1_corridor",
+          "type": "door",
+          "offset": 1.15,
+          "width": 0.9
+        },
+        {
+          "id": "d_bed2",
+          "wall": "w_bed2_corridor",
+          "type": "door",
+          "offset": 1.15,
+          "width": 0.9
+        },
+        {
+          "id": "d_bath",
+          "wall": "w_bath_corridor",
+          "type": "door",
+          "offset": 1.5,
+          "width": 0.8
+        },
+        {
+          "id": "d_hall",
+          "wall": "w_hall_corridor",
+          "type": "door",
+          "offset": 0.7,
+          "width": 0.9
+        },
+        {
+          "id": "d_kitchen",
+          "wall": "w_kitchen_corridor",
+          "type": "door",
+          "offset": 1.25,
+          "width": 0.85
+        },
+        {
+          "id": "d_living",
+          "wall": "w_living_corridor",
+          "type": "door",
+          "offset": 1.6,
+          "width": 0.9
+        },
+        {
+          "id": "p_kitchen_living",
+          "wall": "w_kitchen_living",
+          "type": "passage",
+          "offset": 1.15,
+          "width": 1.5
+        }
+      ],
+      "rooms": [
+        {
+          "id": "r_bed1",
+          "name": "Bedroom 1",
+          "polygon": [[0.15, 0.15], [3.5, 0.15], [3.5, 3.55], [0.15, 3.55]],
+          "area": 11.4
+        },
+        {
+          "id": "r_bed2",
+          "name": "Bedroom 2",
+          "polygon": [[3.5, 0.15], [6.45, 0.15], [6.45, 3.55], [3.5, 3.55]],
+          "area": 10.0
+        },
+        {
+          "id": "r_bath",
+          "name": "Bathroom",
+          "polygon": [[6.45, 0.15], [9.95, 0.15], [9.95, 3.55], [6.45, 3.55]],
+          "area": 11.9
+        },
+        {
+          "id": "r_corridor",
+          "name": "Corridor",
+          "polygon": [[0.15, 3.55], [3.5, 3.55], [6.45, 3.55], [9.95, 3.55], [9.95, 4.75], [5.8, 4.75], [2.45, 4.75], [0.15, 4.75]],
+          "area": 11.8
+        },
+        {
+          "id": "r_hall",
+          "name": "Hall",
+          "polygon": [[0.15, 4.75], [2.45, 4.75], [2.45, 8.1], [0.15, 8.1]],
+          "area": 7.7
+        },
+        {
+          "id": "r_kitchen",
+          "name": "Kitchen",
+          "polygon": [[2.45, 4.75], [5.8, 4.75], [5.8, 8.1], [2.45, 8.1]],
+          "area": 11.2
+        },
+        {
+          "id": "r_living",
+          "name": "Living room",
+          "polygon": [[5.8, 4.75], [9.95, 4.75], [9.95, 8.1], [5.8, 8.1]],
+          "area": 13.9
+        }
+      ],
+      "furniture": [
+        {
+          "id": "bed1",
+          "type": "bed-double",
+          "center": [2.3, 1.85],
+          "size": [2.0, 1.6],
+          "rotation": 180
+        },
+        {
+          "id": "bed2",
+          "type": "bed-double",
+          "center": [5.25, 1.85],
+          "size": [2.0, 1.6],
+          "rotation": 180
+        },
+        {
+          "id": "wardrobe1",
+          "type": "wardrobe",
+          "center": [0.75, 0.6],
+          "size": [1.0, 0.6],
+          "rotation": 0
+        },
+        {
+          "id": "wardrobe2",
+          "type": "wardrobe",
+          "center": [4.1, 0.6],
+          "size": [1.0, 0.6],
+          "rotation": 0
+        },
+        {
+          "id": "bath_basin",
+          "type": "basin",
+          "center": [6.95, 0.6],
+          "size": [0.5, 0.4]
+        },
+        {
+          "id": "bath_toilet",
+          "type": "toilet",
+          "center": [9.5, 0.65],
+          "size": [0.4, 0.65],
+          "rotation": 0
+        },
+        {
+          "id": "bath_tub",
+          "type": "bathtub",
+          "center": [8.2, 3.05],
+          "size": [1.6, 0.7]
+        },
+        {
+          "id": "kitchen_sink",
+          "type": "sink",
+          "center": [3.2, 5.25],
+          "size": [1.2, 0.6]
+        },
+        {
+          "id": "living_sofa",
+          "type": "sofa",
+          "center": [7.88, 7.45],
+          "size": [2.0, 0.9],
+          "rotation": 180
+        },
+        {
+          "id": "living_coffee_table",
+          "type": "table-coffee",
+          "center": [7.88, 6.35],
+          "size": [1.0, 0.55]
+        }
+      ]
+    }
+  ]
+}
+```

@@ -1,0 +1,10 @@
+{
+  "model": "openai/gpt-6-astra",
+  "route": "openclaw infer model run (picture attached)",
+  "promptSpec": "docs/PROMPT.md (revised prompt; the exact text that was sent is prompt.txt)",
+  "promptMode": "whole file",
+  "promptSha256": "276f56ba055ac8573ba3a24ba02e07dd57b54c4cdacdd98ef91af7058a710b33",
+  "promptChars": 4988,
+  "extractor": "src/core/extract-json.js (the viewer's extractor, first version)",
+  "createdAt": "2026-10-23 23:35:15"
+}

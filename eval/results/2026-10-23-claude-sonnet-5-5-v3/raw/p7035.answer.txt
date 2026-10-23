@@ -1,0 +1,67 @@
+```json
+{
+  "version": 1,
+  "name": "Apartment with living room, bedroom, kitchen, bathroom, hall and entrance porch",
+  "units": "m",
+  "meta": {
+    "source": "image",
+    "scale_note": "The printed overall dimension 9.35 m runs between the centerlines of the left and right outer walls. That is 748 px, so the scale is 80 px/m. The printed room areas (19.4, 9.2, 6.0, 6.0, 16.0 m2) are consistent with the scale. Confidence: high.",
+    "notes": "The origin is the outer top-left corner of the main building, so the wall centerlines start at 0.15. The unlabelled enclosure above the living room is traced as three thin exterior walls, but no room is created for it because it has no name. Its depth and the door swing into it are read from the image. Opening positions are read from the image to about 5 cm. No furniture or stairs are drawn on the plan."
+  },
+  "levels": [
+    {
+      "id": "L0",
+      "walls": [
+        { "id": "wt1", "from": [0.15, 0.15], "to": [1.1, 0.15], "kind": "exterior" },
+        { "id": "wt2", "from": [1.1, 0.15], "to": [4.3, 0.15], "kind": "exterior" },
+        { "id": "wt3", "from": [4.3, 0.15], "to": [9.5, 0.15], "kind": "exterior" },
+        { "id": "wr1", "from": [9.5, 0.15], "to": [9.5, 3.2], "kind": "exterior" },
+        { "id": "wr2", "from": [9.5, 3.2], "to": [9.5, 6.2], "kind": "exterior" },
+        { "id": "wb1", "from": [0.15, 6.2], "to": [2.15, 6.2], "kind": "exterior" },
+        { "id": "wb2", "from": [2.15, 6.2], "to": [4.15, 6.2], "kind": "exterior" },
+        { "id": "wb3", "from": [4.15, 6.2], "to": [9.5, 6.2], "kind": "exterior" },
+        { "id": "wl1", "from": [0.15, 0.15], "to": [0.15, 3.2], "kind": "exterior" },
+        { "id": "wl2", "from": [0.15, 3.2], "to": [0.15, 6.2], "kind": "exterior" },
+        { "id": "bl", "from": [1.1, 0.15], "to": [1.1, -1.25], "kind": "exterior" },
+        { "id": "bt", "from": [1.1, -1.25], "to": [4.3, -1.25], "kind": "exterior" },
+        { "id": "br", "from": [4.3, -1.25], "to": [4.3, 0.15], "kind": "exterior" },
+        { "id": "m1", "from": [0.15, 3.2], "to": [2.15, 3.2], "kind": "interior" },
+        { "id": "m2", "from": [2.15, 3.2], "to": [4.15, 3.2], "kind": "interior" },
+        { "id": "m3", "from": [4.15, 3.2], "to": [6.5, 3.2], "kind": "interior" },
+        { "id": "m4", "from": [6.5, 3.2], "to": [9.5, 3.2], "kind": "interior" },
+        { "id": "wbed", "from": [6.5, 0.15], "to": [6.5, 3.2], "kind": "interior" },
+        { "id": "wbath", "from": [2.15, 3.2], "to": [2.15, 6.2], "kind": "interior" },
+        { "id": "wkit", "from": [4.15, 3.2], "to": [4.15, 6.2], "kind": "interior" }
+      ],
+      "openings": [
+        { "id": "d_porch", "wall": "wt2", "type": "door", "offset": 1.15, "width": 0.9 },
+        { "id": "win_t1", "wall": "wt3", "type": "window", "offset": 0.0, "width": 1.3 },
+        { "id": "win_t2", "wall": "wt3", "type": "window", "offset": 2.85, "width": 1.75 },
+        { "id": "win_r1", "wall": "wr1", "type": "window", "offset": 0.6, "width": 1.8 },
+        { "id": "win_r2", "wall": "wr2", "type": "window", "offset": 0.8, "width": 1.4 },
+        { "id": "d_main", "wall": "wb1", "type": "door", "offset": 0.45, "width": 0.9 },
+        { "id": "win_bath", "wall": "wb2", "type": "window", "offset": 0.71, "width": 0.6 },
+        { "id": "win_k1", "wall": "wb3", "type": "window", "offset": 0.46, "width": 1.78 },
+        { "id": "win_k2", "wall": "wb3", "type": "window", "offset": 3.2, "width": 1.59 },
+        { "id": "win_l1", "wall": "wl1", "type": "window", "offset": 0.75, "width": 1.55 },
+        { "id": "win_l2", "wall": "wl2", "type": "window", "offset": 1.2, "width": 0.6 },
+        { "id": "d_hall", "wall": "m1", "type": "door", "offset": 0.54, "width": 0.9 },
+        { "id": "d_kit", "wall": "m3", "type": "door", "offset": 0.95, "width": 0.85 },
+        { "id": "d_bed", "wall": "wbed", "type": "door", "offset": 0.95, "width": 0.9 },
+        { "id": "d_bath", "wall": "wbath", "type": "door", "offset": 0.78, "width": 0.8 }
+      ],
+      "rooms": [
+        { "id": "living", "name": "Living room", "polygon": [[0.15, 0.15], [6.5, 0.15], [6.5, 3.2], [0.15, 3.2]], "area": 19.4 },
+        { "id": "bedroom", "name": "Bedroom", "polygon": [[6.5, 0.15], [9.5, 0.15], [9.5, 3.2], [6.5, 3.2]], "area": 9.2 },
+        { "id": "hall", "name": "Hall", "polygon": [[0.15, 3.2], [2.15, 3.2], [2.15, 6.2], [0.15, 6.2]], "area": 6.0 },
+        { "id": "bathroom", "name": "Bathroom", "polygon": [[2.15, 3.2], [4.15, 3.2], [4.15, 6.2], [2.15, 6.2]], "area": 6.0 },
+        { "id": "kitchen", "name": "Kitchen", "polygon": [[4.15, 3.2], [9.5, 3.2], [9.5, 6.2], [4.15, 6.2]], "area": 16.0 }
+      ]
+    }
+  ]
+}
+```
+
+- Scale: the printed 9.35 m dimension, which spans the wall centerlines (80 px/m). The printed room areas agree with it.
+- Unsure: the unlabelled enclosure above the living room. I traced its walls but left it out as a room.
+- Unsure: opening positions, which are read by eye to about 5 cm.

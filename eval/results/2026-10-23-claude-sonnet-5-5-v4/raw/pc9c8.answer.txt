@@ -1,0 +1,57 @@
+```json
+{
+  "version": 1,
+  "name": "Apartment with hall, bathroom, kitchen, living room, bedroom and balcony",
+  "units": "m",
+  "meta": {
+    "source": "image",
+    "scale_note": "The plan has no printed dimensions or areas. I used a standard door of 0.85 m as a last resort. The door chords measure about 66 px, which gives about 78 px/m. The overall size is about 9.1 m by 6.4 m (wall centerlines) plus the balcony. Confidence is low to medium.",
+    "notes": "The origin is the top-left of the balcony, so the main outer wall starts at y=1.33. The balcony is traced as three railing walls (height 1.0) with no ceiling. Some window positions are approximate because the lines are faint. I left out a faint window low on the left wall and the small stubs in the wall lines. There is no furniture, no stairs and no printed areas."
+  },
+  "levels": [
+    {
+      "id": "L0",
+      "walls": [
+        { "id": "w_top", "from": [0, 1.33], "to": [9.1, 1.33], "kind": "exterior" },
+        { "id": "w_right", "from": [9.1, 1.33], "to": [9.1, 7.76], "kind": "exterior" },
+        { "id": "w_bottom", "from": [0, 7.76], "to": [9.1, 7.76], "kind": "exterior" },
+        { "id": "w_left", "from": [0, 1.33], "to": [0, 7.76], "kind": "exterior" },
+        { "id": "w_mid", "from": [0, 4.53], "to": [9.1, 4.53], "kind": "interior" },
+        { "id": "w_bed", "from": [6.23, 1.33], "to": [6.23, 4.53], "kind": "interior" },
+        { "id": "w_bath", "from": [1.88, 4.53], "to": [1.88, 7.76], "kind": "interior" },
+        { "id": "w_kit", "from": [3.81, 4.53], "to": [3.81, 7.76], "kind": "interior" },
+        { "id": "w_bal1", "from": [0.92, 1.33], "to": [0.92, 0], "kind": "exterior", "height": 1.0 },
+        { "id": "w_bal2", "from": [0.92, 0], "to": [3.94, 0], "kind": "exterior", "height": 1.0 },
+        { "id": "w_bal3", "from": [3.94, 0], "to": [3.94, 1.33], "kind": "exterior", "height": 1.0 }
+      ],
+      "openings": [
+        { "id": "d_bal", "wall": "w_top", "type": "door", "offset": 1.99, "width": 0.87 },
+        { "id": "win_t1", "wall": "w_top", "type": "window", "offset": 3.91, "width": 1.54 },
+        { "id": "win_t2", "wall": "w_top", "type": "window", "offset": 6.99, "width": 1.34 },
+        { "id": "win_r1", "wall": "w_right", "type": "window", "offset": 0.82, "width": 1.48 },
+        { "id": "win_r2", "wall": "w_right", "type": "window", "offset": 4.35, "width": 1.15 },
+        { "id": "win_l1", "wall": "w_left", "type": "window", "offset": 0.86, "width": 1.46 },
+        { "id": "d_front", "wall": "w_bottom", "type": "door", "offset": 0.42, "width": 0.85 },
+        { "id": "win_b1", "wall": "w_bottom", "type": "window", "offset": 2.56, "width": 0.56 },
+        { "id": "win_b2", "wall": "w_bottom", "type": "window", "offset": 4.49, "width": 1.25 },
+        { "id": "win_b3", "wall": "w_bottom", "type": "window", "offset": 7.08, "width": 1.38 },
+        { "id": "d_hall", "wall": "w_mid", "type": "door", "offset": 0.42, "width": 0.85 },
+        { "id": "d_kit", "wall": "w_mid", "type": "door", "offset": 4.53, "width": 0.8 },
+        { "id": "d_bed", "wall": "w_bed", "type": "door", "offset": 1.08, "width": 0.86 },
+        { "id": "d_bath", "wall": "w_bath", "type": "door", "offset": 1.21, "width": 0.77 }
+      ],
+      "rooms": [
+        { "id": "r_living", "name": "Living room", "polygon": [[0, 1.33], [6.23, 1.33], [6.23, 4.53], [0, 4.53]] },
+        { "id": "r_bed", "name": "Bedroom", "polygon": [[6.23, 1.33], [9.1, 1.33], [9.1, 4.53], [6.23, 4.53]] },
+        { "id": "r_hall", "name": "Hall", "polygon": [[0, 4.53], [1.88, 4.53], [1.88, 7.76], [0, 7.76]] },
+        { "id": "r_bath", "name": "Bathroom", "polygon": [[1.88, 4.53], [3.81, 4.53], [3.81, 7.76], [1.88, 7.76]] },
+        { "id": "r_kitchen", "name": "Kitchen", "polygon": [[3.81, 4.53], [9.1, 4.53], [9.1, 7.76], [3.81, 7.76]] }
+      ]
+    }
+  ]
+}
+```
+
+- **Scale:** I used the standard 0.85 m door because the plan has no printed dimensions or areas. I'm not very sure of it.
+- **Balcony:** It sits above the main outer wall, so the origin is the top-left of the balcony. I traced it as railing walls and did not name it as a room.
+- **Windows:** Some window positions are approximate because the lines are faint. I left out one faint window low on the left wall.

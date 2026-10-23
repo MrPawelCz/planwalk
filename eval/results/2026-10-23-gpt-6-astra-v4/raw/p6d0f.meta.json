@@ -1,0 +1,26 @@
+{
+  "code": "p6d0f",
+  "model": "openai/gpt-6-astra",
+  "status": "ok",
+  "finishedAt": "2026-10-23 23:47:33",
+  "ms": 48328,
+  "answerChars": 5044,
+  "bare": false,
+  "fenceBlocks": 1,
+  "charsBeforeBlock": 0,
+  "charsAfterBlock": 0,
+  "extractOk": true,
+  "repairs": [
+    "took the code block"
+  ],
+  "planFile": "readings/p6d0f.plan.json",
+  "call": {},
+  "attempts": [
+    {
+      "n": 1,
+      "at": "2026-10-23 23:47:33",
+      "ms": 48328,
+      "ok": true
+    }
+  ]
+}
