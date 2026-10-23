@@ -78,6 +78,48 @@ test('a chat answer is read, every repair is printed as a note line and --strict
   assert.doesNotMatch(run(join(root, 'examples/flat-1.plan.json')).stdout, /note:/);
 });
 
+test('an unknown property is a warning (exit 0); --strict makes it an error (exit 1)', () => {
+  const p = flat();
+  p.levels[0].rooms[0].furniture = [];
+  const f = put('unknown.json', p);
+  const r = run(f);
+  assert.equal(r.status, 0, r.stdout);
+  assert.match(r.stdout, /^W116 levels\[0\]\.rooms\[0\] "living": .*unknown property "furniture".* Fix: /m);
+  assert.match(r.stdout, /0 errors, 1 warnings/);
+  const s = run(f, '--strict');
+  assert.equal(s.status, 1);
+  assert.match(s.stdout, /^E002 levels\[0\]\.rooms\[0\] "living": .*unknown property "furniture"/m);
+  assert.match(s.stdout, /1 errors, 0 warnings/);
+  p['x-tool'] = 1;
+  p.$schema = 'https://example.com/s.json';
+  assert.match(run(put('ext.json', p), '--strict').stdout, /1 errors, 0 warnings/, '$schema and x- keys add nothing');
+});
+
+test('a plan in which some elements have errors exits 1 and says how many the viewer would skip', () => {
+  const p = flat();
+  p.levels[0].openings[1].width = 0;
+  const one = run(put('partial1.json', p));
+  assert.equal(one.status, 1);
+  assert.match(one.stdout, /^E002 levels\[0\]\.openings\[1\]\.width/m);
+  assert.match(one.stdout, /^1 element would be skipped when opened in the viewer$/m);
+  p.levels[0].furniture[0].center = 'x';
+  const two = run(put('partial2.json', p));
+  assert.equal(two.status, 1);
+  assert.match(two.stdout, /^2 elements would be skipped when opened in the viewer$/m);
+  const j = JSON.parse(run(put('partial2.json', p), '--json').stdout);
+  assert.equal(j.ok, false);
+  assert.equal(j.partial, true);
+  assert.deepEqual(j.skipped.map((s) => s.kind).sort(), ['furniture', 'opening']);
+  assert.doesNotMatch(run(join(root, 'examples/flat-1.plan.json')).stdout, /skipped/, 'nothing is said about a good plan');
+  const none = flat();
+  none.levels[0].walls.forEach((w) => { w.from = 'a'; });
+  const gone = run(put('none.json', none));
+  assert.equal(gone.status, 1);
+  assert.doesNotMatch(gone.stdout, /would be skipped/);
+  assert.match(gone.stdout, /nothing usable would be left/);
+  assert.equal(JSON.parse(run(put('none.json', none), '--json').stdout).partial, false);
+});
+
 test('two plans in one answer: the CLI says which one it read', () => {
   const second = { ...flat(), name: 'Corrected' };
   const r = run(put('two.txt', `First:\n${JSON.stringify(flat())}\nCorrected:\n${JSON.stringify(second)}`), '--json');
