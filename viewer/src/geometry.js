@@ -184,8 +184,12 @@ function labelPoint(poly) {
   const maxSamples = Math.min(2500, Math.max(150, Math.floor(40000 / poly.length)));
   const step = Math.max(0.05, Math.min(bb.width, bb.height) / 24, Math.max(bb.width, bb.height) / 200, Math.sqrt((bb.width * bb.height) / maxSamples));
   let best = null, bestD = -1;
-  for (let x = bb.minX + step / 2; x < bb.maxX; x += step) {
-    for (let y = bb.minY + step / 2; y < bb.maxY; y += step) {
+  // Counted loops: far from the origin a float step can fall below the spacing of the numbers and `x += step` would never advance.
+  const nx = Math.ceil((bb.maxX - bb.minX - step / 2) / step), ny = Math.ceil((bb.maxY - bb.minY - step / 2) / step);
+  for (let i = 0; i < nx; i++) {
+    const x = bb.minX + step / 2 + i * step;
+    for (let j = 0; j < ny; j++) {
+      const y = bb.minY + step / 2 + j * step;
       if (!pointInPolygon([x, y], poly)) continue;
       const d = edgeDist([x, y]);
       if (d > bestD) { bestD = d; best = [x, y]; }

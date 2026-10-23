@@ -3,6 +3,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { validatePlan } from '../../src/core/validate.js';
 import { buildModel } from '../../viewer/src/geometry.js';
 import { defaultSpawn } from '../../viewer/src/physics.js';
@@ -103,4 +105,19 @@ test('the spawn point search stays bounded in a huge room whose middle is blocke
   const ms = performance.now() - t0;
   assert.ok(Number.isFinite(spawn.x) && Number.isFinite(spawn.y));
   assert.ok(ms < 300, `${Math.round(ms)} ms`);
+});
+
+// A whole room far from the origin (not one stray corner): near 1e16 a float step no longer advances, so a loop written as
+// `x += step` never ended and froze the tab. The child process is killed after 10 s, a hang shows up as a failure here.
+test('a whole plan moved to 1e15, 1e16, 1e17 or 1e20 builds the model and picks a walk start in well under a second', () => {
+  const child = fileURLToPath(new URL('./far-plan-child.mjs', import.meta.url));
+  for (const example of ['flat-1', 'duplex-1']) {
+    for (const offset of [1e15, 1e16, 1e17, 1e20]) {
+      const r = spawnSync(process.execPath, [child, String(offset), example], { encoding: 'utf8', timeout: 10000 });
+      assert.equal(r.status, 0, `${example} at ${offset}: ${r.signal || r.error || r.stderr}`);
+      const out = JSON.parse(r.stdout.trim().split('\n').pop());
+      assert.ok(out.ms < 1000, `${example} at ${offset}: ${out.ms} ms`);
+      if (out.built) assert.equal(out.spawnFinite, true, `${example} at ${offset}: walk start is not finite`);
+    }
+  }
 });
