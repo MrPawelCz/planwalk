@@ -32,4 +32,4 @@ export function englishLeft(text) {
 export const isValidatorLine = (text) => /^[EW]\d{3}\b/.test(String(text).trim());
 
 // The style rule for everything the product says: no em dash, no en dash.
-export const DASHES = /[–—]/;
+export const DASHES = /[\u2013\u2014]/;
