@@ -98,6 +98,8 @@ var CAPS = Object.freeze({
   // points of one room polygon
   furnitureSpan: 6,
   // metres: the largest width, depth or height of a piece of furniture the viewer draws (W112 warns above it)
+  coordinate: 1e3,
+  // metres from the origin: a wall end, room corner, stair end or furniture centre farther out is E014 (a mistyped number)
   echo: 80,
   // characters of a user supplied value that a message may repeat
   message: 1500,
@@ -209,7 +211,7 @@ var OTHER_SPACE = /[\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]/;
 var TYPO_QUOTES = "\u201C\u201D\u201E\u201F\xAB\xBB\u2033\uFF02";
 var HAS_TYPO_QUOTE = new RegExp(`[${TYPO_QUOTES}]`);
 var STARTS_LIKE_PLAN = new RegExp(`^\\{\\s*["${TYPO_QUOTES}]\\s*[A-Za-z_]`);
-var FENCE = /(?:^|\n)[ \t]*(`{3,}|~{3,})[^\n]*\n([\s\S]*?)(?:\n[ \t]*\1[`~]*[ \t]*(?=\n|$)|$)/g;
+var FENCE = /(?:^|\n)[ \t]*(`{3,}(?!`)|~{3,}(?!~))[^\n]*\n([\s\S]*?)(?:\n[ \t]*\1[`~]*[ \t]*(?=\n|$)|$)/g;
 var JSON_LINE = /^\s*json[ \t]*:?[ \t]*\r?\n/i;
 var MAX_FENCES = 4;
 var MAX_TRIES = 3;
@@ -595,10 +597,14 @@ function schemaHint(s, root) {
   return "a valid value";
 }
 function checkSchema(value, schema, root = schema, segs = [], out = []) {
+  suggestBudget = SUGGEST_BUDGET;
+  return checkNode(value, schema, root, segs, out);
+}
+function checkNode(value, schema, root, segs, out) {
   if (out.length >= CAPS.violations) return out;
   const push = (rule, detail, fix, at = segs) => out.push({ segs: at.slice(), rule, detail, fix });
   const where2 = segs.length ? formatPath(segs) : "the plan";
-  if (schema.$ref) checkSchema(value, resolveRef(schema.$ref, root), root, segs, out);
+  if (schema.$ref) checkNode(value, resolveRef(schema.$ref, root), root, segs, out);
   if (schema.type !== void 0) {
     const types = Array.isArray(schema.type) ? schema.type : [schema.type];
     if (!types.some((t) => typeOk(value, t))) {
@@ -644,8 +650,8 @@ function checkSchema(value, schema, root = schema, segs = [], out = []) {
     if (schema.maxItems !== void 0 && value.length > schema.maxItems) push("maxItems", `${where2} has ${value.length} items but allows at most ${schema.maxItems}`, `Remove items so that ${where2} has at most ${schema.maxItems}.`);
     const prefix = schema.prefixItems || [];
     const seen = schema.maxItems === void 0 ? value.length : Math.min(value.length, schema.maxItems);
-    for (let i = 0; i < Math.min(prefix.length, seen); i++) checkSchema(value[i], prefix[i], root, [...segs, i], out);
-    if (schema.items) for (let i = prefix.length; i < seen; i++) checkSchema(value[i], schema.items, root, [...segs, i], out);
+    for (let i = 0; i < Math.min(prefix.length, seen); i++) checkNode(value[i], prefix[i], root, [...segs, i], out);
+    if (schema.items) for (let i = prefix.length; i < seen; i++) checkNode(value[i], schema.items, root, [...segs, i], out);
   }
   if (isObj2(value)) {
     const props = schema.properties || {};
@@ -660,7 +666,7 @@ function checkSchema(value, schema, root = schema, segs = [], out = []) {
       }
     }
     for (const k of Object.keys(value)) {
-      if (hasOwn(props, k)) checkSchema(value[k], props[k], root, [...segs, k], out);
+      if (hasOwn(props, k)) checkNode(value[k], props[k], root, [...segs, k], out);
       else if (schema.additionalProperties === false) {
         const near = closest(k, Object.keys(props));
         push(
@@ -668,7 +674,7 @@ function checkSchema(value, schema, root = schema, segs = [], out = []) {
           `${where2} has the unknown property ${jq(k)}${near ? ` (did you mean ${JSON.stringify(near)}?)` : ""}`,
           `${near ? `Rename ${jq(k)} to ${JSON.stringify(near)} or delete it` : `Delete ${jq(k)}`} in ${where2}. Allowed properties: ${Object.keys(props).join(", ")}.`
         );
-      } else if (isObj2(schema.additionalProperties)) checkSchema(value[k], schema.additionalProperties, root, [...segs, k], out);
+      } else if (isObj2(schema.additionalProperties)) checkNode(value[k], schema.additionalProperties, root, [...segs, k], out);
     }
   }
   return out;
@@ -764,13 +770,14 @@ var GAP_MAX = 0.5;
 var OPEN_MIN = 0.7;
 var RANGES = Object.freeze({ furniture: CAPS.furnitureSpan, levelHeight: [2, 6], stairWidth: [0.5, 3], windowWidth: [0.3, 4] });
 var wallReach = (w) => w.thickness + 0.02;
+var edgeSteps = (len2) => Math.min(200, Math.max(2, Math.ceil(len2 / 0.05)));
 function edgeInsets(poly, walls) {
   return poly.map((p0, i) => {
     const p1 = poly[(i + 1) % poly.length];
     const el = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]);
     if (el < 1e-9) return 0;
     const ux = (p1[0] - p0[0]) / el, uy = (p1[1] - p0[1]) / el;
-    const steps = Math.min(200, Math.max(2, Math.ceil(el / 0.05)));
+    const steps = edgeSteps(el);
     if (!spend(steps * walls.length)) return 0;
     let sum = 0;
     for (let s = 0; s < steps; s++) {
@@ -1145,6 +1152,24 @@ function semanticChecks(plan, model, add, errors2) {
         `Fix this first: checks that depend on absolute size (wall thickness, room areas, door widths) are skipped until the scale is plausible. ${sug ? `The numbers look like "${sug.unit}": set "units": "${sug.unit}" (the plan would then measure ${r3(sug.w)} x ${r3(sug.h)} m). Otherwise rescale every coordinate, thickness and size.` : 'Flats are usually 3 to 30 m across: choose "units" so that the walls match real sizes, or rescale every coordinate, thickness and size.'}`
       );
     }
+  }
+  if (!scaleBroken) {
+    const where2 = [["walls", (e) => [e.from, e.to]], ["rooms", (e) => e.polygon], ["stairs", (e) => [e.from, e.to]], ["furniture", (e) => [e.center]]];
+    norm.levels.forEach((L, l) => {
+      for (const [key, points] of where2) {
+        L[key].forEach((e, j) => {
+          const far = points(e).find((p) => Math.abs(p[0]) > CAPS.coordinate || Math.abs(p[1]) > CAPS.coordinate);
+          if (!far) return;
+          add(
+            "E014",
+            pathOf(l, key, j),
+            e.id,
+            `${key.replace(/s$/, "")} "${clip(e.id)}" has a point at ${pt2(far)}, more than ${len2(CAPS.coordinate)} from the origin`,
+            `Coordinates are measured from one corner of the drawing and a flat is rarely more than 30 m across: look for an extra digit in this point, or a wrong "units" for the whole plan.`
+          );
+        });
+      }
+    });
   }
   const seenLevel = /* @__PURE__ */ new Map();
   (plan.levels || []).forEach((lv, li) => {
