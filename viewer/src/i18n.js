@@ -3,9 +3,19 @@
 const SUPPORTED = ['en', 'pl'];
 const has = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
 
-export function detectLang(search = typeof location !== 'undefined' ? location.search : '', nav = typeof navigator !== 'undefined' ? navigator : {}) {
+// A localized copy of the page (tools/localize-page.mjs) names its own default language in a head tag:
+// <meta name="planwalk-default-lang" content="pl">. ?lang= still wins; without the tag the browser language decides.
+function pageDefault(doc) {
+  const meta = doc && doc.querySelector ? doc.querySelector('meta[name="planwalk-default-lang"]') : null;
+  const lang = meta && meta.getAttribute('content');
+  return SUPPORTED.includes(lang) ? lang : null;
+}
+
+export function detectLang(search = typeof location !== 'undefined' ? location.search : '', nav = typeof navigator !== 'undefined' ? navigator : {}, doc = typeof document !== 'undefined' ? document : null) {
   const q = new URLSearchParams(search).get('lang');
   if (SUPPORTED.includes(q)) return q;
+  const page = pageDefault(doc);
+  if (page) return page;
   const first = (nav.languages && nav.languages[0]) || nav.language || '';
   return /^pl\b/i.test(first) ? 'pl' : 'en';
 }
