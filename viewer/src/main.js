@@ -14,6 +14,8 @@ import { version as PW_VERSION } from '../../package.json'; // the one place the
 import { getLang } from './i18n.js';
 import { createFirstVisit } from './first-visit.js';
 import { createHelp } from './help.js';
+import { createCompact } from './compact.js';
+import { boxCorners, fitView, ndcRect, projectedBox, marginsOf } from './framing.js';
 
 // All user-facing strings live here so a translation is one object.
 const T = {
@@ -149,7 +151,7 @@ function start() {
     sampleSel,
     h('button', { type: 'button', onclick: () => openDialog(pasteDlg) }, T.paste),
     h('button', { type: 'button', onclick: () => api.exportGLB().then((buf) => download(new Blob([buf], { type: 'model/gltf-binary' }), `${slug()}.glb`)) }, T.exportGlb),
-    h('button', { type: 'button', onclick: () => fetch(api.screenshot()).then((r) => r.blob()).then((b) => download(b, `${slug()}.png`)) }, T.exportPng),
+    h('button', { type: 'button', onclick: () => fetch(api.screenshot({ fit: true })).then((r) => r.blob()).then((b) => download(b, `${slug()}.png`)) }, T.exportPng),
     h('button', { type: 'button', title: T.standaloneTip, onclick: () => download(new Blob([standaloneHtml()], { type: 'text/html' }), `${slug()}.html`) }, T.standalone),
     about.button,
     h('button', { type: 'button', onclick: () => help.open() }, T.help));
@@ -166,6 +168,9 @@ function start() {
         h('button', { type: 'button', onclick: () => { api.load(pasteArea.value); closeDialog(pasteDlg); } }, T.load))));
   root.append(bar, card, visit.el, issuesEl, hint, mini, pasteDlg, help.el, about.dialog);
   card.append(notes.openFileButton(openPicked));
+  const chooseFile = notes.openFileButton(openPicked); // kept out of the page: window.planwalk.openFile() and the phone Menu press it
+  // Phone layout: moves the toolbar controls into a Menu sheet (compact.js). onLayout runs when the window changes kind.
+  const compact = createCompact({ h, root, bar, nameEl, badge: about.badge, tag: visit.tag, issuesEl, hint, mini, visit, actionSelects: [sampleSel], openFile: () => chooseFile.click(), onLayout: () => { size(); refreshFrame(); render(); } });
 
   // ---------- three.js ----------
   const scene = new THREE.Scene();
@@ -177,6 +182,7 @@ function start() {
   controls.enableDamping = false;
   controls.maxPolarAngle = Math.PI / 2 - 0.02;
   controls.screenSpacePanning = true;
+  controls.addEventListener('start', () => { framed = false; }); // the person moved the camera: a new window size no longer re-frames
 
   // ---------- state ----------
   let plan = null, rawText = '', model = null, planScene = null, world = null, player = null;
@@ -256,12 +262,12 @@ function start() {
     nameEl.textContent = plan?.name || '';
     about.update();
     visit.setExample(!!plan && Object.values(samples).includes(plan));
-    issuesEl.hidden = !(issues.errors.length || issues.warnings.length);
+    compact.sync({ mode, hasModel: !!model, issues: issues.errors.length + issues.warnings.length, errors: issues.errors.length });
   }
 
   function renderIssues() {
-    issuesEl.replaceChildren();
-    const all = [...issues.errors.map((i) => ['e', i]), ...issues.warnings.map((i) => ['w', i])];
+    issuesEl.replaceChildren(compact.issuesRenewed());
+    const all =[...issues.errors.map((i) => ['e', i]), ...issues.warnings.map((i) => ['w', i])];
     if (!all.length) return;
     issuesEl.append(h('h3', {}, `${T.issues}: ${issues.errors.length} errors, ${issues.warnings.length} warnings`,
       h('button', { type: 'button', onclick: (e) => { copyText(fixRequest()); e.target.textContent = T.copied; setTimeout(() => { e.target.textContent = T.copyFix; }, 1500); } }, T.copyFix)),
@@ -325,19 +331,37 @@ function start() {
     controls.update();
   }
 
+  // The first view (and every re-frame) puts the whole model inside the part of the screen no bar or card covers, with
+  // FRAME_MARGIN of that area free on each side, whatever the window shape. framed: the camera is still where frame() left it.
+  const FRAME_DIR = new THREE.Vector3(-0.45, 0.57, 0.68).normalize();
+  const FRAME_MARGIN = 0.05;
+  let framed = false;
+  const pageSize = () => [root.clientWidth || window.innerWidth, root.clientHeight || window.innerHeight];
+
+  // Top view for a w x h picture with the given free rectangle: the half height of the view and its centre.
+  function topFit(a, w, hgt, free, e) {
+    const k = 1 - 2 * FRAME_MARGIN, fw = (free.right - free.left) / w, fh = (free.bottom - free.top) / hgt;
+    const half = Math.max((e.maxZ - e.minZ) / 2 / (k * fh), (e.maxX - e.minX) / 2 / (a * k * fw), 1);
+    const fx = ((free.left + free.right) / 2 - w / 2) / (w / 2), fy = (hgt / 2 - (free.top + free.bottom) / 2) / (hgt / 2);
+    return { cx: (e.minX + e.maxX) / 2 - fx * half * a, cz: (e.minZ + e.maxZ) / 2 + fy * half, half };
+  }
+
   function frame() {
     if (!model) return;
-    const { e, c, R } = extentInfo();
+    const { e, R } = extentInfo();
     fitR = R;
-    const d = R * 2.0;
     persp.fov = 50; persp.updateProjectionMatrix();
-    persp.position.copy(c).addScaledVector(new THREE.Vector3(-0.45, 0.57, 0.68).normalize(), d);
-    controls.target.copy(c);
-    controls.minDistance = 1; controls.maxDistance = d * 4;
+    const [w, hgt] = pageSize(), free = compact.freeRect();
+    const pose = fitView(boxCorners(e), FRAME_DIR, 50, persp.aspect, ndcRect(free, w, hgt, FRAME_MARGIN));
+    persp.position.copy(pose.position);
+    controls.target.copy(pose.target);
+    controls.minDistance = 1; controls.maxDistance = Math.max(R * 8, pose.distance * 4);
     controls.update();
-    topView = { cx: c.x, cz: c.z, half: Math.max((e.maxZ - e.minZ) / 2, (e.maxX - e.minX) / 2 / persp.aspect) * 1.12 + 0.4 };
+    topView = topFit(persp.aspect, w, hgt, free, e);
     applyTop();
+    framed = true;
   }
+  function refreshFrame() { if (framed && model && mode !== 'walk') frame(); }
 
   function spawn() {
     const sp = defaultSpawn(model);
@@ -546,19 +570,59 @@ function start() {
     };
   }
 
+  // opts.fit: frame the whole model in this picture (Dollhouse, Orbit and Top), turned the way the view is now, for the Export PNG button.
   function screenshot(opts = {}) {
     const w = opts.width ?? renderer.domElement.width, hgt = opts.height ?? renderer.domElement.height;
     const prevRatio = renderer.getPixelRatio(), prev = renderer.getSize(new THREE.Vector2());
+    const prevTop = topView, prevPos = persp.position.clone(), fit = opts.fit ? exportPose(w, hgt) : null;
     renderer.setPixelRatio(1);
     renderer.setSize(w, hgt, false);
+    if (fit && fit.top) topView = fit.top;
     aspect(w / hgt);
+    if (fit && fit.pose) { persp.position.copy(fit.pose.position); persp.lookAt(fit.pose.target); }
     render();
     const url = renderer.domElement.toDataURL('image/png');
     renderer.setPixelRatio(prevRatio);
     renderer.setSize(prev.x, prev.y, false);
+    topView = prevTop;
+    if (fit && fit.pose) { persp.position.copy(prevPos); persp.lookAt(controls.target); }
     aspect(prev.x / prev.y);
     render();
     return url;
+  }
+
+  // The camera for a picture of w x h that shows the whole model with the margin on every side: { pose } or, in Top, { top }.
+  function exportPose(w, hgt) {
+    if (!model || mode === 'walk') return null;
+    const { e } = extentInfo(), full = { left: 0, top: 0, right: w, bottom: hgt };
+    if (mode === 'top') return { top: topFit(w / hgt, w, hgt, full, e) };
+    const dir = persp.position.clone().sub(controls.target).normalize();
+    return { pose: fitView(boxCorners(e), dir, persp.fov, w / hgt, ndcRect(full, w, hgt, FRAME_MARGIN)) };
+  }
+
+  // Where the model's bounding box lands on screen (CSS px) and the free space around it as fractions of the free area (negative:
+  // cropped). Without options it answers for the live view and the area no bar covers; { fit: true, width, height } answers for the
+  // Export PNG picture. A test aid, not part of the documented API.
+  function framing(opts = {}) {
+    if (!model || mode === 'walk') return null;
+    const corners = boxCorners(modelExtent(model, explodeV));
+    const [W, H] = pageSize();
+    const w = opts.fit ? (opts.width ?? W) : W, hgt = opts.fit ? (opts.height ?? H) : H;
+    const free = opts.fit ? { left: 0, top: 0, right: w, bottom: hgt } : compact.freeRect();
+    let cam;
+    if (mode === 'top') {
+      const tv = opts.fit ? exportPose(w, hgt).top : topView, a = w / hgt;
+      cam = new THREE.OrthographicCamera(-tv.half * a, tv.half * a, tv.half, -tv.half, 0.1, 1000);
+      cam.up.set(0, 0, -1);
+      cam.position.set(tv.cx, modelExtent(model, explodeV).maxY + 50, tv.cz);
+      cam.lookAt(tv.cx, 0, tv.cz);
+    } else {
+      cam = persp.clone();
+      cam.aspect = w / hgt; cam.updateProjectionMatrix();
+      if (opts.fit) { const p = exportPose(w, hgt).pose; cam.position.copy(p.position); cam.lookAt(p.target); }
+    }
+    const box = projectedBox(corners, cam, w, hgt);
+    return { width: w, height: hgt, free, box, margins: marginsOf(box, free) };
   }
 
   // opts.materials: 'clay' or 'textured' (default: the current look). A textured export embeds the colour maps as JPEG;
@@ -624,6 +688,7 @@ function start() {
     // Turns the dollhouse or orbit camera around the model (degrees, positive turns clockwise seen from above).
     rotateView(degrees) {
       if (!model || !(mode === 'dollhouse' || mode === 'orbit')) return;
+      framed = false;
       const t = controls.target, v = persp.position.clone().sub(t), a = rad(degrees), c = Math.cos(a), s = Math.sin(a);
       persp.position.set(t.x + v.x * c - v.z * s, persp.position.y, t.z + v.x * s + v.z * c);
       controls.update();
@@ -632,6 +697,7 @@ function start() {
     // Moves the dollhouse or orbit camera toward its target (factor below 1) or away from it (above 1); in Top it scales the view.
     zoomView(factor) {
       if (!model) return;
+      framed = false;
       const f = clamp(+factor || 1, 0.2, 5);
       if (mode === 'top') { topView.half = clamp(topView.half * f, 1, 400); applyTop(); render(); return; }
       if (!(mode === 'dollhouse' || mode === 'orbit')) return;
@@ -643,6 +709,7 @@ function start() {
     // Sets the elevation of the dollhouse or orbit camera in degrees above the horizon (azimuth and distance stay).
     tiltView(elevationDegrees) {
       if (!model || !(mode === 'dollhouse' || mode === 'orbit') || !Number.isFinite(+elevationDegrees)) return;
+      framed = false;
       const t = controls.target, v = persp.position.clone().sub(t), d = v.length(), az = Math.atan2(v.z, v.x), e = rad(clamp(+elevationDegrees, 5, 85));
       persp.position.set(t.x + d * Math.cos(e) * Math.cos(az), t.y + d * Math.sin(e), t.z + d * Math.cos(e) * Math.sin(az));
       controls.update();
@@ -651,6 +718,9 @@ function start() {
     state,
     renderGameToText: () => JSON.stringify(state()),
     screenshot,
+    framing,
+    // Opens the file chooser that the paste dialog uses; the first-visit card and the phone Menu offer it.
+    openFile() { chooseFile.click(); },
     exportGLB,
   };
   window.planwalk = api;
@@ -670,7 +740,7 @@ function start() {
     if (KEYMAP[e.code]) kb.delete(KEYMAP[e.code]);
   });
   window.addEventListener('blur', () => { kb.clear(); shift = false; });
-  window.addEventListener('resize', () => { size(); render(); });
+  window.addEventListener('resize', () => { size(); refreshFrame(); render(); });
   window.addEventListener('mousemove', (e) => {
     if (mode !== 'walk' || !player || document.pointerLockElement !== canvas) return;
     player.yaw += e.movementX * 0.0022;
@@ -691,6 +761,7 @@ function start() {
   const touchPtr = new Map();
   canvas.addEventListener('pointermove', (e) => {
     if (mode === 'top' && drag) {
+      framed = false;
       const k = (2 * topView.half) / canvas.clientHeight;
       topView.cx -= (e.clientX - drag.x) * k;
       topView.cz -= (e.clientY - drag.y) * k;
@@ -714,6 +785,7 @@ function start() {
   canvas.addEventListener('wheel', (e) => {
     if (mode !== 'top') return;
     e.preventDefault();
+    framed = false;
     topView.half = clamp(topView.half * Math.exp(e.deltaY * 0.001), 1, 400);
     applyTop(); render();
   }, { passive: false });
@@ -752,7 +824,7 @@ function start() {
   if (embedded && embedded.textContent.trim()) api.load(embedded.textContent);
   else if (hash) { try { api.load(b64urlDecode(hash[1]), 'link'); } catch { notes.show(loadMessage('invalid', 'link')); } }
   else if (/^https?:\/\//i.test(q.get('plan') || '')) fetchPlanText(q.get('plan')).then((r) => (r.ok ? api.load(r.text, 'download') : notes.show(downloadMessage(r))));
-  else if (sampleNames.length) { api.load(samples[sampleNames[0]]); visit.show(); }
+  else if (sampleNames.length) { api.load(samples[sampleNames[0]]); visit.show(); refreshFrame(); render(); } // the card is up now, so frame the model above it
   requestAnimationFrame(loop);
 }
 

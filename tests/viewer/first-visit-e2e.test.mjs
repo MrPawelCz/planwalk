@@ -64,17 +64,15 @@ test('Paste answer opens the paste dialog', { skip, timeout: 90000 }, withPage({
   assert.equal(await p.evaluate(`document.querySelector('dialog.pw-dlg[open] textarea') !== null`), true);
 }));
 
-test('Open file appears only when the build has an open-file control: a .pw-open-file button or the openFile hook', { skip, timeout: 120000 }, async () => {
+test('Open file: the card offers the chooser of the paste dialog (window.planwalk.openFile), and a build that replaces the hook is followed', { skip, timeout: 120000 }, async () => {
   const labels = (p) => p.evaluate(`[...document.querySelectorAll('.pw-visit-btns button')].map((b) => b.textContent)`);
-  const none = await openPage(page, { beforeLoad: STUB });
-  try { assert.ok(!(await labels(none)).includes('Open file'), 'no control, no button'); } finally { await none.close(); }
-  const viaButton = await openPage(page, { beforeLoad: `${STUB}
-    document.addEventListener('DOMContentLoaded', () => { const b = document.createElement('button'); b.className = 'pw-open-file'; b.onclick = () => { window.__opened = 'button'; }; document.body.append(b); });` });
+  const chooser = `HTMLInputElement.prototype.click = function () { if (this.type === 'file') window.__chooser = (window.__chooser || 0) + 1; };`;
+  const own = await openPage(page, { beforeLoad: `${STUB}${chooser}` });
   try {
-    assert.ok((await labels(viaButton)).includes('Open file'));
-    await viaButton.evaluate(`[...document.querySelectorAll('.pw-visit-btns button')].find((b) => b.textContent === 'Open file').click()`);
-    assert.equal(await viaButton.evaluate('window.__opened'), 'button');
-  } finally { await viaButton.close(); }
+    assert.ok((await labels(own)).includes('Open file'), 'the viewer provides the hook');
+    await own.evaluate(`[...document.querySelectorAll('.pw-visit-btns button')].find((b) => b.textContent === 'Open file').click()`);
+    assert.equal(await own.evaluate('window.__chooser'), 1);
+  } finally { await own.close(); }
   const viaHook = await openPage(page, { beforeLoad: `${STUB}
     let api; Object.defineProperty(window, 'planwalk', { configurable: true, get: () => api, set: (v) => { v.openFile = () => { window.__opened = 'hook'; }; api = v; } });` });
   try {
@@ -141,12 +139,20 @@ test('with both prompts embedded the card offers a switch: the page language is 
   assert.deepEqual(await pressed(), ['EN:true', 'PL:false']);
 }, both));
 
-test('on a phone the card is a bottom sheet that leaves the middle of the screen free; the touch targets are 44 px', { skip, timeout: 90000 }, withPage({ width: 390, height: 664, mobile: true, dpr: 2 }, async (p) => {
-  const r = await p.evaluate(`(() => { const c = ${q('.pw-visit')}.getBoundingClientRect(); return { l: c.left, r: c.right, t: c.top, b: c.bottom, vw: innerWidth, vh: innerHeight, small: [...document.querySelectorAll('.pw-visit-btns button, .pw-visit-x')].filter((b) => b.getBoundingClientRect().height < 44 || b.getBoundingClientRect().width < 44).length }; })()`);
+test('on a phone the card is one line above the bottom bar and opens to a sheet that leaves the middle of the screen free; the touch targets are 44 px', { skip, timeout: 90000 }, withPage({ width: 390, height: 664, mobile: true, dpr: 2 }, async (p) => {
+  const box = () => p.evaluate(`(() => { const c = ${q('.pw-visit')}.getBoundingClientRect(), m = ${q('.pw-modebar')}.getBoundingClientRect(); return { l: c.left, r: c.right, t: c.top, b: c.bottom, modeTop: m.top, vw: innerWidth, vh: innerHeight, small: [...document.querySelectorAll('.pw-visit-btns button, .pw-visit-x, .pw-visit-open, .pw-visit-note button')].filter((b) => b.getBoundingClientRect().height < 44 || b.getBoundingClientRect().width < 44).length }; })()`);
+  let r = await box();
   assert.equal(r.l, 0);
   assert.equal(r.r, r.vw);
-  assert.equal(r.b, r.vh);
-  assert.ok(r.t > r.vh * 0.6, `the sheet starts at ${r.t} of ${r.vh}`);
+  assert.equal(r.b, r.modeTop, 'the card stands on the bottom bar, not under it');
+  assert.ok(r.t > r.vh * 0.6, `the line starts at ${r.t} of ${r.vh}`);
+  assert.equal(r.small, 0, 'every button is at least 44 px');
+  await p.evaluate(`${q('.pw-visit-open')}.click(); ${settle}`);
+  r = await box();
+  assert.equal(r.l, 0);
+  assert.equal(r.r, r.vw);
+  assert.equal(r.b, r.modeTop);
+  assert.ok(r.t > r.vh * 0.35, `the open card starts at ${r.t} of ${r.vh}`);
   assert.equal(r.small, 0, 'every button is at least 44 px');
 }));
 

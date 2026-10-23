@@ -58,8 +58,8 @@ async function openPage(lang) {
 }
 
 const plan = (extra = {}) => ({ ...JSON.parse(readFileSync(join(root, 'tests/fixtures/duplex-min.plan.json'), 'utf8')), ...extra });
-const state = (label) => `(() => { const b = [...document.querySelectorAll('.pw-bar button')].find((x) => x.textContent === ${JSON.stringify(label)}); return { exists: !!b, disabled: !!b && b.disabled, badge: !document.querySelector('.pw-badge').hidden, badgeText: document.querySelector('.pw-badge').textContent }; })()`;
-const click = (selectorOrLabel) => `(() => { const b = ${selectorOrLabel.startsWith('.') ? `document.querySelector(${JSON.stringify(selectorOrLabel)})` : `[...document.querySelectorAll('.pw-bar button')].find((x) => x.textContent === ${JSON.stringify(selectorOrLabel)})`}; b.click(); return true; })()`;
+const state = (label) => `(() => { const b = [...document.querySelectorAll('.pw-bar button, .pw-menu-body button')].find((x) => x.textContent === ${JSON.stringify(label)}); return { exists: !!b, disabled: !!b && b.disabled, badge: !document.querySelector('.pw-badge').hidden, badgeText: document.querySelector('.pw-badge').textContent }; })()`;
+const click = (selectorOrLabel) => `(() => { const b = ${selectorOrLabel.startsWith('.') ? `document.querySelector(${JSON.stringify(selectorOrLabel)})` : `[...document.querySelectorAll('.pw-bar button, .pw-menu-body button')].find((x) => x.textContent === ${JSON.stringify(selectorOrLabel)})`}; b.click(); return true; })()`;
 const sheet = '(() => { const d = document.querySelector(".pw-about"); return { open: d.open, text: d.innerText, hostile: d.querySelectorAll("img,script,b").length, pwx: window.__pwx === undefined }; })()';
 
 test('About sheet: follows the model, shows the version from package.json, keeps plan strings as text, badge only for a guessed scale', { skip, timeout: 120000 }, async () => {

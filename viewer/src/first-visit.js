@@ -14,6 +14,7 @@ export const STRINGS = {
     paste: 'Paste answer', open: 'Open file', hide: 'Hide',
     promptLang: 'Prompt language',
     privacy: 'Your plan stays in this page. Nothing is uploaded or stored.',
+    collapsed: 'This is an example · How to add yours?',
   },
   pl: {
     example: 'To jest przykład',
@@ -25,6 +26,7 @@ export const STRINGS = {
     paste: 'Wklej odpowiedź', open: 'Otwórz plik', hide: 'Ukryj',
     promptLang: 'Język promptu',
     privacy: 'Twój plan zostaje na tej stronie. Nic nie jest wysyłane ani zapisywane.',
+    collapsed: 'To jest przykład · Jak dodać swój rzut?',
   },
 };
 const t = makeT(STRINGS);
@@ -42,6 +44,9 @@ const CSS = `
 .pw-visit-note{margin:7px 0 0;font-size:11px;color:#6a6358}
 .pw-visit-note button{padding:0 5px;margin-left:3px;font-size:11px;border-radius:4px}
 .pw-visit-note button[aria-pressed=true]{background:#37332d;border-color:#37332d;color:#fff}
+.pw-visit.pw-visit-line{display:flex;align-items:center;padding:0}
+.pw-visit-line .pw-visit-open{flex:1;min-height:48px;padding:0 14px;text-align:left;font-size:14px;background:none;border:0;border-radius:12px 0 0 0}
+.pw-visit.pw-visit-line .pw-visit-x{position:static;flex:none;width:48px;height:48px}
 @media (max-width:640px){.pw-visit{left:0;right:0;bottom:0;width:auto;border-radius:14px 14px 0 0;border-width:1px 0 0;padding:12px 14px calc(10px + env(safe-area-inset-bottom))}.pw-visit button{min-height:44px}.pw-visit .pw-visit-x{width:44px;height:44px;top:0;right:0}.pw-visit-note button{min-height:28px}}
 `;
 
@@ -62,10 +67,18 @@ export function createFirstVisit({ h, onPaste }) {
   const el = h('div', { class: 'pw-visit', role: 'region', hidden: '' });
   const tag = h('span', { class: 'pw-tag', hidden: '' });
   let promptLang = 'en';
+  let compact = false, expanded = false; // on a phone the card is one line until it is tapped
 
   function render() {
     tag.textContent = t('example');
     el.setAttribute('aria-label', t('title'));
+    el.className = compact && !expanded ? 'pw-visit pw-visit-line' : 'pw-visit';
+    if (compact && !expanded) {
+      el.replaceChildren(
+        h('button', { type: 'button', class: 'pw-visit-open', 'aria-expanded': 'false', onclick: () => { expanded = true; render(); } }, t('collapsed')),
+        h('button', { type: 'button', class: 'pw-visit-x', title: t('hide'), 'aria-label': t('hide'), onclick: hide }, '×'));
+      return;
+    }
     const langs = promptLangs();
     const open = findOpenFile();
     const copy = h('button', {
@@ -89,6 +102,7 @@ export function createFirstVisit({ h, onPaste }) {
   }
 
   function show() {
+    expanded = false;
     promptLang = promptLangs().includes(getLang()) ? getLang() : 'en';
     render();
     el.hidden = false;
@@ -97,5 +111,12 @@ export function createFirstVisit({ h, onPaste }) {
   // The caption next to the plan name follows what is on screen, the card does not come back by itself.
   function setExample(on) { tag.hidden = !on; }
 
-  return { el, tag, show, hide, setExample, refresh: () => { render(); } };
+  // The phone layout asks for the one line card; going back to a wide window gives the full card.
+  function setCompact(on) {
+    if (compact === on) return;
+    compact = on; expanded = false;
+    if (!el.hidden) render();
+  }
+
+  return { el, tag, show, hide, setExample, setCompact, refresh: () => { render(); } };
 }
