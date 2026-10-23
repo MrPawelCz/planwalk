@@ -1,8 +1,10 @@
 // planwalk plan validator (docs/SPEC.md section 5).
 // Isomorphic ES module: no Node-only APIs, no DOM, no network.
-//   validatePlan(planObjectOrJsonText) -> { ok, errors: Issue[], warnings: Issue[], normalized }
+//   validatePlan(planObjectOrJsonText, { strict? }) -> { ok, errors: Issue[], warnings: Issue[], normalized }
 //   Issue = { code, path, id?, message, fix }  (message and fix are written to be pasted back into an AI chat)
-// Extra exports for tools: PLAN_SCHEMA, analyzePlan (adds `salvaged`), roomGraph, checkSchema.
+//   strict: a property the schema does not know is an error (E002) instead of a warning (W116).
+// Extra exports for tools: PLAN_SCHEMA, analyzePlan (adds `salvaged`, `dropped`, `skipped`, `partial`), modelOf (the plan a model
+// can be built from, whole or partial), roomGraph, checkSchema.
 import { normalizePlan } from './defaults.js';
 import { extractJson } from './extract-json.js';
 import { UNIT_TO_M } from './units.js';
@@ -240,7 +242,7 @@ export function checkSchema(value, schema, root = schema, segs = [], out = []) {
 
 function checkNode(value, schema, root, segs, out) {
   if (out.length >= CAPS.violations) return out;
-  const push = (rule, detail, fix, at = segs) => out.push({ segs: at.slice(), rule, detail, fix });
+  const push = (rule, detail, fix, at = segs, extra) => out.push({ segs: at.slice(), rule, detail, fix, ...extra });
   const where = segs.length ? formatPath(segs) : 'the plan';
   if (schema.$ref) checkNode(value, resolveRef(schema.$ref, root), root, segs, out);
   if (schema.type !== undefined) {
@@ -299,7 +301,7 @@ function checkNode(value, schema, root, segs, out) {
       else if (schema.additionalProperties === false) {
         const near = closest(k, Object.keys(props));
         push('additionalProperties', `${where} has the unknown property ${jq(k)}${near ? ` (did you mean ${JSON.stringify(near)}?)` : ''}`,
-          `${near ? `Rename ${jq(k)} to ${JSON.stringify(near)} or delete it` : `Delete ${jq(k)}`} in ${where}. Allowed properties: ${Object.keys(props).join(', ')}.`);
+          `${near ? `Rename ${jq(k)} to ${JSON.stringify(near)} or delete it` : `Delete ${jq(k)}`} in ${where}. Allowed properties: ${Object.keys(props).join(', ')}.`, segs, { key: k });
       } else if (isObj(schema.additionalProperties)) checkNode(value[k], schema.additionalProperties, root, [...segs, k], out);
     }
   }
@@ -313,6 +315,17 @@ const TOL = 0.001; // 1 mm, in metres
 const ENTITY_ARRAYS = ['walls', 'openings', 'rooms', 'stairs', 'furniture'];
 const COSMETIC_KEYS = new Set(['name', 'use', 'floor', 'ceiling', 'area', 'hinge', 'opens_to', 'kind']);
 const FATAL_RULES = new Set(['type', 'required', 'const', 'minimum', 'maximum', 'exclusiveMinimum', 'exclusiveMaximum', 'minItems', 'maxItems']);
+const KIND = { walls: 'wall', openings: 'opening', rooms: 'room', stairs: 'stair', furniture: 'furniture' };
+// Keys a plan may carry without a word, in strict mode too: the schema reference and extensions ("x-...").
+const isExtensionKey = (k) => k === '$schema' || (typeof k === 'string' && k.startsWith('x-'));
+// A model needs at least one wall; a salvaged plan without any has nothing to show.
+const hasWalls = (norm) => !!norm && norm.levels.some((L) => L.walls.length > 0);
+
+// The normalized plan a viewer builds its model from: the whole plan when it could be read, else what is left of it
+// after the elements with errors were skipped (result.partial), else null.
+export function modelOf(res) {
+  return res.normalized || (res.partial ? res.salvaged : null);
+}
 
 function scanNonFinite(v, segs, out, seen) {
   if (typeof v === 'number') { if (!Number.isFinite(v)) out.push({ segs: segs.slice(), value: v }); return; }
@@ -595,12 +608,13 @@ const PARSE_FIX = {
   invalid: 'Reply with one valid JSON object: double quotes around every key and string, commas between items, every brace closed',
 };
 
-export function analyzePlan(input) {
+// options.strict: a property the schema does not know stays an error (E002) instead of a warning (W116).
+export function analyzePlan(input, options = {}) {
   suggestBudget = SUGGEST_BUDGET;
   work = WORK_BUDGET;
   workSkipped = false;
   try {
-    return analyze(input);
+    return analyze(input, !!(options && options.strict));
   } finally {
     work = Infinity;
     suggestBudget = SUGGEST_BUDGET;
@@ -609,7 +623,7 @@ export function analyzePlan(input) {
 
 const MAX_PER_CODE = 100; // issues of one code that are listed; one closing issue says how many were left out
 
-function analyze(input) {
+function analyze(input, strict) {
   const errors = [], warnings = [];
   const counts = new Map();
   const add = (code, path, id, message, fix) => {
@@ -624,7 +638,8 @@ function analyze(input) {
     (code[0] === 'E' ? errors : warnings).push(issue);
   };
   let repairs = []; // what extractJson had to change to read a text input, as short English phrases
-  const result = (normalized, salvaged = null, dropped = 0) => ({ ok: errors.length === 0, errors, warnings, normalized, salvaged, dropped, repairs });
+  // skipped: the elements left out of `salvaged` ({ kind, id, path, why, reason }); partial: no whole plan, but a model can be built from the rest
+  const result = (normalized, salvaged = null, dropped = 0, skipped = []) => ({ ok: errors.length === 0, errors, warnings, normalized, salvaged, dropped, repairs, skipped, partial: normalized === null && hasWalls(salvaged) });
 
   let plan = input;
   if (typeof input === 'string') {
@@ -657,13 +672,25 @@ function analyze(input) {
   scanNonFinite(plan, [], nonFinite, new Set());
   const viol = checkSchema(plan, PLAN_SCHEMA);
   const MAX_E002 = 40;
-  viol.slice(0, MAX_E002).forEach((v) => {
+  const truncated = viol.length >= CAPS.violations;
+  // A property the schema does not know is left out of the model and only warned about (W116), unless strict. "$schema" and "x-..." keys
+  // are allowed silently. A key that every object has ("__proto__", "constructor", "toString") stays an error. A plan with so many
+  // violations that the check gave up is not read leniently.
+  const hard = [], unknown = [];
+  for (const v of viol) {
+    if (v.rule === 'additionalProperties' && !truncated) {
+      if (isExtensionKey(v.key)) continue;
+      if (!strict && !(v.key in Object.prototype)) { unknown.push(v); continue; }
+    }
+    hard.push(v);
+  }
+  hard.slice(0, MAX_E002).forEach((v) => {
     add('E002', formatPath(v.segs), entityIdAt(plan, v.segs), `schema violation: ${v.detail} (JSON pointer ${jsonPointer(v.segs)}, rule "${v.rule}")`, v.fix);
   });
-  const truncated = viol.length >= CAPS.violations;
-  if (viol.length > MAX_E002) {
-    add('E002', '', undefined, `${truncated ? 'at least ' : ''}${viol.length - MAX_E002} more schema violations are not listed (only the first ${MAX_E002} are shown)`, 'Fix the listed problems first, then validate again.');
+  if (hard.length > MAX_E002) {
+    add('E002', '', undefined, `${truncated ? 'at least ' : ''}${hard.length - MAX_E002} more schema violations are not listed (only the first ${MAX_E002} are shown)`, 'Fix the listed problems first, then validate again.');
   }
+  unknown.forEach((v) => add('W116', formatPath(v.segs), entityIdAt(plan, v.segs), `${v.detail}; planwalk ignores it`, v.fix));
   nonFinite.slice(0, 20).forEach((n) => {
     add('E010', formatPath(n.segs), entityIdAt(plan, n.segs), `${formatPath(n.segs)} is ${String(n.value)}, which is not a finite number`,
       `Replace the value at ${formatPath(n.segs)} with a real number (measure it from the drawing or estimate it).`);
@@ -671,37 +698,50 @@ function analyze(input) {
   if (truncated) return result(null); // so many violations that the rest of the plan is not trusted enough to interpret
 
   // Which parts of the plan are structurally unusable for geometry checks
-  const bad = { levels: new Set(), ents: new Set(), noLevels: false, units: false };
-  const markBad = (segs, rule) => {
+  const bad = { levels: new Set(), ents: new Set(), noLevels: false, units: false, why: new Map() }; // why: the first reason, by `L<level>` or `<level>.<array>.<index>`
+  const markBad = (segs, rule, why) => {
     if (segs[0] === 'units') { bad.units = true; return; }
     if (segs[0] !== 'levels') return;
     if (segs.length === 1) { if (rule === 'type' || rule === 'minItems') bad.noLevels = true; return; }
     const li = segs[1];
     if (typeof li !== 'number') return;
     if (COSMETIC_KEYS.has(segs[segs.length - 1])) return;
-    if (segs.length >= 4 && ENTITY_ARRAYS.includes(segs[2]) && typeof segs[3] === 'number') { bad.ents.add(`${li}.${segs[2]}.${segs[3]}`); return; }
-    if (segs.length === 3 && ENTITY_ARRAYS.includes(segs[2])) { if (rule === 'type') bad.levels.add(li); return; }
+    const reason = (key) => { if (!bad.why.has(key)) bad.why.set(key, why); };
+    if (segs.length >= 4 && ENTITY_ARRAYS.includes(segs[2]) && typeof segs[3] === 'number') { bad.ents.add(`${li}.${segs[2]}.${segs[3]}`); reason(`${li}.${segs[2]}.${segs[3]}`); return; }
+    if (segs.length === 3 && ENTITY_ARRAYS.includes(segs[2])) { if (rule === 'type') { bad.levels.add(li); reason(`L${li}`); } return; }
     bad.levels.add(li);
+    reason(`L${li}`);
   };
-  for (const v of viol) if (FATAL_RULES.has(v.rule)) markBad(v.segs, v.rule);
-  for (const n of nonFinite) markBad(n.segs, 'type');
+  for (const v of viol) if (FATAL_RULES.has(v.rule)) markBad(v.segs, v.rule, v.detail);
+  for (const n of nonFinite) markBad(n.segs, 'type', `${formatPath(n.segs)} is ${String(n.value)}, which is not a finite number`);
 
-  // Pruned plan that normalizePlan can digest, with index maps back to the original arrays
+  // Pruned plan that normalizePlan can digest, with index maps back to the original arrays. What is left out is listed in `skipped`:
+  // an element with a fatal schema error, and an opening whose wall was left out.
   let model = null;
+  const skipped = [];
+  const skip = (kind, e, path, why, reason = 'invalid') => skipped.push({ kind, id: isObj(e) && typeof e.id === 'string' ? clip(e.id) : undefined, path, why: clip(why, CAPS.message), reason });
   if (!bad.noLevels && Array.isArray(plan.levels)) {
     const pruned = { version: 1, name: '', units: !bad.units && hasOwn(UNIT_TO_M, plan.units ?? 'm') ? (plan.units ?? 'm') : 'm', meta: {}, levels: [] };
     const map = [];
     const drop = { wallIds: new Map(), incomplete: new Set(), levelsDropped: false };
     plan.levels.forEach((lv, li) => {
-      if (!isObj(lv) || bad.levels.has(li)) { drop.levelsDropped = true; return; }
+      if (!isObj(lv) || bad.levels.has(li)) { drop.levelsDropped = true; skip('level', lv, `levels[${li}]`, bad.why.get(`L${li}`) || 'it is not an object'); return; }
       const copy = { id: lv.id, name: lv.name, elevation: lv.elevation, height: lv.height, slab: lv.slab };
       const idx = {};
       for (const key of ENTITY_ARRAYS) {
         copy[key] = []; idx[key] = [];
+        const alive = key === 'openings' ? new Set(copy.walls.map((w) => w.id)) : null;
         (Array.isArray(lv[key]) ? lv[key] : []).forEach((e, j) => {
+          const path = `levels[${li}].${key}[${j}]`;
           if (!isObj(e) || bad.ents.has(`${li}.${key}.${j}`)) {
+            skip(KIND[key], e, path, bad.why.get(`${li}.${key}.${j}`) || 'it is not an object');
             if (key === 'walls' || key === 'openings') drop.incomplete.add(li);
             if (key === 'walls' && isObj(e) && typeof e.id === 'string') drop.wallIds.set(li, (drop.wallIds.get(li) || new Set()).add(e.id));
+            return;
+          }
+          if (alive && drop.wallIds.has(li) && drop.wallIds.get(li).has(e.wall) && !alive.has(e.wall)) {
+            skip('opening', e, path, 'its wall was skipped', 'wall-skipped');
+            drop.incomplete.add(li);
             return;
           }
           copy[key].push(e); idx[key].push(j);
@@ -722,7 +762,7 @@ function analyze(input) {
     if (!structural && dropped === 0 && !bad.noLevels && Array.isArray(plan.levels)) {
       try { normalized = normalizePlan(plan); } catch { normalized = null; }
     }
-    return result(normalized, model ? model.norm : null, dropped);
+    return result(normalized, model ? model.norm : null, dropped, skipped);
   };
   if (!model) return finish();
 
@@ -1149,7 +1189,7 @@ function semanticChecks(plan, model, add, errors) {
   }
 }
 
-export function validatePlan(plan) {
-  const { ok, errors, warnings, normalized } = analyzePlan(plan);
+export function validatePlan(plan, options) {
+  const { ok, errors, warnings, normalized } = analyzePlan(plan, options);
   return { ok, errors, warnings, normalized };
 }
