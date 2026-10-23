@@ -29,7 +29,7 @@ First aid for people who open the page for the first time with an answer pasted 
 
 ### Security
 
-- Hostile input is bounded: a plan text over 2 MB is refused (paste, drop, file, `?plan=` and `#plan=`), the number of items and the length of strings are capped in the schema and the validator, `__proto__`, `constructor` and `toString` as keys are rejected, a message repeats at most 80 characters of a value, and the work of the validator, the scale-note matching, the area estimate, the label placement, the spawn search and the furniture builder has a budget. A 10 KB plan with ids of 5,000 characters validates in under a second inside a 256 MB heap.
+- Hostile input is bounded: a plan text over 2 MB is refused (paste, drop, file, `?plan=` and `#plan=`), the number of items and the length of strings are capped in the schema and the validator, `__proto__`, `constructor` and `toString` as keys are rejected, a message repeats at most 80 characters of a value, and the work of the validator, the scale-note matching, the area estimate, the label placement, the spawn search and the furniture builder has a budget. A 10 KB plan with ids of 5,000 characters validates in under a second inside a 256 MB heap. A whole plan placed 1e15 m or more from the origin no longer freezes the page: the label and walk start searches use counted loops.
 
 ## [0.1.0] - 2026-10-23
 
