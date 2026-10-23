@@ -46,6 +46,13 @@ for (const [file, table] of Object.entries(TABLES)) {
   });
 }
 
+// REVIEW-B: "Poproś AI, żeby wysłało" leaves the reader unsure about the gender of "AI"; the text says "czat" and the verb follows it.
+test('Polish strings ask the chat, not "AI", to do something (no neuter verb after "AI, żeby")', () => {
+  const found = [];
+  for (const [file, table] of Object.entries(TABLES)) for (const [key, pl] of Object.entries(table.pl)) if (/\bAI,? żeby \p{L}+(ło|ła)\b/u.test(pl)) found.push(`${file} ${key}: ${pl}`);
+  assert.deepEqual(found, []);
+});
+
 test('the deny list works: it finds English in a half translated line and leaves tool names alone', () => {
   assert.deepEqual(englishLeft('Pobierz model 3D (GLB), PNG i HTML z JSON'), []);
   assert.deepEqual(englishLeft('Wklej JSON, Copy fix request'), ['copy', 'fix', 'request']);

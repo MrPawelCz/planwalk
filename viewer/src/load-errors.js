@@ -34,9 +34,9 @@ export const strings = {
   pl: {
     noPlan: 'W tym tekście nie ma planu. Wklej całą odpowiedź z czatu z AI, planwalk sam ją przeszuka. Jeśli czat napisał, że nie widzi zdjęcia, dodaj je jeszcze raz.',
     noPlanFile: 'W tym pliku nie ma planu. Otwórz plik z odpowiedzią AI, w której jest plan.',
-    cutOff: 'Plan w tym tekście jest ucięty, brakuje końca. Poproś AI, żeby wysłało cały plan jeszcze raz.',
-    invalid: 'planwalk znalazł w tym tekście plan, ale w zapisie jest błąd, więc nie da się go odczytać. Poproś AI, żeby wysłało plan jeszcze raz w jednym bloku kodu.',
-    decimalComma: 'Liczby muszą mieć kropkę, nie przecinek (2.5, a nie 2,5): poproś AI, żeby tak je zapisało.',
+    cutOff: 'Plan w tym tekście jest ucięty, brakuje końca. Poproś czat, żeby wysłał cały plan jeszcze raz.',
+    invalid: 'planwalk znalazł w tym tekście plan, ale zapis zawiera błąd, więc nie da się go odczytać. Poproś czat, żeby wysłał plan jeszcze raz w jednym bloku kodu.',
+    decimalComma: 'Liczby muszą mieć kropkę, nie przecinek (2.5, a nie 2,5): poproś czat, żeby tak je zapisał.',
     severalPlans: 'W odpowiedzi było więcej niż jeden plan. planwalk wczytał ostatni, zwykle to wersja poprawiona.',
     tooLong: 'Ten tekst jest za długi jak na plan (limit to około 2 MB tekstu). Wklej sam JSON z planem.',
     emptyText: 'Pole jest puste. Wklej odpowiedź z czatu z AI.',
