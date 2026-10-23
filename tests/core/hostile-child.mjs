@@ -2,10 +2,10 @@
 //   node --max-old-space-size=256 tests/core/hostile-child.mjs <case> [repo-root]
 // The optional repo root lets the same cases run against another checkout (to compare before and after a change).
 import { resolve } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const [name, rootArg] = process.argv.slice(2);
-const root = resolve(rootArg ?? new URL('../..', import.meta.url).pathname);
+const root = resolve(rootArg ?? fileURLToPath(new URL('../..', import.meta.url)));
 const { analyzePlan } = await import(pathToFileURL(`${root}/src/core/validate.js`).href);
 
 const square = (id = 'a') => [

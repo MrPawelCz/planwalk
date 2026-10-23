@@ -4,6 +4,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { CAPS, hasOwn, clip } from '../../src/core/caps.js';
 import { MAX_PLAN_CHARS } from '../../src/core/limits.js';
 import { normalizePlan } from '../../src/core/defaults.js';
@@ -13,7 +14,7 @@ const load = (p) => JSON.parse(readFileSync(new URL(`../../${p}`, import.meta.ur
 const flat = () => load('examples/flat-1.plan.json');
 const codes = (r) => [...r.errors, ...r.warnings].map((i) => i.code);
 
-const CHILD = new URL('./hostile-child.mjs', import.meta.url).pathname;
+const CHILD = fileURLToPath(new URL('./hostile-child.mjs', import.meta.url));
 function child(name, asObject = false) {
   const t0 = Date.now();
   const env = asObject ? { ...process.env, HOSTILE_AS_OBJECT: '1' } : process.env;
