@@ -12,13 +12,9 @@ export const chromePath = ['/Applications/Google Chrome.app/Contents/MacOS/Googl
 export const skipReason = (...files) => !chromePath ? 'Chrome or Chromium not found' : typeof WebSocket === 'undefined' ? 'Node 22 or newer is needed for the global WebSocket' : files.find((f) => !existsSync(f)) ? `${files.find((f) => !existsSync(f))} is missing, run npm run build` : false;
 
 // The prompt of a docs/PROMPT*.md file: its longest fenced block (what tools/build.mjs embeds), found here with a second, line based reader.
+// The prompt is the whole file (docs/PROMPT*.md hold nothing but the prompt), the same normalisation as tools/build.mjs.
 export function promptOfFile(md) {
-  const blocks = [];
-  let fence = null, cur = [];
-  for (const line of md.split('\n')) {
-    if (fence === null) { const m = /^(`{3,})/.exec(line); if (m) { fence = m[1]; cur = []; } } else if (line.trimEnd() === fence) { blocks.push(cur.join('\n')); fence = null; } else cur.push(line);
-  }
-  return blocks.sort((a, b) => b.length - a.length)[0];
+  return md.replace(/\r\n/g, '\n').trim();
 }
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));

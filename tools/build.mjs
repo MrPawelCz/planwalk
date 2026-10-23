@@ -43,15 +43,15 @@ for (const f of readdirSync(exDir).filter((n) => n.endsWith('.plan.json')).sort(
   samples[plan.name || f.replace(/\.plan\.json$/, '')] = plan;
 }
 
-// docs/PROMPT.md and, when it exists, docs/PROMPT.pl.md stay the only sources of the prompt: the page embeds the fenced
-// prompt block of each file (the longest fenced block) as inert text for the Copy prompt buttons; viewer/src/prompt.js reads it back.
-const promptBlock = (md) => [...md.matchAll(/^(`{3,})[^\n]*\n([\s\S]*?)\n\1[ \t]*$/gm)].map((m) => m[2]).sort((a, b) => b.length - a.length)[0];
+// docs/PROMPT.md and, when it exists, docs/PROMPT.pl.md stay the only sources of the prompt: the page embeds the whole file (it holds
+// nothing but the prompt) as inert text for the Copy prompt buttons; viewer/src/prompt.js reads it back.
+const promptText = (md) => md.replace(/\r\n/g, '\n').trim();
 const prompts = {};
 for (const [lang, name] of [['en', 'PROMPT.md'], ['pl', 'PROMPT.pl.md']]) {
   const file = join(root, 'docs', name);
   if (!existsSync(file)) continue;
-  prompts[lang] = promptBlock(readFileSync(file, 'utf8'));
-  if (!prompts[lang]) throw new Error(`docs/${name} has no fenced prompt block`);
+  prompts[lang] = promptText(readFileSync(file, 'utf8'));
+  if (!prompts[lang]) throw new Error(`docs/${name} is empty`);
 }
 if (!prompts.en) throw new Error('docs/PROMPT.md is missing');
 const promptBlocks = Object.entries(prompts).map(([lang, text]) => `<script type="text/plain" id="planwalk-prompt-${lang}">${neutralise(text)}</script>\n`).join('');
