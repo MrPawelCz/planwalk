@@ -48,18 +48,51 @@ export const ABOUT_CSS = `
 
 const text = (v) => (typeof v === 'string' ? v.trim() : '');
 
-// The schema has no field for "the scale is a guess": the reader says how it got the scale in meta.scale_note. This looks for
-// the words the prompt's own examples use ("a guess, not a measurement", "scale from a standard door") and for an estimate named
-// next to the word scale, in English and Polish ("wall thickness estimated" or "skala przyjęta z wymiaru" do not count). A note
-// without them (printed dimensions, printed areas) raises no badge; the sheet shows every note either way.
+// The schema has no field for "the scale is a guess": the reader says how it got the scale in meta.scale_note. The badge claims
+// an estimated scale only when the note says so about the scale itself, in English or Polish:
+//   strong: an uncertainty word right next to the word scale ("scale estimated", "approximate scale", "skala szacowana", "Scale: unknown")
+//           or a standard door as the basis ("scale from a standard door");
+//   weak:   the scale is missing ("no printed scale", "brak skali") or comes from the doors ("derived from door widths", "na oko"),
+//           which counts unless the note also names a printed basis ("scale from the printed dimension", "skala z wymiaru").
+// Words about something else ("wall thickness estimated", "I guessed the layout of the bathroom") do not count, and a note that
+// only names a printed basis raises no badge. The sheet shows every note either way.
 // The note can be far longer than the schema allows (that is only a validator error and the model is still built), so it is cut
 // to the schema cap first; every quantifier below is bounded and a word pattern starts at a word boundary, so matching stays linear.
 const NOTE_MAX = PLAN_SCHEMA.properties.meta.properties.scale_note.maxLength;
-const GUESS = [
-  /\bguess(ed)?\b|\b(standard|typical) doors?\b|\bscale\b[^.;:]{0,40}\b(estimat|approximat|assum)|\b(estimat|approximat|assum)\w{0,20}[^.;:]{0,40}\bscale\b/i,
-  /\bzgadn|\bzgadyw|na oko|\b(typow|standardow)\w{0,20} drzw|\bskal[^.;:]{0,40}(szacow|przybli)|\b\w{0,5}(szacow|przybli)\w{0,20}[^.;:]{0,40}\bskal/i,
+const PL = '[a-ząćęłńóśźż]'; // \w does not cover the Polish letters
+const UNSURE_EN = 'guess|estimat|approx|assum|unknown|unclear|uncertain|unsure|infer|rough';
+const UNSURE_PL = 'zgadn|zgadyw|o?szacow|przybli|nieznan|niepewn|domysł';
+const STRONG = [
+  new RegExp(`\\bscale\\b(?:\\s+(?:is|was|are|has been|only|just|also)){0,3}\\s*[:=-]?\\s*(?:a\\s+)?(?:${UNSURE_EN})`, 'i'),
+  new RegExp(`\\b(?:${UNSURE_EN})\\w{0,6}\\s+(?:(?:the|a|my|its|overall)\\s+)?scale\\b`, 'i'),
+  /\b(?:standard|typical|average)\s+(?:[\w.'-]+\s+){0,3}?doors?\b/i,
+  new RegExp(`\\bskal${PL}{0,4}[\\s:=-]+(?:(?:jest|była|została|tylko|raczej)\\s+){0,2}(?:${UNSURE_PL})`, 'i'),
+  new RegExp(`\\b${PL}{0,3}(?:${UNSURE_PL})${PL}{0,6}\\s+skal`, 'i'),
+  /\b(?:typow|standardow)[^\s;,.()]{0,20}\s+(?:[^\s;,.()]+\s+){0,2}?drzw/i,
 ];
-export const scaleGuessed = (note) => { const s = text(note).slice(0, NOTE_MAX); return GUESS.some((re) => re.test(s)); };
+const WEAK = new RegExp([
+  '\\bno\\s+(?:\\w+\\s+){0,2}(?:scale|dimensions?)\\b',
+  '\\bscale\\s+(?:is\\s+)?not\\s+(?:printed|given|stated|known|visible|shown)\\b',
+  '\\b(?:from|on|using|via|by)\\s+(?:(?:the|a|typical|standard|average)\\s+)*doors?\\b',
+  `\\b(?:brak|bez)\\s+(?:${PL}{1,15}\\s+){0,2}(?:skal|wymiar)${PL}*`,
+  `\\bskal${PL}{0,4}\\s+nie\\s+(?:jest\\s+)?(?:podana|podano|wydrukowana|znana)`,
+  '\\bz\\s+(?:(?:szerokości|wymiaru|typowych)\\s+)?drzwi',
+  'na oko',
+].join('|'), 'gi');
+const PRINTED = [
+  /\b(?:from|by|using|via)\s+(?:the\s+)?(?:printed|stated|given|written|marked|drawn)\b/i,
+  /\bfrom\s+(?:the\s+)?(?:\d[\d.,]*\s*(?:m|cm|mm)\s+)?(?:dimension|room\s+areas?)/i,
+  /\bscale\s+(?:is\s+)?(?:printed|exact|known|given|stated)\b/i,
+  /\bprinted\s+(?:scale|dimension|overall|room|area|width|length)/i,
+  new RegExp(`\\bz\\s+(?:(?:podanych|podanego|drukowanych)\\s+)?(?:wymiar|powierzchni)`, 'i'),
+  new RegExp(`\\bskal${PL}{0,4}\\s+(?:jest\\s+)?(?:podana|dokładna|wydrukowana|znana)`, 'i'),
+];
+export function scaleGuessed(note) {
+  const s = text(note).slice(0, NOTE_MAX);
+  if (STRONG.some((re) => re.test(s))) return true;
+  const rest = s.replace(WEAK, ' '); // what is left once the weak phrases are out, so "no printed scale" is not read as a printed basis
+  return rest !== s && !PRINTED.some((re) => re.test(rest));
+}
 
 const metaOf = (plan) => (plan && typeof plan.meta === 'object' && plan.meta) || {};
 
