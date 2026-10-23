@@ -19,7 +19,7 @@
 **With a chat that can read images (nothing to install)**
 
 1. Open the [live viewer](https://mrpawelcz.github.io/planwalk/), or download `planwalk.html` from the [latest release](https://github.com/MrPawelCz/planwalk/releases/latest) and double click it (it works offline, straight from the file). From a clone, `npm start` serves it at http://127.0.0.1:8080/planwalk.html.
-2. Give your floor plan image and the prompt from [`docs/PROMPT.md`](docs/PROMPT.md) ([`docs/PROMPT.pl.md`](docs/PROMPT.pl.md) for Polish drawings) to a chat that can read images. Cover names, addresses and phone numbers on the drawing first. The prompt is designed for chats that can read images. It was measured on the models listed in the Runs by model table of [`docs/BENCHMARK.md`](docs/BENCHMARK.md); other chats that read images are expected to work, but that is an expectation, not a result (results are welcome).
+2. Give your floor plan image and the prompt from [`docs/PROMPT.md`](docs/PROMPT.md) ([`docs/PROMPT.pl.md`](docs/PROMPT.pl.md) for Polish drawings) to a chat that can read images. Cover names, addresses and phone numbers on the drawing first. The prompt is designed for chats that can read images. The English prompt was measured on the models listed in the Runs by model table of [`docs/BENCHMARK.md`](docs/BENCHMARK.md) (Claude Haiku 4.5 only with the first prompt version, gpt-6-astra with the current one on 7 of 12 plans); the Polish prompt and Polish drawings have not been measured. Other chats that read images are expected to work, but that is an expectation, not a result (results are welcome).
 3. Paste the JSON it returns into the viewer ("Paste JSON"). If the viewer lists problems, press "Copy fix request", paste that back into the same chat, repeat.
 
 **With an agent that loads skill folders**
@@ -109,7 +109,7 @@ npm run build:skill   # writes dist/ and regenerates skill/planwalk/ (commit bot
 npm test              # node --test, fails when a generated skill file is stale (CI also checks dist/)
 ```
 
-Layout: `schema/` the format, `src/core/` units, geometry and validator, `viewer/` the viewer source, `tools/` command line tools, `eval/` the benchmark harness (generator, drawing styles, scorer, results), `skill/` the agent skill (its `scripts/validate.mjs`, `scripts/capture.mjs` and `assets/planwalk.html` are generated), `examples/` plans (synthetic, CC0), `docs/` specification and prompt. Contributions that help most: plans that break things, see [`CONTRIBUTING.md`](CONTRIBUTING.md).
+Layout: `schema/` the format, `src/core/` units, geometry and validator, `viewer/` the viewer source, `tools/` command line tools, `eval/` the benchmark harness (generator, drawing styles, scorer, results), `skill/` the agent skill (its `scripts/validate.mjs`, `scripts/embed.mjs`, `scripts/capture.mjs` and `assets/planwalk.html` are generated), `examples/` plans (synthetic, CC0), `docs/` specification and prompt. Contributions that help most: plans that break things, see [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ## Author
 

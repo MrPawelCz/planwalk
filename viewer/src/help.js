@@ -29,7 +29,7 @@ export const STRINGS = {
     tip: 'Wskazówka: zanim wyślesz zdjęcie do AI, wytnij z niego imiona, nazwiska i adresy.',
     copy: 'Kopiuj prompt', copied: 'Skopiowano', copyFailed: 'Nie udało się skopiować',
     links: 'Linki',
-    repo: 'Projekt i kod źródłowy', prompt: 'Prompt (plik tekstowy)', faq: 'Pytania i odpowiedzi (po angielsku)',
+    repo: 'Projekt i kod źródłowy', prompt: 'Prompt (plik tekstowy)', faq: 'Pytania i odpowiedzi',
     close: 'Zamknij',
   },
 };
@@ -74,7 +74,7 @@ export function createHelp({ h }) {
       h('div', { class: 'pw-help-links' }, `${t('links')}:`, h('ul', {},
         h('li', {}, link(REPO, t('repo'))),
         h('li', {}, link(promptUrl(lang), t('prompt'))),
-        h('li', {}, link(`${REPO}/blob/main/docs/FAQ.md`, t('faq'))))),
+        h('li', {}, link(`${REPO}/blob/main/docs/${lang === 'pl' ? 'FAQ.pl.md' : 'FAQ.md'}`, t('faq'))))),
       h('form', { method: 'dialog' }, h('button', { type: 'submit' }, t('close'))));
   }
 

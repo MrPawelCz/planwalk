@@ -1,5 +1,5 @@
-// The prompt a newcomer gives to an AI chat. tools/build.mjs embeds the fenced prompt block of docs/PROMPT.md (and of
-// docs/PROMPT.pl.md when it exists) as <script type="text/plain" id="planwalk-prompt-en|pl">, with "</script" and "<!--" escaped.
+// The prompt a newcomer gives to an AI chat. tools/build.mjs embeds the whole of docs/PROMPT.md (and of
+// docs/PROMPT.pl.md when it exists; the files hold nothing but the prompt) as <script type="text/plain" id="planwalk-prompt-en|pl">, with "</script" and "<!--" escaped.
 const LANGS = ['en', 'pl'];
 
 // The prompt text of one language, or null when that language is not embedded in this page.
