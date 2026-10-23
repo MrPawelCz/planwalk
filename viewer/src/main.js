@@ -22,6 +22,7 @@ import { openDialog, closeDialog } from './dialogs.js';
 import { fileSlug } from './slug.js';
 import { T, issuesHeading, fixRequestText } from './strings.js'; // every caption of this window, English and Polish
 import { createShare, linkProblem } from './share.js';
+import { createLoadedNote } from './loaded-note.js';
 import { decodeShort, parseHash } from './share-link.js';
 
 const MODES = ['dollhouse', 'orbit', 'top', 'walk'];
@@ -143,6 +144,7 @@ function start() {
   const about = createAbout(h, () => ({ plan, model, warnings: issues.warnings.length, version: PW_VERSION }));
   const visit = createFirstVisit({ h, onPaste: () => openDialog(pasteDlg) });
   const help = createHelp({ h, onLang: (l) => applyLang(l) });
+  const loaded = createLoadedNote({ h, root, getBar: () => bar }); // "Loaded: name, N rooms" for a few seconds after a paste, file or ?plan= load
   const share = createShare({ h, getPlan: () => plan, getName: () => plan?.name || '', getSlug: () => slug(), getImage: () => api.screenshot(), download });
   const bar = h('div', { class: 'pw-bar' },
     h('span', { class: 'pw-brand' }, 'planwalk'), nameEl, about.badge, visit.tag,
@@ -171,7 +173,7 @@ function start() {
       h('div', { style: 'margin-top:8px;display:flex;gap:8px;justify-content:flex-end' },
         notes.openFileButton(openPicked),
         h('button', { type: 'submit', value: 'cancel' }, T.cancel),
-        h('button', { type: 'button', onclick: () => { api.load(pasteArea.value); closeDialog(pasteDlg); } }, T.load))));
+        h('button', { type: 'button', onclick: () => { api.load(pasteArea.value, 'paste'); closeDialog(pasteDlg); } }, T.load))));
   root.append(bar, card, visit.el, issuesEl, hint, mini, pasteDlg, help.el, about.dialog, share.dialog);
   card.append(notes.openFileButton(openPicked));
   const chooseFile = notes.openFileButton(openPicked); // kept out of the page: window.planwalk.openFile() and the phone Menu press it
@@ -386,9 +388,13 @@ function start() {
 
   // input: plan text (a chat answer is fine) or an object. source: 'link' (#plan=), 'download' (?plan=) or 'file', which only changes the wording of a failure.
   // A text that holds no plan, or a plan that cannot become a model, leaves the model on screen alone and says so in the banner.
+  const ANNOUNCED = new Set(['paste', 'file', 'download']); // the sources that get the "Loaded" line; the API, links and the embedded plan do not
   function load(input, source) {
     try {
-      return loadPlan(input, source);
+      const before = model;
+      const res = loadPlan(input, source);
+      if (model && model !== before && ANNOUNCED.has(source)) loaded.show({ name: plan?.name, rooms: model.counts.rooms });
+      return res;
     } catch (err) {
       reportCrash(err);
       return { ok: false, errors: [{ code: 'E001', path: '', message: String(err && err.message ? err.message : err), fix: 'Reload the page.' }], warnings: [], repairs: [] };
@@ -593,7 +599,7 @@ function start() {
     renderIssues();
     syncUi();
     refreshLangSwitches(); // before help.refresh(), which puts the focus on the pressed button
-    visit.refresh(); help.refresh(); about.refresh(); notes.refresh(); share.refresh();
+    visit.refresh(); help.refresh(); about.refresh(); notes.refresh(); share.refresh(); loaded.refresh();
     if (planScene) planScene.relabel();
     render();
     return getLang();
@@ -856,7 +862,7 @@ function start() {
   window.addEventListener('paste', (e) => {
     if (typing(e)) return;
     const t = e.clipboardData?.getData('text');
-    if (t && t.includes('{')) api.load(t); // a whole chat answer is fine; text without a { is not meant for planwalk
+    if (t && t.includes('{')) api.load(t, 'paste'); // a whole chat answer is fine; text without a { is not meant for planwalk
   });
 
   // ---------- boot ----------
