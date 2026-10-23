@@ -2,6 +2,7 @@
 // The viewer, the physics and the tests all read the same model, so what you see is what you collide with.
 // Plan point (x, y) at height h maps to world (x, elevation + h, y). Angles are radians here, clockwise on the plan.
 import { pointInPolygon, distancePointToSegment, polygonCentroid, bbox } from '../../src/core/geom2d.js';
+import { CAPS, hasOwn } from '../../src/core/caps.js';
 
 export const CUT_HEIGHT = 1.2;
 export const EXPLODE_FACTOR = 1.2;
@@ -39,9 +40,12 @@ const NO_COLLIDE = new Set(['rug', 'plant']);
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const rad = (d) => (d * Math.PI) / 180;
 
+// A piece is never drawn (or collided with) larger than CAPS.furnitureSpan in any direction, whatever the plan says:
+// a size written in centimetres would otherwise build thousands of meshes. The validator warns about it (W112).
 export function furnitureSize(f) {
-  const d = FURNITURE_DEFAULTS[f.type] ?? [0.6, 0.6, 0.6];
-  return { w: f.size?.[0] ?? d[0], d: f.size?.[1] ?? d[1], h: f.height ?? d[2] };
+  const d = hasOwn(FURNITURE_DEFAULTS, f.type) ? FURNITURE_DEFAULTS[f.type] : [0.6, 0.6, 0.6];
+  const cap = (v) => Math.min(v, CAPS.furnitureSpan);
+  return { w: cap(f.size?.[0] ?? d[0]), d: cap(f.size?.[1] ?? d[1]), h: cap(f.height ?? d[2]) };
 }
 
 // Vertical offset of each level for an explode factor 0..1 (cumulative, so uneven heights never overlap).

@@ -2,7 +2,7 @@
 // (lights, sky, base plate, ground). All names double as GLB node names.
 import * as THREE from 'three';
 import { mat, floorMat, floorName, texScale } from './materials.js';
-import { buildFurniture } from './furniture.js';
+import { buildFurniture, SCENE_MESHES } from './furniture.js';
 import { levelOffsets, modelExtent } from './geometry.js';
 import { boxGeometry, setBoxUV } from './uv.js';
 
@@ -100,6 +100,7 @@ export class PlanScene {
     this.floors = [];
     this.labels = [];
     this.arcs = [];
+    this.furnitureBudget = { left: SCENE_MESHES };
     this.levelGroups = model.levels.map((lv) => this._level(lv));
     this.levelGroups.forEach((g) => this.group.add(g));
     this.setExplode(0);
@@ -218,7 +219,7 @@ export class PlanScene {
       g.add(sg);
     }
     for (const f of lv.furniture) {
-      const fg = buildFurniture(f);
+      const fg = buildFurniture(f, this.furnitureBudget);
       fg.position.set(f.center[0], 0, f.center[1]);
       fg.rotation.y = -f.rotation;
       fg.userData.type = f.type;

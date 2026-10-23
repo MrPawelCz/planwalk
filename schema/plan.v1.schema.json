@@ -35,11 +35,11 @@
         "elevation": { "type": "number", "description": "Floor height above ground in plan units. Default: sum of the heights (plus slab) of the levels listed before this one." },
         "height": { "type": "number", "exclusiveMinimum": 0, "description": "Floor to ceiling. Default 2.7 m." },
         "slab": { "type": "number", "minimum": 0, "description": "Floor slab thickness. Default 0.2 m." },
-        "walls": { "type": "array", "minItems": 3, "items": { "$ref": "#/$defs/wall" } },
-        "openings": { "type": "array", "items": { "$ref": "#/$defs/opening" } },
-        "rooms": { "type": "array", "items": { "$ref": "#/$defs/room" } },
-        "stairs": { "type": "array", "items": { "$ref": "#/$defs/stair" } },
-        "furniture": { "type": "array", "items": { "$ref": "#/$defs/furniture" } }
+        "walls": { "type": "array", "minItems": 3, "maxItems": 600, "items": { "$ref": "#/$defs/wall" } },
+        "openings": { "type": "array", "maxItems": 600, "items": { "$ref": "#/$defs/opening" } },
+        "rooms": { "type": "array", "maxItems": 150, "items": { "$ref": "#/$defs/room" } },
+        "stairs": { "type": "array", "maxItems": 24, "items": { "$ref": "#/$defs/stair" } },
+        "furniture": { "type": "array", "maxItems": 400, "items": { "$ref": "#/$defs/furniture" } }
       }
     },
     "wall": {
@@ -78,7 +78,7 @@
       "properties": {
         "id": { "$ref": "#/$defs/id" },
         "name": { "type": "string", "maxLength": 80 },
-        "polygon": { "type": "array", "minItems": 3, "items": { "$ref": "#/$defs/point" }, "description": "Vertices along the wall centerlines, closed implicitly, any orientation." },
+        "polygon": { "type": "array", "minItems": 3, "maxItems": 120, "items": { "$ref": "#/$defs/point" }, "description": "Vertices along the wall centerlines, closed implicitly, any orientation." },
         "use": { "enum": ["living", "bedroom", "kitchen", "bathroom", "hall", "balcony", "storage", "office", "dining", "other"] },
         "floor": { "enum": ["wood", "tile", "carpet", "stone", "concrete", "none"], "default": "wood" },
         "ceiling": { "type": "boolean", "default": true },

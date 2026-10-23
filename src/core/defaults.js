@@ -2,6 +2,7 @@
 // elevations resolved, derived wall fields added. It does NOT validate (see validate.js).
 import { unitFactor } from './units.js';
 import { bbox, polygonArea } from './geom2d.js';
+import { hasOwn } from './caps.js';
 
 export const DEFAULTS = Object.freeze({
   levelHeight: 2.7,
@@ -36,12 +37,12 @@ export function normalizePlan(input) {
       return {
         id: w.id, kind, from, to, length,
         dir: length > 0 ? [dx / length, dy / length] : [1, 0],
-        thickness: len(w.thickness, f, DEFAULTS.thickness[kind] ?? DEFAULTS.thickness.interior),
+        thickness: len(w.thickness, f, hasOwn(DEFAULTS.thickness, kind) ? DEFAULTS.thickness[kind] : DEFAULTS.thickness.interior),
         height: len(w.height, f, height),
       };
     });
     const openings = (lv.openings ?? []).map((o) => {
-      const d = DEFAULTS.opening[o.type] ?? DEFAULTS.opening.door;
+      const d = hasOwn(DEFAULTS.opening, o.type) ? DEFAULTS.opening[o.type] : DEFAULTS.opening.door;
       return {
         id: o.id, wall: o.wall, type: o.type,
         offset: o.offset * f, width: o.width * f,

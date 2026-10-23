@@ -4,11 +4,16 @@ import * as THREE from 'three';
 import { mat, texScale } from './materials.js';
 import { boxGeometry, setBoxUV } from './uv.js';
 import { softBoxGeometry, leafGeometry } from './soft.js';
+import { hasOwn } from '../../src/core/caps.js';
 
 const CYL = new THREE.CylinderGeometry(0.5, 0.5, 1, 20);
 const SPH = new THREE.SphereGeometry(0.5, 14, 10);
 // Cabinet wood: the grain runs up the fronts (the uv are turned a quarter), as on a wardrobe door.
 const GRAIN_UP = new Set(['f:body', 'f:soft']);
+// Mesh limits: one piece builds at most PIECE_MESHES meshes (a bookshelf adds one per book) and one scene at most
+// SCENE_MESHES, so a plan with hundreds of pieces cannot freeze the page. A piece that hit a limit has userData.truncated.
+export const PIECE_MESHES = 300;
+export const SCENE_MESHES = 8000;
 const BOOKS = ['f:book0', 'f:book1', 'f:book2', 'f:book3', 'f:book4', 'f:book5'];
 
 function rnd(i) {
@@ -226,12 +231,16 @@ const ALIAS = {
   'kitchen-counter': 'counter', 'tv-unit': 'tvunit',
 };
 
-export function buildFurniture(f) {
+export function buildFurniture(f, budget) {
   const g = new THREE.Group();
   const flat = f.type === 'rug';
-  const add = (m) => { m.castShadow = !flat; m.receiveShadow = true; g.add(m); return m; };
+  const room = Math.min(PIECE_MESHES, budget ? budget.left : Infinity);
+  let used = 0, skipped = false;
+  const full = () => { if (used < room) return false; skipped = true; return true; };
+  const add = (m) => { used++; m.castShadow = !flat; m.receiveShadow = true; g.add(m); return m; };
   // The uv of a box are metres in the furniture's own frame, so a grain or a weave runs on across the parts of one piece.
   const bx = (x0, x1, y0, y1, z0, z1, m, look) => {
+    if (full()) return null;
     const mesh = new THREE.Mesh(boxGeometry(), mat(m));
     mesh.pw = { mat: m, box: true };
     if (look) mesh.pw.look = look;
@@ -242,6 +251,7 @@ export function buildFurniture(f) {
     return add(mesh);
   };
   const cy = (cx, cz, r, y0, y1, m, rz = r, look) => {
+    if (full()) return null;
     const mesh = new THREE.Mesh(CYL, mat(m));
     mesh.pw = { mat: m };
     if (look) mesh.pw.look = look;
@@ -250,6 +260,7 @@ export function buildFurniture(f) {
     return add(mesh);
   };
   const sp = (cx, cyy, cz, r, m, look) => {
+    if (full()) return null;
     const mesh = new THREE.Mesh(SPH, mat(m));
     mesh.pw = { mat: m };
     if (look) mesh.pw.look = look;
@@ -259,6 +270,7 @@ export function buildFurniture(f) {
   };
   // Soft solids (rounded, puffed) exist only in the textured look; sb also keeps the plain box for the clay look.
   const soft = (x0, x1, y0, y1, z0, z1, m, r, puff = 0, rot = null) => {
+    if (full()) return null;
     const sx = Math.max(1e-4, x1 - x0), sy = Math.max(1e-4, y1 - y0), sz = Math.max(1e-4, z1 - z0);
     const cxm = (x0 + x1) / 2, cym = (y0 + y1) / 2, czm = (z0 + z1) / 2;
     const mesh = new THREE.Mesh(softBoxGeometry(sx, sy, sz, r, puff, cxm, cym, czm, texScale(m)), mat(m));
@@ -273,6 +285,7 @@ export function buildFurniture(f) {
   };
   // A leaf blade of length len: tilt leans it out from the vertical, az turns it round the stem (textured look only).
   const leaf = (az, tilt, len, x, y, z, m) => {
+    if (full()) return null;
     const mesh = new THREE.Mesh(leafGeometry(), mat(m));
     mesh.pw = { mat: m, look: 'textured' };
     mesh.position.set(x, y, z);
@@ -281,9 +294,11 @@ export function buildFurniture(f) {
     mesh.scale.setScalar(len);
     return add(mesh);
   };
-  const key = ALIAS[f.type] ?? f.type;
-  const fn = BUILDERS[key] ?? BUILDERS.box;
+  const key = hasOwn(ALIAS, f.type) ? ALIAS[f.type] : f.type;
+  const fn = hasOwn(BUILDERS, key) ? BUILDERS[key] : BUILDERS.box;
   fn({ bx, cy, sp, sb, soft, leaf, W: f.w, D: f.d, H: f.h, hw: f.w / 2, hd: f.d / 2 });
+  if (budget) budget.left -= used;
+  if (skipped) g.userData.truncated = true;
   g.name = `furniture:${f.id}`;
   g.userData.type = f.type;
   return g;

@@ -62,7 +62,8 @@ export function segmentCrossing(a, b, c, d) {
   return null;
 }
 
-// First self-intersection point of a closed polygon, or null.
+// First self-intersection point of a closed polygon, or null. Quadratic in the number of points: the validator caps a
+// room polygon at CAPS.polygonPoints (src/core/caps.js) before calling it.
 export function polygonSelfIntersection(poly) {
   const n = poly.length;
   for (let i = 0; i < n; i++) {
@@ -87,6 +88,7 @@ export function bbox(points) {
   return { minX, minY, maxX, maxY, width: maxX - minX, height: maxY - minY };
 }
 
+// Quadratic as well (same cap).
 export function distinctPointCount(poly, eps = 1e-6) {
   const seen = [];
   for (const p of poly) if (!seen.some((q) => Math.hypot(p[0] - q[0], p[1] - q[1]) < eps)) seen.push(p);

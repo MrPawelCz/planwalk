@@ -6,6 +6,7 @@
 import { normalizePlan } from './defaults.js';
 import { UNIT_TO_M } from './units.js';
 import { polygonArea, pointInPolygon, distancePointToSegment, polygonSelfIntersection, distinctPointCount } from './geom2d.js';
+import { CAPS, hasOwn, clip, codePointCount } from './caps.js';
 
 // Embedded copy of schema/plan.v1.schema.json (a test keeps it identical to the file).
 export const PLAN_SCHEMA = {
@@ -20,7 +21,7 @@ export const PLAN_SCHEMA = {
     "version": { "const": 1 },
     "name": { "type": "string", "maxLength": 120 },
     "units": { "enum": ["m", "cm", "mm", "ft", "in"], "default": "m" },
-    "levels": { "type": "array", "minItems": 1, "maxItems": 12, "items": { "$ref": "#/$defs/level" } },
+    "levels": { "type": "array", "minItems": 1, "maxItems": CAPS.levels, "items": { "$ref": "#/$defs/level" } },
     "meta": {
       "type": "object",
       "additionalProperties": true,
@@ -45,11 +46,11 @@ export const PLAN_SCHEMA = {
         "elevation": { "type": "number", "description": "Floor height above ground in plan units. Default: sum of the heights (plus slab) of the levels listed before this one." },
         "height": { "type": "number", "exclusiveMinimum": 0, "description": "Floor to ceiling. Default 2.7 m." },
         "slab": { "type": "number", "minimum": 0, "description": "Floor slab thickness. Default 0.2 m." },
-        "walls": { "type": "array", "minItems": 3, "items": { "$ref": "#/$defs/wall" } },
-        "openings": { "type": "array", "items": { "$ref": "#/$defs/opening" } },
-        "rooms": { "type": "array", "items": { "$ref": "#/$defs/room" } },
-        "stairs": { "type": "array", "items": { "$ref": "#/$defs/stair" } },
-        "furniture": { "type": "array", "items": { "$ref": "#/$defs/furniture" } }
+        "walls": { "type": "array", "minItems": 3, "maxItems": CAPS.walls, "items": { "$ref": "#/$defs/wall" } },
+        "openings": { "type": "array", "maxItems": CAPS.openings, "items": { "$ref": "#/$defs/opening" } },
+        "rooms": { "type": "array", "maxItems": CAPS.rooms, "items": { "$ref": "#/$defs/room" } },
+        "stairs": { "type": "array", "maxItems": CAPS.stairs, "items": { "$ref": "#/$defs/stair" } },
+        "furniture": { "type": "array", "maxItems": CAPS.furniture, "items": { "$ref": "#/$defs/furniture" } }
       }
     },
     "wall": {
@@ -88,7 +89,7 @@ export const PLAN_SCHEMA = {
       "properties": {
         "id": { "$ref": "#/$defs/id" },
         "name": { "type": "string", "maxLength": 80 },
-        "polygon": { "type": "array", "minItems": 3, "items": { "$ref": "#/$defs/point" }, "description": "Vertices along the wall centerlines, closed implicitly, any orientation." },
+        "polygon": { "type": "array", "minItems": 3, "maxItems": CAPS.polygonPoints, "items": { "$ref": "#/$defs/point" }, "description": "Vertices along the wall centerlines, closed implicitly, any orientation." },
         "use": { "enum": ["living", "bedroom", "kitchen", "bathroom", "hall", "balcony", "storage", "office", "dining", "other"] },
         "floor": { "enum": ["wood", "tile", "carpet", "stone", "concrete", "none"], "default": "wood" },
         "ceiling": { "type": "boolean", "default": true },
@@ -126,6 +127,8 @@ export const PLAN_SCHEMA = {
 };
 
 const ID_PATTERN = PLAN_SCHEMA.$defs.id.pattern;
+const PATTERNS = new Map();
+const patternOf = (src) => { if (!PATTERNS.has(src)) PATTERNS.set(src, new RegExp(src)); return PATTERNS.get(src); };
 const ID_RULE = 'letters, digits, "_", "-" and "."';
 
 // ---------------------------------------------------------------------------------------------
@@ -172,32 +175,47 @@ function formatPath(segs) {
   let s = '';
   for (const seg of segs) {
     if (typeof seg === 'number') s += `[${seg}]`;
-    else if (/^[A-Za-z_$][\w$]*$/.test(seg)) s += s ? `.${seg}` : seg;
-    else s += `[${JSON.stringify(seg)}]`;
+    else if (/^[A-Za-z_$][\w$]*$/.test(clip(seg))) s += s ? `.${seg}` : seg;
+    else s += `[${JSON.stringify(clip(seg))}]`;
   }
   return s;
 }
 
-const jsonPointer = (segs) => `/${segs.map((s) => String(s).replace(/~/g, '~0').replace(/\//g, '~1')).join('/')}`.replace(/\/$/, '') || '/';
+const jsonPointer = (segs) => `/${segs.map((s) => clip(String(s)).replace(/~/g, '~0').replace(/\//g, '~1')).join('/')}`.replace(/\/$/, '') || '/';
+const jq = (v) => JSON.stringify(clip(v)); // a user supplied string, quoted and cut short for a message
+
+// "Did you mean" suggestions are only offered for short words, from a short list, and within a work budget per
+// analysis, so a hostile id can neither allocate a×b cells nor make the check quadratic.
+const SUGGEST_MAX_LEN = 48;
+const SUGGEST_BUDGET = 2000000; // table cells per analysis
+let suggestBudget = SUGGEST_BUDGET;
 
 function editDistance(a, b) {
-  const dp = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)]);
-  for (let j = 1; j <= b.length; j++) dp[0][j] = j;
+  if (a.length < b.length) [a, b] = [b, a];
+  let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
   for (let i = 1; i <= a.length; i++) {
-    for (let j = 1; j <= b.length; j++) dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    const cur = [i];
+    for (let j = 1; j <= b.length; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    prev = cur;
   }
-  return dp[a.length][b.length];
+  return prev[b.length];
 }
 
 // Closest candidate to `word` when it is plausibly a typo, else null.
 function closest(word, candidates) {
+  if (String(word).length > SUGGEST_MAX_LEN) return null;
   const w = String(word).toLowerCase();
+  const reach = Math.max(2, Math.floor(w.length / 3));
   let best = null, bestD = Infinity;
   for (const c of candidates) {
-    const d = editDistance(w, String(c).toLowerCase());
+    const cl = String(c).toLowerCase();
+    if (cl.length > SUGGEST_MAX_LEN || Math.abs(cl.length - w.length) > reach) continue; // too different to be a typo
+    suggestBudget -= (w.length + 1) * (cl.length + 1);
+    if (suggestBudget < 0) break;
+    const d = editDistance(w, cl);
     if (d < bestD) { bestD = d; best = c; }
   }
-  return best !== null && bestD <= Math.max(2, Math.floor(w.length / 3)) ? best : null;
+  return best !== null && bestD <= reach ? best : null;
 }
 
 function schemaHint(s, root) {
@@ -214,6 +232,7 @@ function schemaHint(s, root) {
 
 // Collects violations as { segs, rule, detail, fix }. Never throws on bad data.
 export function checkSchema(value, schema, root = schema, segs = [], out = []) {
+  if (out.length >= CAPS.violations) return out;
   const push = (rule, detail, fix, at = segs) => out.push({ segs: at.slice(), rule, detail, fix });
   const where = segs.length ? formatPath(segs) : 'the plan';
   if (schema.$ref) checkSchema(value, resolveRef(schema.$ref, root), root, segs, out);
@@ -240,37 +259,40 @@ export function checkSchema(value, schema, root = schema, segs = [], out = []) {
     if (schema.exclusiveMaximum !== undefined) lim('exclusiveMaximum', value >= schema.exclusiveMaximum, `less than ${schema.exclusiveMaximum}`, `less than ${schema.exclusiveMaximum}`);
   }
   if (typeof value === 'string') {
-    const n = [...value].length;
-    if (schema.minLength !== undefined && n < schema.minLength) push('minLength', `${where} has ${n} characters but needs at least ${schema.minLength}`, `Make the text at ${where} at least ${schema.minLength} characters long.`);
-    if (schema.maxLength !== undefined && n > schema.maxLength) push('maxLength', `${where} has ${n} characters but allows at most ${schema.maxLength}`, `Shorten the text at ${where} to ${schema.maxLength} characters or fewer.`);
-    if (schema.pattern !== undefined && !new RegExp(schema.pattern).test(value)) {
+    if (schema.minLength !== undefined || schema.maxLength !== undefined) {
+      const n = codePointCount(value, Math.max(schema.minLength ?? 0, schema.maxLength ?? 0));
+      if (schema.minLength !== undefined && n < schema.minLength) push('minLength', `${where} has ${n} characters but needs at least ${schema.minLength}`, `Make the text at ${where} at least ${schema.minLength} characters long.`);
+      if (schema.maxLength !== undefined && n > schema.maxLength) push('maxLength', `${where} has ${Number.isFinite(n) ? n : 'far more than the allowed'} characters but allows at most ${schema.maxLength}`, `Shorten the text at ${where} to ${schema.maxLength} characters or fewer.`);
+    }
+    if (schema.pattern !== undefined && !patternOf(schema.pattern).test(value)) {
       const isId = schema.pattern === ID_PATTERN;
-      push('pattern', isId ? `${where} is ${JSON.stringify(value)} but ids may only contain ${ID_RULE} (1 to 40 characters)` : `${where} is ${JSON.stringify(value)} which does not match the pattern ${schema.pattern}`,
-        isId ? `Rename ${JSON.stringify(value)} to something like ${JSON.stringify(value.replace(/[^A-Za-z0-9_.-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'id1')} (update every reference to it).` : `Change the text at ${where} to match ${schema.pattern}.`);
+      push('pattern', isId ? `${where} is ${jq(value)} but ids may only contain ${ID_RULE} (1 to 40 characters)` : `${where} is ${jq(value)} which does not match the pattern ${schema.pattern}`,
+        isId ? `Rename ${jq(value)} to something like ${JSON.stringify(value.slice(0, 200).replace(/[^A-Za-z0-9_.-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'id1')} (update every reference to it).` : `Change the text at ${where} to match ${schema.pattern}.`);
     }
   }
   if (Array.isArray(value)) {
     if (schema.minItems !== undefined && value.length < schema.minItems) push('minItems', `${where} has ${value.length} items but needs at least ${schema.minItems}`, `Add items so that ${where} has at least ${schema.minItems}.`);
     if (schema.maxItems !== undefined && value.length > schema.maxItems) push('maxItems', `${where} has ${value.length} items but allows at most ${schema.maxItems}`, `Remove items so that ${where} has at most ${schema.maxItems}.`);
     const prefix = schema.prefixItems || [];
-    for (let i = 0; i < Math.min(prefix.length, value.length); i++) checkSchema(value[i], prefix[i], root, [...segs, i], out);
-    if (schema.items) for (let i = prefix.length; i < value.length; i++) checkSchema(value[i], schema.items, root, [...segs, i], out);
+    const seen = schema.maxItems === undefined ? value.length : Math.min(value.length, schema.maxItems); // an array over its cap is not walked
+    for (let i = 0; i < Math.min(prefix.length, seen); i++) checkSchema(value[i], prefix[i], root, [...segs, i], out);
+    if (schema.items) for (let i = prefix.length; i < seen; i++) checkSchema(value[i], schema.items, root, [...segs, i], out);
   }
   if (isObj(value)) {
     const props = schema.properties || {};
     for (const k of schema.required || []) {
-      if (!(k in value)) {
-        const near = Object.keys(value).find((key) => !(key in props) && closest(key, [k]));
-        push('required', `${where} is missing the required property ${JSON.stringify(k)}${near ? ` (found ${JSON.stringify(near)}, probably a typo)` : ''}`,
-          `Add ${JSON.stringify(k)} (${props[k] ? schemaHint(props[k], root) : 'a value'}) to ${where}${near ? ` or rename ${JSON.stringify(near)} to ${JSON.stringify(k)}` : ''}.`);
+      if (!hasOwn(value, k)) {
+        const near = Object.keys(value).find((key) => !hasOwn(props, key) && closest(key, [k]));
+        push('required', `${where} is missing the required property ${JSON.stringify(k)}${near ? ` (found ${jq(near)}, probably a typo)` : ''}`,
+          `Add ${JSON.stringify(k)} (${props[k] ? schemaHint(props[k], root) : 'a value'}) to ${where}${near ? ` or rename ${jq(near)} to ${JSON.stringify(k)}` : ''}.`);
       }
     }
     for (const k of Object.keys(value)) {
-      if (k in props) checkSchema(value[k], props[k], root, [...segs, k], out);
+      if (hasOwn(props, k)) checkSchema(value[k], props[k], root, [...segs, k], out);
       else if (schema.additionalProperties === false) {
         const near = closest(k, Object.keys(props));
-        push('additionalProperties', `${where} has the unknown property ${JSON.stringify(k)}${near ? ` (did you mean ${JSON.stringify(near)}?)` : ''}`,
-          `${near ? `Rename ${JSON.stringify(k)} to ${JSON.stringify(near)} or delete it` : `Delete ${JSON.stringify(k)}`} in ${where}. Allowed properties: ${Object.keys(props).join(', ')}.`);
+        push('additionalProperties', `${where} has the unknown property ${jq(k)}${near ? ` (did you mean ${JSON.stringify(near)}?)` : ''}`,
+          `${near ? `Rename ${jq(k)} to ${JSON.stringify(near)} or delete it` : `Delete ${jq(k)}`} in ${where}. Allowed properties: ${Object.keys(props).join(', ')}.`);
       } else if (isObj(schema.additionalProperties)) checkSchema(value[k], schema.additionalProperties, root, [...segs, k], out);
     }
   }
@@ -328,6 +350,7 @@ function overlapArea(A, B, areaA, areaB) {
   let step = Math.min(0.1, Math.max(0.01, Math.sqrt(Math.min(areaA, areaB) / 4000)));
   while (((x1 - x0) / step) * ((y1 - y0) / step) > 250000) step *= 1.5;
   const nx = Math.max(1, Math.ceil((x1 - x0) / step)), ny = Math.max(1, Math.ceil((y1 - y0) / step));
+  if (!spend(nx * ny * (A.length + B.length))) return 0;
   const dx = (x1 - x0) / nx, dy = (y1 - y0) / ny;
   let count = 0;
   for (let i = 0; i < nx; i++) {
@@ -348,11 +371,25 @@ function distToPolygonBoundary(p, poly) {
   return best;
 }
 
+// Work meter: the pairwise and sampling loops charge their inner iterations here. A plan that uses the whole budget
+// (only hostile or broken ones do) gets W111, and the checks that did not run are left out. Infinity outside analyzePlan.
+const WORK_BUDGET = 12000000;
+let work = Infinity;
+let workSkipped = false;
+function spend(n) {
+  if (work === Infinity) return true;
+  if (work < n) { work = 0; workSkipped = true; return false; }
+  work -= n;
+  return true;
+}
+
 // Tolerances of the semantic checks (fractions of an area, or metres).
 const AREA_TOL = 0.05; // W102: declared area against the polygon along the wall centerlines
 const NET_AREA_TOL = 0.1; // W102: against the polygon net of the walls (printed areas are net and wall thickness is only read off the drawing)
 const GAP_MAX = 0.5; // W106: a free wall end this close to another wall is probably a corner that was meant to close
 const OPEN_MIN = 0.7; // roomGraph: shared boundary without a wall that counts as an opening between two rooms
+// Plausible sizes in metres (W112 to W115): outside them the numbers are most likely in the wrong unit.
+export const RANGES = Object.freeze({ furniture: CAPS.furnitureSpan, levelHeight: [2, 6], stairWidth: [0.5, 3], windowWidth: [0.3, 4] });
 const wallReach = (w) => w.thickness + 0.02; // a point this close to a wall centerline counts as on that wall (W101, net areas, open edges)
 
 // Mean half thickness of the wall that runs along each edge of a room polygon (0 where no wall does: an open edge).
@@ -363,6 +400,7 @@ function edgeInsets(poly, walls) {
     if (el < 1e-9) return 0;
     const ux = (p1[0] - p0[0]) / el, uy = (p1[1] - p0[1]) / el;
     const steps = Math.min(200, Math.max(2, Math.ceil(el / 0.05)));
+    if (!spend(steps * walls.length)) return 0;
     let sum = 0;
     for (let s = 0; s < steps; s++) {
       const t = (s + 0.5) / steps;
@@ -422,6 +460,7 @@ function unwalledSamples(poly, walls, step = 0.1) {
     const el = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]);
     if (el < 1e-9) continue;
     const n = Math.max(1, Math.ceil(el / step)), w = el / n;
+    if (!spend(n * walls.length)) continue;
     for (let s = 0; s < n; s++) {
       const t = (s + 0.5) / n;
       const q = [p0[0] + (p1[0] - p0[0]) * t, p0[1] + (p1[1] - p0[1]) * t];
@@ -440,7 +479,8 @@ export function roomGraph(norm, { open = false } = {}) {
   const edges = [], entrances = [];
   norm.levels.forEach((L, l) => {
     const wallById = new Map(L.walls.map((w) => [w.id, w]));
-    const roomAt = (p) => L.rooms.findIndex((room) => room.polygon.length >= 3 && pointInPolygon(p, room.polygon));
+    const polyPts = L.rooms.reduce((n, room) => n + room.polygon.length, 0);
+    const roomAt = (p) => (spend(polyPts) ? L.rooms.findIndex((room) => room.polygon.length >= 3 && pointInPolygon(p, room.polygon)) : -1);
     L.openings.forEach((o, oi) => {
       if (o.type === 'window') return;
       const w = wallById.get(o.wall);
@@ -491,6 +531,7 @@ export function roomGraph(norm, { open = false } = {}) {
       for (let x = 0; x < usable.length; x++) {
         for (let y = x + 1; y < usable.length; y++) {
           let shared = 0;
+          if (!spend(loose[x].length * usable[y].poly.length)) continue;
           for (const s of loose[x]) if (distToPolygonBoundary(s.q, usable[y].poly).dist <= 0.15) shared += s.w;
           if (shared >= OPEN_MIN) edges.push({ a: { l, r: usable[x].r }, b: { l, r: usable[y].r }, via: 'open' });
         }
@@ -522,13 +563,47 @@ function parseText(text) {
   }
 }
 
+// Arrays above their caps (CAPS, docs/SPEC.md "Limits"), found before anything walks them: [{ path, count, max }].
+function overCaps(plan) {
+  const out = [];
+  const check = (arr, max, path) => { if (Array.isArray(arr) && arr.length > max) out.push({ path, count: arr.length, max }); };
+  check(plan.levels, CAPS.levels, 'levels');
+  if (Array.isArray(plan.levels)) {
+    plan.levels.slice(0, CAPS.levels).forEach((lv, li) => {
+      if (!isObj(lv)) return;
+      for (const key of ENTITY_ARRAYS) check(lv[key], CAPS[key], `levels[${li}].${key}`);
+      if (Array.isArray(lv.rooms)) lv.rooms.slice(0, CAPS.rooms).forEach((r, ri) => { if (isObj(r)) check(r.polygon, CAPS.polygonPoints, `levels[${li}].rooms[${ri}].polygon`); });
+    });
+  }
+  return out;
+}
+
 export function analyzePlan(input) {
+  suggestBudget = SUGGEST_BUDGET;
+  work = WORK_BUDGET;
+  workSkipped = false;
+  try {
+    return analyze(input);
+  } finally {
+    work = Infinity;
+    suggestBudget = SUGGEST_BUDGET;
+  }
+}
+
+const MAX_PER_CODE = 100; // issues of one code that are listed; one closing issue says how many were left out
+
+function analyze(input) {
   const errors = [], warnings = [];
+  const counts = new Map();
   const add = (code, path, id, message, fix) => {
+    const n = (counts.get(code) || 0) + 1;
+    counts.set(code, n);
+    if (n > MAX_PER_CODE + 1) return;
+    if (n === MAX_PER_CODE + 1) { path = ''; id = undefined; message = `more issues with the code ${code} are not listed (only the first ${MAX_PER_CODE} are shown)`; fix = 'Fix the listed problems first, then validate again.'; }
     const issue = { code, path };
-    if (id !== undefined && id !== null) issue.id = String(id);
-    issue.message = message;
-    issue.fix = fix;
+    if (id !== undefined && id !== null) issue.id = clip(String(id));
+    issue.message = clip(message, CAPS.message);
+    issue.fix = clip(fix, CAPS.message);
     (code[0] === 'E' ? errors : warnings).push(issue);
   };
   const result = (normalized, salvaged = null, dropped = 0) => ({ ok: errors.length === 0, errors, warnings, normalized, salvaged, dropped });
@@ -550,6 +625,14 @@ export function analyzePlan(input) {
     return result(null);
   }
 
+  // E013: counts first, before anything walks an array (a plan over a cap is not read any further)
+  const over = overCaps(plan);
+  if (over.length) {
+    over.slice(0, 10).forEach((o) => add('E013', o.path, undefined, `${o.path} has ${o.count} items but at most ${o.max} are allowed`,
+      `Keep at most ${o.max} items in ${o.path}: leave out what is not needed (small decorations, duplicates) or split the plan into several files.`));
+    return result(null);
+  }
+
   // E010 and E002: structure
   const nonFinite = [];
   scanNonFinite(plan, [], nonFinite, new Set());
@@ -558,13 +641,15 @@ export function analyzePlan(input) {
   viol.slice(0, MAX_E002).forEach((v) => {
     add('E002', formatPath(v.segs), entityIdAt(plan, v.segs), `schema violation: ${v.detail} (JSON pointer ${jsonPointer(v.segs)}, rule "${v.rule}")`, v.fix);
   });
+  const truncated = viol.length >= CAPS.violations;
   if (viol.length > MAX_E002) {
-    add('E002', '', undefined, `${viol.length - MAX_E002} more schema violations are not listed (only the first ${MAX_E002} are shown)`, 'Fix the listed problems first, then validate again.');
+    add('E002', '', undefined, `${truncated ? 'at least ' : ''}${viol.length - MAX_E002} more schema violations are not listed (only the first ${MAX_E002} are shown)`, 'Fix the listed problems first, then validate again.');
   }
   nonFinite.slice(0, 20).forEach((n) => {
     add('E010', formatPath(n.segs), entityIdAt(plan, n.segs), `${formatPath(n.segs)} is ${String(n.value)}, which is not a finite number`,
       `Replace the value at ${formatPath(n.segs)} with a real number (measure it from the drawing or estimate it).`);
   });
+  if (truncated) return result(null); // so many violations that the rest of the plan is not trusted enough to interpret
 
   // Which parts of the plan are structurally unusable for geometry checks
   const bad = { levels: new Set(), ents: new Set(), noLevels: false, units: false };
@@ -585,7 +670,7 @@ export function analyzePlan(input) {
   // Pruned plan that normalizePlan can digest, with index maps back to the original arrays
   let model = null;
   if (!bad.noLevels && Array.isArray(plan.levels)) {
-    const pruned = { version: 1, name: '', units: !bad.units && Object.hasOwn(UNIT_TO_M, plan.units ?? 'm') ? (plan.units ?? 'm') : 'm', meta: {}, levels: [] };
+    const pruned = { version: 1, name: '', units: !bad.units && hasOwn(UNIT_TO_M, plan.units ?? 'm') ? (plan.units ?? 'm') : 'm', meta: {}, levels: [] };
     const map = [];
     const drop = { wallIds: new Map(), incomplete: new Set(), levelsDropped: false };
     plan.levels.forEach((lv, li) => {
@@ -635,13 +720,18 @@ function semanticChecks(plan, model, add, errors) {
   const pt = (p) => `(${r3(p[0] / f)}, ${r3(p[1] / f)})`;
   const pathOf = (l, key, j) => `levels[${model.map[l].li}].${key}[${model.map[l].idx[key][j]}]`;
   const levelPath = (l) => `levels[${model.map[l].li}]`;
-  const levelLabel = (l) => `level "${norm.levels[l].id}"`;
-  const listIds = (items, max = 12) => `${items.slice(0, max).map((x) => `"${x}"`).join(', ')}${items.length > max ? `, ... (${items.length} in total)` : ''}`;
+  const levelLabel = (l) => `level "${clip(norm.levels[l].id)}"`;
+  const listIds = (items, max = 12) => `${items.slice(0, max).map((x) => `"${clip(x)}"`).join(', ')}${items.length > max ? `, ... (${items.length} in total)` : ''}`;
 
   const drop = model.drop;
   const incomplete = (l) => drop.levelsDropped || drop.incomplete.has(model.map[l].li);
   const anyIncomplete = drop.levelsDropped || drop.incomplete.size > 0;
   const pct = (x) => `${Math.round(x * 1000) / 10}%`;
+  // Which unit would make `v` metres plausible (between lo and hi)? Only offered when the plan unit is metres.
+  const inM = (m) => (unit === 'm' ? '' : ` (${r3(m)} m)`);
+  const slipUnit = (v, lo, hi) => (unit !== 'm' ? null : [['cm', 0.01], ['mm', 0.001], ['ft', 0.3048], ['in', 0.0254]].find(([, k]) => v * k >= lo && v * k <= hi) ?? null);
+  const slip = (v, lo, hi) => { const u = slipUnit(v, lo, hi); return u ? `; it looks like ${u[0] === 'cm' ? 'centimetres' : u[0] === 'mm' ? 'millimetres' : u[0] === 'ft' ? 'feet' : 'inches'} written as metres` : ''; };
+  const slipFix = (v, lo, hi) => { const u = slipUnit(v, lo, hi); return u ? ` If ${v} is in ${u[0]}, write ${r3(v * u[1])} (metres) there.` : ''; };
 
   // E011 implausible scale (reported first: it usually explains many other messages)
   let scaleBroken = false;
@@ -664,7 +754,7 @@ function semanticChecks(plan, model, add, errors) {
   const seenLevel = new Map();
   (plan.levels || []).forEach((lv, li) => {
     if (!isObj(lv) || typeof lv.id !== 'string') return;
-    if (seenLevel.has(lv.id)) add('E003', `levels[${li}]`, lv.id, `level id ${JSON.stringify(lv.id)} is already used by levels[${seenLevel.get(lv.id)}]`, `Give this level a unique id (for example "${lv.id}-2"); level ids must be unique across the whole plan.`);
+    if (seenLevel.has(lv.id)) add('E003', `levels[${li}]`, lv.id, `level id ${jq(lv.id)} is already used by levels[${seenLevel.get(lv.id)}]`, `Give this level a unique id (for example "${clip(lv.id)}-2"); level ids must be unique across the whole plan.`);
     else seenLevel.set(lv.id, li);
   });
   norm.levels.forEach((L, l) => {
@@ -673,8 +763,8 @@ function semanticChecks(plan, model, add, errors) {
       L[key].forEach((e, j) => {
         if (typeof e.id !== 'string') return;
         if (seen.has(e.id)) {
-          add('E003', pathOf(l, key, j), e.id, `${key.replace(/s$/, '')} id ${JSON.stringify(e.id)} appears twice on ${levelLabel(l)} (also at ${pathOf(l, key, seen.get(e.id))})`,
-            `Rename one of them to a unique id on this level (for example "${e.id}-2")${key === 'walls' ? ' and update every opening whose "wall" refers to it' : ''}.`);
+          add('E003', pathOf(l, key, j), e.id, `${key.replace(/s$/, '')} id ${jq(e.id)} appears twice on ${levelLabel(l)} (also at ${pathOf(l, key, seen.get(e.id))})`,
+            `Rename one of them to a unique id on this level (for example "${clip(e.id)}-2")${key === 'walls' ? ' and update every opening whose "wall" refers to it' : ''}.`);
         } else seen.set(e.id, j);
       });
     }
@@ -691,10 +781,10 @@ function semanticChecks(plan, model, add, errors) {
     L.walls.forEach((w, j) => {
       if (w.length < 1e-9) {
         add('E004', pathOf(l, 'walls', j), w.id, `wall has zero length: both ends are at ${pt(w.from)}`,
-          `Delete wall "${w.id}" or move its "to" point away from ${pt(w.from)} so that it runs along a real wall.`);
+          `Delete wall "${clip(w.id)}" or move its "to" point away from ${pt(w.from)} so that it runs along a real wall.`);
       } else if (w.length < w.thickness - 1e-9 && !scaleBroken) {
         add('E004', pathOf(l, 'walls', j), w.id, `wall is ${len(w.length)} long but ${len(w.thickness)} thick (from ${pt(w.from)} to ${pt(w.to)}), so it would be a block, not a wall`,
-          `Delete wall "${w.id}" if it is a stray mark, or move its end points at least ${len(w.thickness)} apart. If every wall looks too short, check "units".`);
+          `Delete wall "${clip(w.id)}" if it is a stray mark, or move its end points at least ${len(w.thickness)} apart. If every wall looks too short, check "units".`);
       }
     });
 
@@ -707,10 +797,10 @@ function semanticChecks(plan, model, add, errors) {
         if (o.type === 'door') unresolvedDoor = true;
         const near = closest(o.wall, L.walls.map((x) => x.id));
         const other = norm.levels.findIndex((X, k) => k !== l && X.walls.some((x) => x.id === o.wall));
-        add('E005', pathOf(l, 'openings', j), o.id, `${o.type} refers to wall ${JSON.stringify(o.wall)}, which does not exist on ${levelLabel(l)} (walls here: ${listIds(L.walls.map((x) => x.id))})`,
+        add('E005', pathOf(l, 'openings', j), o.id, `${o.type} refers to wall ${jq(o.wall)}, which does not exist on ${levelLabel(l)} (walls here: ${listIds(L.walls.map((x) => x.id))})`,
           other >= 0
             ? `Wall "${o.wall}" exists on ${levelLabel(other)}; an opening must name a wall of its own level. Move the opening to levels[${model.map[other].li}].openings or point it at a wall of this level.`
-            : `Set "wall" to the id of the wall that contains this ${o.type}${near ? ` (probably ${JSON.stringify(near)})` : ''}, or add a wall with id "${o.wall}" to this level.`);
+            : `Set "wall" to the id of the wall that contains this ${o.type}${near ? ` (probably ${jq(near)})` : ''}, or add a wall with id "${clip(o.wall)}" to this level.`);
         return;
       }
       if (!byWall.has(w.id)) byWall.set(w.id, []);
@@ -718,16 +808,16 @@ function semanticChecks(plan, model, add, errors) {
       const end = o.offset + o.width;
       if (end > w.length + TOL) {
         const maxOffset = Math.max(0, w.length - o.width);
-        add('E006', pathOf(l, 'openings', j), o.id, `${o.type} spans ${len(o.offset)} to ${len(end)} along wall "${w.id}", but that wall is only ${len(w.length)} long (${len(end - w.length)} too far)`,
+        add('E006', pathOf(l, 'openings', j), o.id, `${o.type} spans ${len(o.offset)} to ${len(end)} along wall "${clip(w.id)}", but that wall is only ${len(w.length)} long (${len(end - w.length)} too far)`,
           o.width > w.length + TOL
-            ? `The ${o.type} (${len(o.width)} wide) is wider than wall "${w.id}" (${len(w.length)}). Reduce "width", or place it on a longer wall.`
+            ? `The ${o.type} (${len(o.width)} wide) is wider than wall "${clip(w.id)}" (${len(w.length)}). Reduce "width", or place it on a longer wall.`
             : `Set "offset" to at most ${len(maxOffset)} (keeping width ${len(o.width)}), or reduce "width" to at most ${len(w.length - o.offset)}, or move the ${o.type} to a longer wall.`);
       }
       if (o.height > w.height + TOL) {
-        add('E007', pathOf(l, 'openings', j), o.id, `${o.type} is ${len(o.height)} tall but wall "${w.id}" is only ${len(w.height)} high`,
+        add('E007', pathOf(l, 'openings', j), o.id, `${o.type} is ${len(o.height)} tall but wall "${clip(w.id)}" is only ${len(w.height)} high`,
           `Reduce "height" to at most ${len(Math.max(0, w.height - o.sill))} (or raise the wall "height" / level "height" if the ceiling really is higher).`);
       } else if (o.sill + o.height > w.height + TOL) {
-        add('E007', pathOf(l, 'openings', j), o.id, `${o.type} reaches ${len(o.sill + o.height)} (sill ${len(o.sill)} + height ${len(o.height)}) but wall "${w.id}" is only ${len(w.height)} high`,
+        add('E007', pathOf(l, 'openings', j), o.id, `${o.type} reaches ${len(o.sill + o.height)} (sill ${len(o.sill)} + height ${len(o.height)}) but wall "${clip(w.id)}" is only ${len(w.height)} high`,
           `Lower "sill" or reduce "height" so that sill + height is at most ${len(w.height)}.`);
       }
     });
@@ -742,8 +832,8 @@ function semanticChecks(plan, model, add, errors) {
           if (overlap > TOL) {
             const later = Math.max(sorted[m], sorted[k]);
             const O = L.openings[later], P = L.openings[later === sorted[k] ? sorted[m] : sorted[k]];
-            add('E006', pathOf(l, 'openings', later), O.id, `${O.type} overlaps ${P.type} "${P.id}" on wall "${w.id}" by ${len(overlap)} (this one spans ${len(O.offset)} to ${len(O.offset + O.width)}, the other ${len(P.offset)} to ${len(P.offset + P.width)})`,
-              `Move one of them: for example set the offset of "${B.id}" to at least ${len(A.offset + A.width)}, or use a different wall. Openings on one wall must not overlap.`);
+            add('E006', pathOf(l, 'openings', later), O.id, `${O.type} overlaps ${P.type} "${clip(P.id)}" on wall "${clip(w.id)}" by ${len(overlap)} (this one spans ${len(O.offset)} to ${len(O.offset + O.width)}, the other ${len(P.offset)} to ${len(P.offset + P.width)})`,
+              `Move one of them: for example set the offset of "${clip(B.id)}" to at least ${len(A.offset + A.width)}, or use a different wall. Openings on one wall must not overlap.`);
           }
         }
       }
@@ -755,18 +845,18 @@ function semanticChecks(plan, model, add, errors) {
       if (distinctPointCount(poly) < 3 || polygonSelfIntersection(poly)) badRoom.add(`${l}:${j}`);
       if (distinctPointCount(poly) < 3) {
         add('E008', pathOf(l, 'rooms', j), r.id, `room polygon has only ${distinctPointCount(poly)} distinct point${distinctPointCount(poly) === 1 ? '' : 's'}; a room needs at least 3`,
-          `List the corners of room "${r.id}" one after another around the room (for a rectangle: 4 corners). Do not repeat the same point.`);
+          `List the corners of room "${clip(r.id)}" one after another around the room (for a rectangle: 4 corners). Do not repeat the same point.`);
         return;
       }
       const x = polygonSelfIntersection(poly);
       if (x) {
         add('E008', pathOf(l, 'rooms', j), r.id, `room polygon crosses itself near ${pt(x)}`,
-          `Reorder the corners of room "${r.id}" so that they follow the room boundary in order (clockwise or counter-clockwise) without crossing; the edges cross near ${pt(x)}.`);
+          `Reorder the corners of room "${clip(r.id)}" so that they follow the room boundary in order (clockwise or counter-clockwise) without crossing; the edges cross near ${pt(x)}.`);
         return;
       }
       if (r.area < 0.5 && !scaleBroken) {
         add('E008', pathOf(l, 'rooms', j), r.id, `room area is ${areaTxt(r.area)} (${r3(r.area)} m2), below the minimum of 0.5 m2`,
-          `Check the corner coordinates of room "${r.id}" (a sliver or a unit mix-up): a real room encloses at least 0.5 m2.`);
+          `Check the corner coordinates of room "${clip(r.id)}" (a sliver or a unit mix-up): a real room encloses at least 0.5 m2.`);
       }
     });
 
@@ -781,12 +871,12 @@ function semanticChecks(plan, model, add, errors) {
             `Delete "rise" (the default is one storey up) or give the height the stair really climbs, negative when it goes down from this level.`);
         }
       } else if (s.to_level === L.id) {
-        add('E009', pathOf(l, 'stairs', j), s.id, `stair leads to its own level ${JSON.stringify(s.to_level)}`,
+        add('E009', pathOf(l, 'stairs', j), s.id, `stair leads to its own level ${jq(s.to_level)}`,
           others.length ? `Set "to_level" to the id of the level above or below (available: ${listIds(others)}). ${leaves}` : `This plan has no other level. ${leaves}`);
       } else if (!ids.includes(s.to_level)) {
         const near = closest(s.to_level, others);
-        add('E009', pathOf(l, 'stairs', j), s.id, `stair leads to level ${JSON.stringify(s.to_level)}, which does not exist (levels: ${listIds(ids)})`,
-          others.length ? `Set "to_level" to one of ${listIds(others)}${near ? ` (probably ${JSON.stringify(near)})` : ''}, or add the missing level with its own walls. ${leaves}` : `This plan has only the level "${L.id}", and a stair cannot lead to its own level. ${leaves}`);
+        add('E009', pathOf(l, 'stairs', j), s.id, `stair leads to level ${jq(s.to_level)}, which does not exist (levels: ${listIds(ids)})`,
+          others.length ? `Set "to_level" to one of ${listIds(others)}${near ? ` (probably ${jq(near)})` : ''}, or add the missing level with its own walls. ${leaves}` : `This plan has only the level "${clip(L.id)}", and a stair cannot lead to its own level. ${leaves}`);
       }
       if (Math.hypot(s.to[0] - s.from[0], s.to[1] - s.from[1]) < 0.2) {
         add('E012', pathOf(l, 'stairs', j), s.id, `stair "from" ${pt(s.from)} and "to" ${pt(s.to)} are ${len(Math.hypot(s.to[0] - s.from[0], s.to[1] - s.from[1]))} apart, too close for ${s.steps} steps`,
@@ -811,8 +901,8 @@ function semanticChecks(plan, model, add, errors) {
       valid.push(j);
       const a = r.area;
       if ((a < 2 || a > 80) && !scaleBroken) {
-        add('W107', pathOf(l, 'rooms', j), r.id, `room "${r.name}" has an area of ${areaTxt(a)} (${r3(a)} m2), outside the plausible 2 to 80 m2`,
-          `Check the corner coordinates of room "${r.id}" and the plan "units"; split it into several rooms if it covers more than one space.`);
+        add('W107', pathOf(l, 'rooms', j), r.id, `room "${clip(r.name)}" has an area of ${areaTxt(a)} (${r3(a)} m2), outside the plausible 2 to 80 m2`,
+          `Check the corner coordinates of room "${clip(r.id)}" and the plan "units"; split it into several rooms if it covers more than one space.`);
       }
       // W102: printed areas are net (inside the wall faces) while polygons run along the centerlines, so the declared
       // area has to match one of the two: the centerline polygon within 5%, or the polygon net of its walls within 10%.
@@ -822,19 +912,20 @@ function semanticChecks(plan, model, add, errors) {
         if (!withNet || Math.abs(r.declaredArea - net) / net > NET_AREA_TOL) {
           const diff = (withNet ? net : a) - r.declaredArea;
           add('W102', pathOf(l, 'rooms', j), r.id,
-            `room "${r.name}" declares an area of ${areaTxt(r.declaredArea)} but its polygon encloses ${areaTxt(a)} along the wall centerlines${withNet ? ` and about ${areaTxt(net)} net of the walls` : ''}, which is ${pct(Math.abs(diff) / r.declaredArea)} ${diff > 0 ? 'more' : 'less'} than declared`,
-            `Printed areas are usually net (inside the wall faces) and polygons run along the wall centerlines, so a few percent of difference is normal. A gap this large points at the polygon (a missing split, a corner in the wrong place, a wrong scale) or at the printed number (part of the space may be left out of it, for example under a stair): compare room "${r.id}" with the drawing. Do not stretch a polygon only to reach the number; remove "area" if you are unsure about it.`);
+            `room "${clip(r.name)}" declares an area of ${areaTxt(r.declaredArea)} but its polygon encloses ${areaTxt(a)} along the wall centerlines${withNet ? ` and about ${areaTxt(net)} net of the walls` : ''}, which is ${pct(Math.abs(diff) / r.declaredArea)} ${diff > 0 ? 'more' : 'less'} than declared`,
+            `Printed areas are usually net (inside the wall faces) and polygons run along the wall centerlines, so a few percent of difference is normal. A gap this large points at the polygon (a missing split, a corner in the wrong place, a wrong scale) or at the printed number (part of the space may be left out of it, for example under a stair): compare room "${clip(r.id)}" with the drawing. Do not stretch a polygon only to reach the number; remove "area" if you are unsure about it.`);
         }
       }
       // W101: sample the perimeter and test the distance to wall centerlines
       if (walls.length && !incomplete(l) && !scaleBroken) {
-        let total = 0, unbacked = 0, run = null, bestRun = null;
+        let total = 0, unbacked = 0, run = null, bestRun = null, cut = false;
         const poly = r.polygon;
         for (let i = 0; i < poly.length; i++) {
           const p0 = poly[i], p1 = poly[(i + 1) % poly.length];
           const el = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]);
           if (el < 1e-9) continue;
           const steps = Math.min(400, Math.max(2, Math.ceil(el / 0.05)));
+          if (!spend(steps * walls.length)) { cut = true; break; }
           const seg = el / steps;
           for (let s = 0; s < steps; s++) {
             const t = (s + 0.5) / steps;
@@ -850,9 +941,9 @@ function semanticChecks(plan, model, add, errors) {
             } else run = null;
           }
         }
-        if (total > 0 && unbacked / total > 0.3) {
-          add('W101', pathOf(l, 'rooms', j), r.id, `room "${r.name}" boundary has no wall along ${pct(unbacked / total)} of its perimeter (${len(unbacked)} of ${len(total)}); the longest gap runs from ${pt(bestRun.from)} to ${pt(bestRun.to)}`,
-            `Move the corners of room "${r.id}" onto the wall centerlines, or add the missing walls (for example a wall from ${pt(bestRun.from)} to ${pt(bestRun.to)}).`);
+        if (!cut && total > 0 && unbacked / total > 0.3) {
+          add('W101', pathOf(l, 'rooms', j), r.id, `room "${clip(r.name)}" boundary has no wall along ${pct(unbacked / total)} of its perimeter (${len(unbacked)} of ${len(total)}); the longest gap runs from ${pt(bestRun.from)} to ${pt(bestRun.to)}`,
+            `Move the corners of room "${clip(r.id)}" onto the wall centerlines, or add the missing walls (for example a wall from ${pt(bestRun.from)} to ${pt(bestRun.to)}).`);
         }
       }
     });
@@ -864,8 +955,8 @@ function semanticChecks(plan, model, add, errors) {
         const ov = overlapArea(A.polygon, B.polygon, A.area, B.area);
         if (ov / small > 0.05) {
           const smaller = A.area <= B.area ? A : B;
-          add('W103', pathOf(l, 'rooms', valid[y]), B.id, `rooms "${A.name}" and "${B.name}" overlap by ${areaTxt(ov)} (${r3((ov / small) * 100)}% of the smaller room "${smaller.name}")`,
-            `Adjust the corners of "${A.id}" or "${B.id}" so that the two polygons only share an edge along their common wall centerline.`);
+          add('W103', pathOf(l, 'rooms', valid[y]), B.id, `rooms "${clip(A.name)}" and "${clip(B.name)}" overlap by ${areaTxt(ov)} (${r3((ov / small) * 100)}% of the smaller room "${clip(smaller.name)}")`,
+            `Adjust the corners of "${clip(A.id)}" or "${clip(B.id)}" so that the two polygons only share an edge along their common wall centerline.`);
         }
       }
     }
@@ -877,6 +968,50 @@ function semanticChecks(plan, model, add, errors) {
           `Set "width" to about 0.9 m (${len(0.9)}) for an interior door, or use "type": "passage" for a wide opening without a leaf.`);
       }
     });
+
+    // W112 to W115: sizes that look like a unit slip (centimetres or millimetres written as metres). Not when the scale
+    // as a whole is already reported (E011).
+    if (!scaleBroken) {
+      const [lh0, lh1] = RANGES.levelHeight;
+      if (L.height < lh0 - TOL || L.height > lh1 + TOL) {
+        add('W113', levelPath(l), L.id, `${levelLabel(l)} is ${len(L.height)} high${inM(L.height)}, outside the plausible ${lh0} to ${lh1} m${slip(L.height, lh0, lh1)}`,
+          `Set the level "height" (floor to ceiling, in the plan units "${unit}") to the real storey height, usually 2.4 to 3.2 m.${slipFix(L.height, lh0, lh1)}`);
+      }
+      L.openings.forEach((o, j) => {
+        const [w0, w1] = RANGES.windowWidth;
+        if (o.type === 'window' && (o.width < w0 - TOL || o.width > w1 + TOL)) {
+          add('W115', pathOf(l, 'openings', j), o.id, `window is ${len(o.width)} wide${inM(o.width)}, outside the plausible ${w0} to ${w1} m${slip(o.width, w0, w1)}`,
+            `Set the window "width" to its real size, usually 0.6 to 2.4 m (in the plan units "${unit}"), or use two windows if it is a long glazed wall.${slipFix(o.width, w0, w1)}`);
+        }
+      });
+      L.stairs.forEach((s, j) => {
+        const [s0, s1] = RANGES.stairWidth;
+        if (s.width < s0 - TOL || s.width > s1 + TOL) {
+          add('W114', pathOf(l, 'stairs', j), s.id, `stair is ${len(s.width)} wide${inM(s.width)}, outside the plausible ${s0} to ${s1} m${slip(s.width, s0, s1)}`,
+            `Set the stair "width" to its real width, usually 0.8 to 1.5 m (in the plan units "${unit}").${slipFix(s.width, s0, s1)}`);
+        }
+      });
+      L.furniture.forEach((m, j) => {
+        const dims = [['width', m.size?.[0]], ['depth', m.size?.[1]], ['height', m.height]].filter(([, v]) => v !== undefined);
+        const huge = dims.filter(([, v]) => v > RANGES.furniture + TOL);
+        const shown = (list) => list.map(([n, v]) => `${n} ${len(v)}`).join(', ');
+        if (huge.length) {
+          const cm = unit === 'm' && huge.every(([, v]) => v / 100 <= RANGES.furniture);
+          add('W112', pathOf(l, 'furniture', j), m.id, `${m.type} has ${shown(huge)}, more than the ${RANGES.furniture} m that a piece of furniture can have; the viewer draws it at most ${RANGES.furniture} m wide, deep and high`,
+            `Furniture sizes use the plan units ("${unit}").${cm ? ` If these numbers are centimetres, write metres instead (divide by 100: ${[...(m.size ? [m.size[0]] : []), ...(m.size ? [m.size[1]] : [])].map((v) => r3(v / 100)).join(' x ')}${m.height !== undefined ? `, height ${r3(m.height / 100)}` : ''}).` : ''} Otherwise make the piece smaller.`);
+          return;
+        }
+        if (!m.size) return;
+        const room = spend(L.rooms.reduce((n, r) => n + r.polygon.length, 0)) ? L.rooms.find((r) => r.polygon.length >= 3 && pointInPolygon(m.center, r.polygon)) : null;
+        if (!room) return;
+        const rb = bboxOf(room.polygon);
+        const roomSpan = Math.max(rb.maxX - rb.minX, rb.maxY - rb.minY);
+        if (Math.max(m.size[0], m.size[1]) > 2 * roomSpan) {
+          add('W112', pathOf(l, 'furniture', j), m.id, `${m.type} is ${len(m.size[0])} x ${len(m.size[1])}, more than twice as long as room "${clip(room.id)}" (${len(roomSpan)} at most across)`,
+            `Check the "size" of "${clip(m.id)}": [width, depth] in the plan units "${unit}". A piece cannot be bigger than the room that holds it.`);
+        }
+      });
+    }
 
     // W106 wall ends that just miss another wall (a corner that was probably meant to close). A free end farther than
     // GAP_MAX from every other wall (a partition that stops at a column, a half wall) is normal and not reported.
@@ -890,20 +1025,22 @@ function semanticChecks(plan, model, add, errors) {
           if (!best || r.dist < best.dist) best = { ...r, wall: o };
         }
         if (best && best.dist > Math.max(w.thickness, best.wall.thickness) / 2 + 0.02 && best.dist <= GAP_MAX) {
-          add('W106', pathOf(l, 'walls', j), w.id, `the "${endName}" end of the wall at ${pt(e)} just misses wall "${best.wall.id}" (${len(best.dist)} away)`,
-            `Move the "${endName}" point of wall "${w.id}" onto the centerline of wall "${best.wall.id}" (for example to ${pt(best.closest)}) so the corner closes. If the end really is free (a partition that stops at a column), ignore this warning.`);
+          add('W106', pathOf(l, 'walls', j), w.id, `the "${endName}" end of the wall at ${pt(e)} just misses wall "${clip(best.wall.id)}" (${len(best.dist)} away)`,
+            `Move the "${endName}" point of wall "${clip(w.id)}" onto the centerline of wall "${clip(best.wall.id)}" (for example to ${pt(best.closest)}) so the corner closes. If the end really is free (a partition that stops at a column), ignore this warning.`);
         }
       }
     });
 
     // W109 furniture outside rooms
     if (L.rooms.length) {
+      const polyPts = L.rooms.reduce((n, r) => n + r.polygon.length, 0);
       L.furniture.forEach((m, j) => {
+        if (!spend(polyPts)) return;
         if (L.rooms.some((r) => r.polygon.length >= 3 && pointInPolygon(m.center, r.polygon))) return;
         let near = null;
-        for (const r of L.rooms) if (r.polygon.length >= 3) { const d = distToPolygonBoundary(m.center, r.polygon); if (!near || d.dist < near.dist) near = { ...d, room: r }; }
-        add('W109', pathOf(l, 'furniture', j), m.id, `${m.type} has its centre at ${pt(m.center)}, outside every room of ${levelLabel(l)}${near ? ` (nearest is room "${near.room.id}", ${len(near.dist)} away)` : ''}`,
-          near ? `Move "${m.id}" inside room "${near.room.id}" (for example near ${pt(near.closest)}), or delete it.` : `Move "${m.id}" into a room, or delete it.`);
+        if (spend(polyPts)) for (const r of L.rooms) if (r.polygon.length >= 3) { const d = distToPolygonBoundary(m.center, r.polygon); if (!near || d.dist < near.dist) near = { ...d, room: r }; }
+        add('W109', pathOf(l, 'furniture', j), m.id, `${m.type} has its centre at ${pt(m.center)}, outside every room of ${levelLabel(l)}${near ? ` (nearest is room "${clip(near.room.id)}", ${len(near.dist)} away)` : ''}`,
+          near ? `Move "${clip(m.id)}" inside room "${clip(near.room.id)}" (for example near ${pt(near.closest)}), or delete it.` : `Move "${clip(m.id)}" into a room, or delete it.`);
       });
     }
   });
@@ -924,7 +1061,7 @@ function semanticChecks(plan, model, add, errors) {
 
   // W105 reachability from exterior doors (doors, passages, stairs and open edges between rooms all connect)
   const graph = roomGraph(norm, { open: true });
-  if (graph.entrances.length) {
+  if (graph.entrances.length && !workSkipped) { // with open edges left unchecked, "cannot be reached" would be a guess
     const key = (n) => `${n.l}:${n.r}`;
     const adj = new Map();
     const link = (a, b) => { if (!adj.has(a)) adj.set(a, []); adj.get(a).push(b); };
@@ -944,6 +1081,7 @@ function semanticChecks(plan, model, add, errors) {
             const p0 = r.polygon[i], p1 = r.polygon[(i + 1) % r.polygon.length];
             const el = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]);
             const steps = Math.max(1, Math.ceil(el / 0.1));
+            if (!spend(steps * o.polygon.length)) break;
             for (let s = 0; s < steps; s++) {
               const t = (s + 0.5) / steps;
               const q = [p0[0] + (p1[0] - p0[0]) * t, p0[1] + (p1[1] - p0[1]) * t];
@@ -953,20 +1091,26 @@ function semanticChecks(plan, model, add, errors) {
           const reach = seen.has(`${l}:${k}`);
           if (pts.length >= 8 && (!best || (reach && !best.reach) || (reach === best.reach && pts.length > best.pts.length))) best = { room: o, pts, reach };
         });
-        let fix = `Add a door or passage that connects room "${r.id}" to a room that can be reached from the entrance.`;
+        let fix = `Add a door or passage that connects room "${clip(r.id)}" to a room that can be reached from the entrance.`;
         if (best) {
           const mid = best.pts[Math.floor(best.pts.length / 2)];
           let nearest = null;
           for (const w of L.walls) { const d = distancePointToSegment(mid, w.from, w.to); if (w.length > 1e-9 && (!nearest || d.dist < nearest.dist)) nearest = { ...d, wall: w }; }
           if (nearest) {
             const off = Math.max(0.1, Math.min(nearest.wall.length - 1.0, nearest.t * nearest.wall.length - 0.45));
-            fix = `Add a door (width ${len(0.9)}) on wall "${nearest.wall.id}" at "offset" about ${len(off)} to connect room "${r.id}" with ${best.reach ? '' : 'its neighbour '}"${best.room.id}"${best.reach ? ' (reachable)' : ''}; or add a passage there if the rooms are open to each other.`;
+            fix = `Add a door (width ${len(0.9)}) on wall "${clip(nearest.wall.id)}" at "offset" about ${len(off)} to connect room "${clip(r.id)}" with ${best.reach ? '' : 'its neighbour '}"${clip(best.room.id)}"${best.reach ? ' (reachable)' : ''}; or add a passage there if the rooms are open to each other.`;
           }
         }
-        add('W105', pathOf(l, 'rooms', j), r.id, `room "${r.name}" cannot be reached from any exterior door through doors, passages or open edges`,
+        add('W105', pathOf(l, 'rooms', j), r.id, `room "${clip(r.name)}" cannot be reached from any exterior door through doors, passages or open edges`,
           `${fix} If the room really is open to its neighbour (no wall between them, as in an open-plan kitchen), do not add a door: leave the wall out and let the two polygons share that edge (at least ${len(OPEN_MIN)} of shared edge without a wall counts as a connection).`);
       });
     });
+  }
+
+  // W111 the plan is so large or so tangled that some checks (overlaps, wall backing, areas, reachability) were left out
+  if (workSkipped) {
+    add('W111', '', undefined, 'the plan is so large or so tangled that some checks (room overlaps, walls behind room edges, net areas, reachability) were skipped to keep the page responsive',
+      'Simplify the plan: fewer rooms and walls, rooms with fewer corners that do not overlap each other. The other warnings are still valid.');
   }
 }
 

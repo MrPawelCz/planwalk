@@ -84,15 +84,21 @@ test('the skill validator prints exactly what tools/validate.mjs prints, on good
 });
 
 test('a large --json report comes through a pipe whole, from the tools and from the skill (process.exit would cut it)', () => {
+  // The validator lists at most 100 issues of one code, so the report is made big with several codes at once.
   const big = flat();
-  for (let i = 0; i < 4000; i++) big.levels[0].openings.push({ id: `x${i}`, wall: 'ghost', type: 'window', offset: 0.5, width: 1 });
+  const L = big.levels[0];
+  for (let i = 0; i < 300; i++) L.openings.push({ id: `x${i}`, wall: 'ghost', type: 'window', offset: 0.5, width: 1 }); // E005
+  for (let i = 0; i < 250; i++) L.walls.push({ id: `z${i}`, from: [1, 1], to: [1, 1] }); // E004
+  for (let i = 0; i < 250; i++) L.walls.push({ id: 'dup', from: [2, 2], to: [3, 3] }); // E003
+  for (let i = 0; i < 100; i++) L.rooms.push({ id: `q${i}`, name: 'Q', polygon: [[0, 0], [1, 1]] }); // E002 (two points)
   const f = join(tmp, 'big.plan.json');
   writeFileSync(f, JSON.stringify(big));
   for (const cli of [fx('tools/validate.mjs'), join(skill, 'scripts/validate.mjs')]) {
     const r = run(cli, f, '--json');
     assert.equal(r.status, 1, cli);
-    assert.ok(r.stdout.length > 500000, 'the report should be big enough to overflow a pipe buffer');
-    assert.equal(JSON.parse(r.stdout).errors.length, 4000, cli);
+    assert.ok(r.stdout.length > 100000, 'the report should be big enough to overflow a pipe buffer');
+    const report = JSON.parse(r.stdout);
+    for (const code of ['E003', 'E004', 'E005']) assert.equal(report.errors.filter((e) => e.code === code).length, 101, `${cli}: ${code} (100 listed and one closing issue)`);
   }
 });
 
