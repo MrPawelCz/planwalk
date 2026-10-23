@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "name": "pcb5b",
+  "units": "m",
+  "meta": {
+    "source": "image",
+    "scale_note": "sketch with no printed scale or areas: scale from standard door 0.85 m; five door chords measure 67 to 76 px (mean about 74), so about 87 px per metre (a guess, not a measurement)",
+    "notes": "Wavy lines make positions good to about 15 cm and the whole scale about 10 percent uncertain. Window extents read between the thick wall pieces. The wide gap between Living room and Kitchen is read as a passage."
+  },
+  "levels": [
+    {
+      "id": "L0",
+      "walls": [
+        { "id": "w1", "from": [0, 0], "to": [6.6, 0], "kind": "exterior" },
+        { "id": "w2", "from": [6.6, 0], "to": [6.6, 3.55], "kind": "exterior" },
+        { "id": "w3", "from": [6.6, 3.55], "to": [11.05, 3.55], "kind": "exterior" },
+        { "id": "w4", "from": [11.05, 3.55], "to": [11.05, 7.7], "kind": "exterior" },
+        { "id": "w5", "from": [0, 7.7], "to": [11.05, 7.7], "kind": "exterior" },
+        { "id": "w6", "from": [0, 0], "to": [0, 7.7], "kind": "exterior" },
+        { "id": "w7", "from": [0, 3.55], "to": [6.6, 3.55], "kind": "interior" },
+        { "id": "w8", "from": [3.0, 0], "to": [3.0, 3.55], "kind": "interior" },
+        { "id": "w9", "from": [2.35, 3.55], "to": [2.35, 7.7], "kind": "interior" },
+        { "id": "w10", "from": [5.9, 3.55], "to": [5.9, 7.7], "kind": "interior" },
+        { "id": "w11", "from": [8.9, 3.55], "to": [8.9, 7.7], "kind": "interior" }
+      ],
+      "openings": [
+        { "id": "o1", "wall": "w1", "type": "window", "offset": 0.85, "width": 1.35 },
+        { "id": "o2", "wall": "w1", "type": "window", "offset": 3.95, "width": 1.65 },
+        { "id": "o3", "wall": "w2", "type": "window", "offset": 1.05, "width": 1.4 },
+        { "id": "o4", "wall": "w3", "type": "window", "offset": 0.5, "width": 1.25 },
+        { "id": "o5", "wall": "w5", "type": "door", "offset": 0.6, "width": 0.85, "hinge": "start", "opens_to": "left" },
+        { "id": "o6", "wall": "w5", "type": "window", "offset": 3.25, "width": 1.8 },
+        { "id": "o7", "wall": "w5", "type": "window", "offset": 6.8, "width": 1.3 },
+        { "id": "o8", "wall": "w5", "type": "window", "offset": 9.7, "width": 0.6 },
+        { "id": "o9", "wall": "w6", "type": "window", "offset": 0.95, "width": 1.65 },
+        { "id": "o10", "wall": "w6", "type": "window", "offset": 5.35, "width": 0.55 },
+        { "id": "o11", "wall": "w7", "type": "door", "offset": 0.85, "width": 0.85, "hinge": "start", "opens_to": "left" },
+        { "id": "o12", "wall": "w7", "type": "door", "offset": 3.65, "width": 0.85, "hinge": "start", "opens_to": "left" },
+        { "id": "o13", "wall": "w9", "type": "door", "offset": 1.95, "width": 0.85, "hinge": "start", "opens_to": "left" },
+        { "id": "o14", "wall": "w10", "type": "passage", "offset": 1.5, "width": 1.7 },
+        { "id": "o15", "wall": "w11", "type": "door", "offset": 1.7, "width": 0.8, "hinge": "start", "opens_to": "left" }
+      ],
+      "rooms": [
+        { "id": "r1", "name": "Bedroom 1", "polygon": [[0, 0], [3.0, 0], [3.0, 3.55], [0, 3.55]] },
+        { "id": "r2", "name": "Bedroom 2", "polygon": [[3.0, 0], [6.6, 0], [6.6, 3.55], [3.0, 3.55]] },
+        { "id": "r3", "name": "Hall", "polygon": [[0, 3.55], [2.35, 3.55], [2.35, 7.7], [0, 7.7]] },
+        { "id": "r4", "name": "Living room", "polygon": [[2.35, 3.55], [5.9, 3.55], [5.9, 7.7], [2.35, 7.7]] },
+        { "id": "r5", "name": "Kitchen", "polygon": [[5.9, 3.55], [8.9, 3.55], [8.9, 7.7], [5.9, 7.7]] },
+        { "id": "r6", "name": "Bathroom", "polygon": [[8.9, 3.55], [11.05, 3.55], [11.05, 7.7], [8.9, 7.7]] }
+      ]
+    }
+  ]
+}

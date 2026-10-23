@@ -1,0 +1,181 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { validatePlan } from '../../src/core/validate.js';
+import { buildModel, levelOffsets, modelExtent, EXPLODE_FACTOR } from '../../viewer/src/geometry.js';
+import { createWorld, createPlayer, stepPlayer, teleport, defaultSpawn, maxPenetration } from '../../viewer/src/physics.js';
+
+const modelOf = (p) => buildModel(validatePlan(JSON.parse(readFileSync(new URL(`../../${p}`, import.meta.url), 'utf8'))).normalized);
+const flat = () => modelOf('examples/flat-1.plan.json');
+const duplex = () => modelOf('tests/fixtures/duplex-min.plan.json');
+
+function walk(world, p, input, seconds, dt = 1 / 60) {
+  const n = Math.round(seconds / dt);
+  for (let i = 0; i < n; i++) stepPlayer(world, p, input, dt);
+  return p;
+}
+const player = (world, x, y, yawDeg, level = 0) => createPlayer(world, { level, x, y, yawDeg });
+
+test('flat-1 builds the expected model', () => {
+  const m = flat();
+  assert.deepEqual(m.counts, { levels: 1, walls: 8, openings: 12, rooms: 5, furniture: 9, stairs: 0 });
+});
+
+test('default spawn is the room behind the exterior door', () => {
+  const m = flat();
+  const sp = defaultSpawn(m);
+  assert.equal(sp.roomId ?? m.levels[sp.level].rooms.find((r) => r.name === 'Hall')?.id, sp.roomId ?? 'hall');
+  const w = createWorld(m);
+  const p = createPlayer(w, { level: sp.level, x: sp.x, y: sp.y, yawDeg: sp.yawDeg });
+  assert.equal(maxPenetration(m.levels[0], p.x, p.y), 0, 'the spawn point must be free of colliders');
+});
+
+test('a wall stops the player', () => {
+  const m = duplex();
+  const w = createWorld(m);
+  // interior wall g5 sits at x = 4 (thickness 0.12); the gap (passage) is at y 2.0 to 3.0, so y = 1.0 is solid
+  const p = walk(w, player(w, 3, 1.0, 0), { forward: 1 }, 4);
+  assert.ok(p.x < 4 - 0.06 - 0.2 + 1e-3, `x = ${p.x}`);
+  assert.ok(p.collisions > 0);
+});
+
+test('a passage lets the player through', () => {
+  const m = duplex();
+  const w = createWorld(m);
+  const p = walk(w, player(w, 3, 2.5, 0), { forward: 1 }, 3);
+  assert.ok(p.x > 5, `x = ${p.x}`);
+});
+
+test('a window is not an exit: the sill is below eye height so the gap stays solid', () => {
+  const m = duplex();
+  const w = createWorld(m);
+  // window gw1 on g1 (y = 0) spans x 1.5 to 2.9
+  const p = walk(w, player(w, 2.2, 2, -90), { forward: 1 }, 4);
+  assert.ok(p.y > 0.15, `y = ${p.y}`);
+});
+
+test('furniture blocks, the player never ends up inside a collider', () => {
+  const m = duplex();
+  const w = createWorld(m);
+  // sofa f1 centre (6.0, 3.9), 2.0 x 0.9, rotation 0: walking +y from (6.0, 2.0) must stop at its edge
+  const p = walk(w, player(w, 6.0, 3.0, 90), { forward: 1 }, 3);
+  assert.ok(p.y < 3.9 - 0.45 + 1e-3, `y = ${p.y}`);
+  assert.equal(maxPenetration(m.levels[0], p.x, p.y) < 1e-3, true);
+});
+
+test('stairs carry the player to the upper level', () => {
+  const m = duplex();
+  const w = createWorld(m);
+  const p = walk(w, player(w, 1.0, 1.0, 90), { forward: 1 }, 6);
+  assert.equal(p.level, 1, `level ${p.level}, y = ${p.y}`);
+  assert.ok(Math.abs(p.floor - m.levels[1].elevation) < 0.05, `floor ${p.floor} vs ${m.levels[1].elevation}`);
+});
+
+test('the default spawn is never on a stair run (duplex-1 has its stair through the middle of the hall)', () => {
+  const m = modelOf('examples/duplex-1.plan.json');
+  const w = createWorld(m);
+  const sp = defaultSpawn(m);
+  assert.equal(sp.level, 0);
+  assert.equal(sp.roomId, 'hall');
+  const p = createPlayer(w, { level: sp.level, x: sp.x, y: sp.y, yawDeg: sp.yawDeg });
+  walk(w, p, {}, 1);
+  assert.equal(p.level, 0);
+  assert.equal(p.onStair, null);
+  assert.equal(p.floor, 0);
+  for (const st of m.stairs) {
+    // the stair footprint is 1.0 m wide: stay at least the player radius away from it
+    const inside = (x, y) => x >= Math.min(...st.footprint.map((q) => q[0])) && x <= Math.max(...st.footprint.map((q) => q[0])) && y >= Math.min(...st.footprint.map((q) => q[1])) && y <= Math.max(...st.footprint.map((q) => q[1]));
+    assert.equal(inside(sp.x, sp.y), false, `spawn (${sp.x}, ${sp.y}) lies on ${st.id}`);
+  }
+});
+
+test('duplex-1: walking north from the foot of the stair arrives on the upper floor', () => {
+  const m = modelOf('examples/duplex-1.plan.json');
+  const w = createWorld(m);
+  const p = walk(w, player(w, 1.1, 5.7, -90), { forward: 1, run: true }, 3);
+  assert.equal(p.level, 1);
+  assert.ok(Math.abs(p.floor - m.levels[1].elevation) < 0.05);
+});
+
+test('explode offsets are cumulative level heights', () => {
+  const m = duplex();
+  assert.deepEqual(levelOffsets(m, 0), [0, 0]);
+  const off = levelOffsets(m, 1);
+  assert.equal(off[0], 0);
+  assert.ok(Math.abs(off[1] - m.levels[0].height * EXPLODE_FACTOR) < 1e-9);
+});
+
+test('the same input sequence gives the same state (determinism)', () => {
+  const run = () => {
+    const m = flat();
+    const w = createWorld(m);
+    const sp = defaultSpawn(m);
+    const p = createPlayer(w, { level: sp.level, x: sp.x, y: sp.y, yawDeg: sp.yawDeg });
+    for (let i = 0; i < 600; i++) stepPlayer(w, p, { forward: 1, strafe: i % 90 < 45 ? 0.5 : -0.5, turn: i % 200 < 100 ? 0.3 : -0.3, run: i % 300 > 150 }, 1 / 60);
+    teleport(w, p, p.x, p.y);
+    return JSON.stringify(p);
+  };
+  assert.equal(run(), run());
+});
+
+test('walking speed matches the spec (1.4 m/s, 2.8 m/s running)', () => {
+  const m = duplex();
+  const w = createWorld(m);
+  // y = 0.8 is clear of the coffee table (y 2.3 to 2.9) and of the sofa
+  const a = walk(w, player(w, 4.5, 0.8, 0), { forward: 1 }, 1);
+  assert.ok(Math.abs(a.x - (4.5 + 1.4)) < 0.05, `x = ${a.x}`);
+  const b = walk(w, player(w, 4.5, 0.8, 0), { forward: 1, run: true }, 1);
+  assert.ok(Math.abs(b.x - (4.5 + 2.8)) < 0.05, `x = ${b.x}`);
+});
+
+// Stairs without to_level leave the plan (a drawing of one floor): drawn, solid, not a way to another level.
+const outStairs = () => modelOf('tests/fixtures/flat-stairs-out.plan.json');
+
+test('stairs that leave the plan are drawn from the floor, up by default and down with a negative rise', () => {
+  const m = outStairs();
+  assert.equal(m.counts.stairs, 2);
+  assert.equal(m.stairs.length, 0, 'they are not ramps between two levels');
+  assert.deepEqual(m.looseStairs.map((s) => [s.id, s.down]), [['st-up', false], ['st-down', true]]);
+  const [up, down] = m.levels[0].stairs;
+  assert.equal(up.boxes.length, 14);
+  assert.equal(up.boxes[0].y0, 0);
+  assert.ok(Math.abs(up.boxes[13].y1 - (m.levels[0].height + m.levels[0].slab)) < 1e-9, 'one storey up by default');
+  assert.ok(Math.abs(down.boxes[0].y0 + 3) < 1e-9 && Math.abs(down.boxes[13].y1) < 1e-9, 'the top step is flush with the floor and the flight goes 3 m down');
+  const living = m.levels[0].rooms.find((r) => r.id === 'living'), bedroom = m.levels[0].rooms.find((r) => r.id === 'bedroom');
+  assert.equal(living.ceilingHoles.length, 1, 'the flight up goes through the ceiling');
+  assert.equal(living.floorHoles.length, 0);
+  assert.equal(bedroom.floorHoles.length, 1, 'the flight down opens the floor');
+  assert.equal(bedroom.ceilingHoles.length, 0);
+  const e = modelExtent(m);
+  assert.ok(e.minY <= m.levels[0].elevation - 3 + 1e-9 && e.maxY >= m.levels[0].elevation + 2.9 - 1e-9, 'the camera frames the steps too');
+});
+
+test('stairs that leave the plan block the walk and never change the level', () => {
+  const m = outStairs();
+  const w = createWorld(m);
+  // st-up occupies x 0.915 to 3.285 at y 0.75 to 1.65: walking east along y = 1.2 stops in front of it
+  const p = walk(w, player(w, 0.4, 1.2, 0), { forward: 1 }, 3);
+  assert.ok(p.x < 0.915 - 0.2 + 1e-2, `x = ${p.x}`);
+  assert.equal(p.level, 0);
+  assert.equal(p.onStair, null);
+  assert.equal(p.floor, m.levels[0].elevation);
+  // st-down is a hole in the bedroom floor: the player does not fall in
+  const q = walk(w, player(w, 5.7, 0.4, 90), { forward: 1 }, 3);
+  assert.ok(q.y < 0.84 - 0.2 + 1e-2, `y = ${q.y}`);
+  assert.equal(maxPenetration(m.levels[0], q.x, q.y) < 1e-3, true);
+});
+
+test('a stair that leaves the plan on one level of a two level plan leaves the real stair and the level alone', () => {
+  const p = JSON.parse(readFileSync(new URL('../../tests/fixtures/duplex-min.plan.json', import.meta.url), 'utf8'));
+  p.levels[1].stairs = [{ id: 'out', from: [5, 1], to: [7, 1], width: 0.9, steps: 12 }];
+  const m = buildModel(validatePlan(p).normalized);
+  assert.equal(m.counts.stairs, 2);
+  assert.deepEqual(m.stairs.map((s) => s.id), ['st1'], 'only the stair between the two levels is a ramp');
+  const w = createWorld(m);
+  const q = walk(w, player(w, 4.5, 1, 0, 1), { forward: 1 }, 3);
+  assert.equal(q.level, 1);
+  assert.equal(q.onStair, null);
+  assert.ok(q.x < 5 - 0.09 - 0.2 + 1e-2, `x = ${q.x}`);
+  const up = walk(w, player(w, 1.0, 1.0, 90), { forward: 1 }, 6);
+  assert.equal(up.level, 1, 'the real stair still carries the player up');
+});

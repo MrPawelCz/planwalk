@@ -1,0 +1,214 @@
+// Walk physics: 2D circle against oriented rectangles, stair ramps, deterministic. No DOM, no three.js.
+import { PLAYER, STAIR_SWITCH, roomAt } from './geometry.js';
+import { pointInPolygon } from '../../src/core/geom2d.js';
+
+const MAX_SUBSTEP = 0.04; // metres per collision pass, well under the thinnest wall (0.08) plus the radius
+const EPS_PEN = 1e-3;
+const rad = (d) => (d * Math.PI) / 180;
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const wrap = (a) => {
+  const t = Math.PI * 2;
+  return a - t * Math.floor((a + Math.PI) / t);
+};
+
+export function createWorld(model, margin = 6) {
+  const b = model.bounds;
+  return {
+    model,
+    levels: model.levels,
+    stairs: model.stairs,
+    radius: PLAYER.radius,
+    bounds: { minX: b.minX - margin, maxX: b.maxX + margin, minY: b.minY - margin, maxY: b.maxY + margin },
+  };
+}
+
+// Push vector that moves a circle (x, y, r) out of rect c, or null when they do not overlap.
+function pushOut(c, x, y, r) {
+  if (x < c.minX - r || x > c.maxX + r || y < c.minY - r || y > c.maxY + r) return null;
+  const dx = x - c.cx, dy = y - c.cy;
+  const lx = dx * c.ux + dy * c.uy;
+  const ly = -dx * c.uy + dy * c.ux;
+  const qx = clamp(lx, -c.hx, c.hx), qy = clamp(ly, -c.hy, c.hy);
+  let nx, ny, depth;
+  if (qx === lx && qy === ly) {
+    // centre inside the rectangle: leave through the nearest face
+    const px = c.hx - Math.abs(lx), py = c.hy - Math.abs(ly);
+    if (px < py) { nx = lx >= 0 ? 1 : -1; ny = 0; depth = px + r; } else { nx = 0; ny = ly >= 0 ? 1 : -1; depth = py + r; }
+  } else {
+    const ex = lx - qx, ey = ly - qy;
+    const d = Math.hypot(ex, ey);
+    if (d >= r) return null;
+    nx = ex / d; ny = ey / d; depth = r - d;
+  }
+  return [(nx * c.ux - ny * c.uy) * depth, (nx * c.uy + ny * c.ux) * depth];
+}
+
+// Iterative push-out against all colliders of the level. Returns true when anything pushed.
+function resolve(level, p, r) {
+  let hit = false;
+  for (let it = 0; it < 6; it++) {
+    let moved = false;
+    for (const c of level.colliders) {
+      const v = pushOut(c, p.x, p.y, r);
+      if (v) { p.x += v[0]; p.y += v[1]; moved = true; }
+    }
+    if (!moved) break;
+    hit = true;
+  }
+  return hit;
+}
+
+export function maxPenetration(level, x, y, r = PLAYER.radius) {
+  let worst = 0;
+  for (const c of level.colliders) {
+    const v = pushOut(c, x, y, r);
+    if (v) worst = Math.max(worst, Math.hypot(v[0], v[1]));
+  }
+  return worst;
+}
+
+function clampBounds(world, p) {
+  const b = world.bounds;
+  p.x = clamp(p.x, b.minX, b.maxX);
+  p.y = clamp(p.y, b.minY, b.maxY);
+}
+
+function settle(world, p) {
+  const level = world.levels[p.level];
+  clampBounds(world, p);
+  resolve(level, p, world.radius);
+  if (maxPenetration(level, p.x, p.y, world.radius) <= EPS_PEN) return;
+  // still stuck: spiral outwards to the nearest free spot
+  const x0 = p.x, y0 = p.y;
+  for (let ring = 1; ring <= 60; ring++) {
+    for (let k = 0; k < 16; k++) {
+      const a = (k / 16) * Math.PI * 2;
+      const x = x0 + Math.cos(a) * ring * 0.1, y = y0 + Math.sin(a) * ring * 0.1;
+      if (maxPenetration(level, x, y, world.radius) <= EPS_PEN) { p.x = x; p.y = y; return; }
+    }
+  }
+}
+
+function stairCoords(st, x, y) {
+  const dx = x - st.from[0], dy = y - st.from[1];
+  return { r: st.length > 0 ? (dx * st.dir[0] + dy * st.dir[1]) / st.length : 0, t: -dx * st.dir[1] + dy * st.dir[0] };
+}
+
+// Floor height under the player and level switching on stairs (ramp: height = r * delta).
+function updateStairs(world, p) {
+  p.onStair = null;
+  let floor = world.levels[p.level].elevation;
+  for (const st of world.stairs) {
+    if (p.level !== st.lower && p.level !== st.upper) continue;
+    const { r, t } = stairCoords(st, p.x, p.y);
+    if (Math.abs(t) > st.width / 2 || r < 0 || r > 1) continue;
+    const lowE = world.levels[st.lower].elevation;
+    if (p.level === st.lower) {
+      if (r >= STAIR_SWITCH) { p.level = st.upper; floor = world.levels[st.upper].elevation; resolve(world.levels[p.level], p, world.radius); }
+      else { floor = lowE + r * st.delta; p.onStair = st.id; }
+    } else if (r < STAIR_SWITCH) {
+      p.level = st.lower; floor = lowE + r * st.delta; p.onStair = st.id;
+      resolve(world.levels[p.level], p, world.radius);
+    } else {
+      floor = world.levels[st.upper].elevation;
+    }
+    break;
+  }
+  p.floor = floor;
+}
+
+export function createPlayer(world, { level = 0, x = 0, y = 0, yawDeg = 0, pitchDeg = 0 } = {}) {
+  const p = { level: clamp(level, 0, Math.max(0, world.levels.length - 1)), x, y, yaw: rad(yawDeg), pitch: rad(pitchDeg), floor: 0, onStair: null, collisions: 0 };
+  teleport(world, p, x, y, p.level);
+  return p;
+}
+
+export function teleport(world, p, x, y, level = p.level) {
+  p.level = clamp(level, 0, Math.max(0, world.levels.length - 1));
+  p.x = x; p.y = y;
+  if (world.levels.length) { settle(world, p); updateStairs(world, p); }
+  return p;
+}
+
+// Advance the player by dt seconds. input: { forward, strafe, turn (-1..1), run }.
+export function stepPlayer(world, p, input = {}, dt = 1 / 60) {
+  const fwd = clamp(+input.forward || 0, -1, 1), str = clamp(+input.strafe || 0, -1, 1), turn = clamp(+input.turn || 0, -1, 1);
+  if (!world.levels.length) return p;
+  p.yaw = wrap(p.yaw + turn * rad(PLAYER.turnRate) * dt);
+  let mx = fwd, my = str;
+  const mag = Math.hypot(mx, my);
+  if (mag > 1) { mx /= mag; my /= mag; }
+  if (mag > 1e-9 && dt > 0) {
+    const speed = input.run ? PLAYER.run : PLAYER.walk;
+    const cos = Math.cos(p.yaw), sin = Math.sin(p.yaw);
+    const vx = (cos * mx - sin * my) * speed, vy = (sin * mx + cos * my) * speed;
+    const n = Math.max(1, Math.ceil((Math.hypot(vx, vy) * dt) / MAX_SUBSTEP));
+    for (let i = 0; i < n; i++) {
+      const px = p.x, py = p.y;
+      p.x += (vx * dt) / n;
+      p.y += (vy * dt) / n;
+      clampBounds(world, p);
+      const level = world.levels[p.level];
+      if (resolve(level, p, world.radius)) p.collisions++;
+      if (maxPenetration(level, p.x, p.y, world.radius) > EPS_PEN) { p.x = px; p.y = py; }
+      updateStairs(world, p);
+    }
+  } else {
+    updateStairs(world, p);
+  }
+  return p;
+}
+
+// Where Walk mode starts: the room with an exterior door, else the largest room (lowest level first).
+export function defaultSpawn(model) {
+  let found = null;
+  for (const lv of model.levels) {
+    for (const op of lv.openings) {
+      if (op.type === 'window') continue;
+      const w = lv.wallById.get(op.wallId);
+      if (!w || w.kind !== 'exterior') continue;
+      const um = (op.u0 + op.u1) / 2;
+      const cx = w.from[0] + w.dir[0] * um, cy = w.from[1] + w.dir[1] * um;
+      for (const side of [1, -1]) {
+        const k = side * (w.thickness / 2 + 0.4);
+        const room = roomAt(lv, cx + w.normal[0] * k, cy + w.normal[1] * k);
+        if (room) { found = { level: lv.index, room, door: [cx, cy] }; break; }
+      }
+      if (found) break;
+    }
+    if (found) break;
+  }
+  if (!found) {
+    for (const lv of model.levels) {
+      if (!lv.rooms.length) continue;
+      const room = lv.rooms.reduce((a, b) => (b.area > a.area ? b : a));
+      found = { level: lv.index, room, door: null };
+      break;
+    }
+  }
+  const b = model.bounds;
+  if (!found) return { level: 0, roomId: null, x: (b.minX + b.maxX) / 2, y: (b.minY + b.maxY) / 2, yawDeg: 0 };
+  const lv = model.levels[found.level];
+  // A spawn point must not sit on a stair run (or the hole above it): a ring around the point is tested as well.
+  const ring = [[0, 0], ...Array.from({ length: 8 }, (_, i) => [Math.cos((i * Math.PI) / 4) * 0.5, Math.sin((i * Math.PI) / 4) * 0.5])];
+  const onStair = (x, y) => model.stairs.some((st) => (st.lower === found.level || st.upper === found.level) && ring.some(([dx, dy]) => pointInPolygon([x + dx, y + dy], st.footprint)));
+  const clear = (x, y) => pointInPolygon([x, y], found.room.polygon) && maxPenetration(lv, x, y, PLAYER.radius + 0.25) === 0 && !onStair(x, y);
+  let [sx, sy] = found.room.label;
+  if (!clear(sx, sy)) {
+    let best = null, bestD = Infinity;
+    const poly = found.room.polygon;
+    const xs = poly.map((q) => q[0]), ys = poly.map((q) => q[1]);
+    for (let x = Math.min(...xs); x <= Math.max(...xs); x += 0.1) {
+      for (let y = Math.min(...ys); y <= Math.max(...ys); y += 0.1) {
+        if (!clear(x, y)) continue;
+        const d = Math.hypot(x - sx, y - sy);
+        if (d < bestD) { bestD = d; best = [x, y]; }
+      }
+    }
+    if (best) [sx, sy] = best;
+  }
+  const lookAt = found.door ?? [(b.minX + b.maxX) / 2, (b.minY + b.maxY) / 2];
+  let yaw = Math.atan2(sy - lookAt[1], sx - lookAt[0]);
+  if (Math.hypot(sx - lookAt[0], sy - lookAt[1]) < 0.05) yaw = 0;
+  return { level: found.level, roomId: found.room.id, x: sx, y: sy, yawDeg: (yaw * 180) / Math.PI };
+}

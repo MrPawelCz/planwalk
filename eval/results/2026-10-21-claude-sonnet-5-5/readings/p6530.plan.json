@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "name": "p6530",
+  "units": "m",
+  "meta": {
+    "source": "image",
+    "scale_note": "printed overall width 9.80 m between the dimension ticks (784 px, so 80 px per metre); printed room areas match the polygons",
+    "notes": "Furniture symbols skipped. Window and door positions are read from pixels (about 10 cm). The opening between Kitchen and Living room is a passage without a leaf."
+  },
+  "levels": [
+    {
+      "id": "L0",
+      "walls": [
+        { "id": "w1", "from": [0, 0], "to": [9.8, 0], "kind": "exterior" },
+        { "id": "w2", "from": [9.8, 0], "to": [9.8, 7.95], "kind": "exterior" },
+        { "id": "w3", "from": [0, 7.95], "to": [9.8, 7.95], "kind": "exterior" },
+        { "id": "w4", "from": [0, 0], "to": [0, 7.95], "kind": "exterior" },
+        { "id": "w5", "from": [0, 3.4], "to": [9.8, 3.4], "kind": "interior" },
+        { "id": "w6", "from": [0, 4.6], "to": [9.8, 4.6], "kind": "interior" },
+        { "id": "w7", "from": [3.35, 0], "to": [3.35, 3.4], "kind": "interior" },
+        { "id": "w8", "from": [6.3, 0], "to": [6.3, 3.4], "kind": "interior" },
+        { "id": "w9", "from": [2.3, 4.6], "to": [2.3, 7.95], "kind": "interior" },
+        { "id": "w10", "from": [5.65, 4.6], "to": [5.65, 7.95], "kind": "interior" }
+      ],
+      "openings": [
+        { "id": "o1", "wall": "w1", "type": "window", "offset": 1.05, "width": 1.3 },
+        { "id": "o2", "wall": "w1", "type": "window", "offset": 4.15, "width": 1.35 },
+        { "id": "o3", "wall": "w1", "type": "window", "offset": 7.75, "width": 0.6 },
+        { "id": "o4", "wall": "w2", "type": "window", "offset": 5.75, "width": 1.3 },
+        { "id": "o5", "wall": "w3", "type": "door", "offset": 0.55, "width": 0.9, "hinge": "start", "opens_to": "left" },
+        { "id": "o6", "wall": "w3", "type": "window", "offset": 3.25, "width": 1.5 },
+        { "id": "o7", "wall": "w3", "type": "window", "offset": 6.9, "width": 1.7 },
+        { "id": "o8", "wall": "w4", "type": "window", "offset": 0.95, "width": 1.5 },
+        { "id": "o9", "wall": "w4", "type": "window", "offset": 6.0, "width": 0.6 },
+        { "id": "o10", "wall": "w5", "type": "door", "offset": 1.15, "width": 0.9, "hinge": "start", "opens_to": "left" },
+        { "id": "o11", "wall": "w5", "type": "door", "offset": 4.5, "width": 0.9, "hinge": "start", "opens_to": "left" },
+        { "id": "o12", "wall": "w5", "type": "door", "offset": 7.8, "width": 0.8, "hinge": "start", "opens_to": "left" },
+        { "id": "o13", "wall": "w6", "type": "door", "offset": 0.7, "width": 0.9, "hinge": "start", "opens_to": "left" },
+        { "id": "o14", "wall": "w6", "type": "door", "offset": 3.55, "width": 0.85, "hinge": "start", "opens_to": "left" },
+        { "id": "o15", "wall": "w6", "type": "door", "offset": 7.25, "width": 0.9, "hinge": "start", "opens_to": "left" },
+        { "id": "o16", "wall": "w10", "type": "passage", "offset": 1.15, "width": 1.5 }
+      ],
+      "rooms": [
+        { "id": "r1", "name": "Bedroom 1", "polygon": [[0, 0], [3.35, 0], [3.35, 3.4], [0, 3.4]], "area": 11.4 },
+        { "id": "r2", "name": "Bedroom 2", "polygon": [[3.35, 0], [6.3, 0], [6.3, 3.4], [3.35, 3.4]], "area": 10.0 },
+        { "id": "r3", "name": "Bathroom", "polygon": [[6.3, 0], [9.8, 0], [9.8, 3.4], [6.3, 3.4]], "area": 11.9 },
+        { "id": "r4", "name": "Corridor", "polygon": [[0, 3.4], [9.8, 3.4], [9.8, 4.6], [0, 4.6]], "area": 11.8 },
+        { "id": "r5", "name": "Hall", "polygon": [[0, 4.6], [2.3, 4.6], [2.3, 7.95], [0, 7.95]], "area": 7.7 },
+        { "id": "r6", "name": "Kitchen", "polygon": [[2.3, 4.6], [5.65, 4.6], [5.65, 7.95], [2.3, 7.95]], "area": 11.2 },
+        { "id": "r7", "name": "Living room", "polygon": [[5.65, 4.6], [9.8, 4.6], [9.8, 7.95], [5.65, 7.95]], "area": 13.9 }
+      ]
+    }
+  ]
+}

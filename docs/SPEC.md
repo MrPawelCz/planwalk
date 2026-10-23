@@ -1,0 +1,130 @@
+# planwalk specification (v1 draft)
+
+planwalk turns a floor plan into a walkable 3D model. The pipeline is: an image or PDF of a plan, read by an AI with vision (an agent, or any chat), becomes a small JSON file (this spec); the validator checks it; the viewer builds a dollhouse, an exploded multi-level view and a first-person walkthrough from it, and exports GLB. Everything runs locally and offline (the only thing that can fetch anything is the viewer's optional `?plan=<url>` parameter, see the plan sources below). No API keys, no server.
+
+## 1. Coordinate system and units
+
+- Plan space is 2D: x to the right, y downward, exactly like an image. The origin is arbitrary.
+- `units` is one of `m`, `cm`, `mm`, `ft`, `in` (default `m`). Every length in the file (coordinates, thickness, heights, offsets, sizes) is in those units; areas in `m2` equivalents of the same unit squared. `src/core/defaults.js#normalizePlan` converts everything to metres; all code after that works in metres.
+- 3D world (viewer): metres, Y up. Plan point `(x, y)` at height `h` maps to world `(x, level.elevation + h, y)`, so world +Z is plan +y ("down" on the plan). A top-down camera with `up = (0, 0, -1)` shows the plan exactly as drawn.
+- Angles are degrees, clockwise on the plan seen from above. In three.js that is `object.rotation.y = -degToRad(angle)`.
+
+## 2. Plan format
+
+The authoritative definition is `schema/plan.v1.schema.json` (JSON Schema 2020-12). Summary:
+
+- Top level: `version` (1), `name`, `units`, `levels[]`, `meta{source, scale_note, notes, generator}` (`scale_note` up to 1000 characters, `notes` up to 2000).
+- Ids (levels, walls, openings, rooms, stairs, furniture) are strings of letters, digits, `_`, `-` and `.`, 1 to 40 characters; unique within a level (level ids across the plan).
+- `levels[]`: `id`, `name`, `elevation`, `height` (default 2.7 m), `slab` (default 0.2 m), `walls[]`, `openings[]`, `rooms[]`, `stairs[]`, `furniture[]`. `elevation` defaults to the cumulative sum of the previous levels' `height + slab`.
+- `walls[]`: `id`, `from[x,y]`, `to[x,y]`, `kind` (`exterior` default thickness 0.30 m, `interior` 0.12 m, `partition` 0.08 m), `thickness`, `height`. A wall is its centerline plus thickness.
+- `openings[]`: `id`, `wall` (wall id on the same level), `type` (`door`, `window`, `passage`), `offset` (distance along the wall from its `from` end to the near edge), `width`, `height` (door 2.05, window 1.2, passage 2.1 m), `sill` (window 0.9, others 0), doors only: `hinge` (`start` or `end`), `opens_to` (`left` or `right` looking from `from` to `to` on the plan seen from above).
+- `rooms[]`: `id`, `name`, `polygon` (vertices along wall centerlines, closed implicitly, any orientation; rooms that are open to each other, with no wall between them, share an edge), `use`, `floor` (`wood`, `tile`, `carpet`, `stone`, `concrete`, `none`), `ceiling`, `area` (declared, optional; printed areas are usually net of the walls, see W102).
+- `stairs[]`: `id`, `from`, `to` (centres of the step line at this level's floor and of the step line at the far end), `width`, `steps`, `to_level` (optional), `rise` (optional, only without `to_level`). Without `to_level` the stair leaves the plan: use it on a drawing of one floor, where the other floor is not part of the file.
+- `furniture[]`: `id`, `type` (catalog in the schema), `center`, `size [w, d]`, `rotation`, `height`. Decorative, with type defaults (sofa 2.0 x 0.9 x 0.8, bed-double 2.0 x 1.6 x 0.5, bed-single 2.0 x 0.9 x 0.5, table-dining 1.6 x 0.9 x 0.75, table-coffee 1.0 x 0.6 x 0.4, chair 0.45 x 0.45 x 0.9, desk 1.4 x 0.7 x 0.75, wardrobe 1.0 x 0.6 x 2.1, kitchen-counter 1.2 x 0.6 x 0.9, fridge 0.6 x 0.65 x 1.8, stove 0.6 x 0.6 x 0.9, sink 0.8 x 0.55 x 0.9, bathtub 1.7 x 0.75 x 0.55, shower 0.9 x 0.9 x 2.0, toilet 0.4 x 0.7 x 0.4, basin 0.6 x 0.45 x 0.85, tv-unit 1.5 x 0.4 x 0.5, bookshelf 0.9 x 0.3 x 1.9, armchair 0.85 x 0.85 x 0.85, plant 0.4 x 0.4 x 1.0, rug 2.0 x 1.4 x 0.01).
+
+- A piece of furniture faces +y (down the plan) at `rotation: 0`: its front, doors, drawers and seat face that way and its back is at -y. Angles run clockwise seen from above, so 180 faces up the plan, 90 faces left (-x) and 270 faces right. Put a wardrobe against the bottom wall of a room at 180, a sofa that looks at a table above it at 180. A bed has its head at -x (left) at 0 and up the plan at 90.
+
+A reference file is `examples/flat-1.plan.json`.
+
+## 3. Geometry semantics (viewer and tools must agree)
+
+1. Wall solid: a box along the centerline, `length x thickness x height`, base at level elevation. When a wall end touches another wall (the end point lies within `0.5 * thickness + 0.02` m of another wall's centerline segment, excluding itself), extend that end by half its own thickness, so corners and T-junctions close without gaps.
+2. Openings cut a gap in the wall interval `[offset, offset + width]` (measured from the wall's `from` end, before end extension) between heights `[sill, sill + height]`. Remaining solids: the left and right full-height pieces, a lintel above (`sill + height` to wall height) and, for windows, a piece below (0 to `sill`). Doors and passages leave the gap open for walking. Window glass is decorative (not a collider); a door leaf is decorative: a thin box hinged at the `hinge` end, rotated about 75 degrees toward `opens_to`, not a collider.
+3. Floor: each room polygon extruded downward by the level `slab`, top face at the level elevation. Floors may extend to wall centerlines (hidden under walls). Ceiling (when `ceiling` is true and the mode is walk) at `elevation + height`.
+4. Stairs: `steps` boxes between `from` and `to`, riser = (elevation of `to_level` minus this level's elevation) divided by `steps`. For walking, the stair footprint is a ramp: at fraction `r` along `from -> to` the floor height is `r * delta`; when `r >= 0.98` the player switches to `to_level`. Where the whole stair footprint lies inside one room, the viewer cuts a hole in that room's ceiling on the lower level and in the room's floor on the upper level; otherwise rooms of the upper level should not cover the footprint. A stair without `to_level` is not a ramp: its steps climb from this level's floor by `rise` (default: level height plus slab, upward; negative for a stair that goes down, `from` then being the end at this level), the viewer draws them (with a hole in the ceiling, or in the floor for a stair that goes down, when one room contains the whole footprint), they block the walk like furniture, and they never change the level.
+5. Collision (walk mode): 2D, the player is a circle of radius 0.2 m. Colliders are the wall solids as 2D rectangles after subtracting the opening gaps (door and passage gaps from floor to 2.0 m are free; window gaps stay solid below the window top because the sill is below eye height; use the same rectangles the geometry uses) plus furniture footprints (oriented rectangles; `rug` and `plant` excluded). Resolution is push-out against the nearest penetrated rectangle, iterated a few times, deterministic for a given input sequence.
+
+## 4. Visual style (two looks: clay and textured)
+
+Warm white walls (#f2efe9), floor colours by material (wood #c9a27a, tile #d9dde0, carpet #b9b2a6, stone #a9a49a, concrete #9a9a98), neutral furniture (#d8d2c8 with a slightly darker top edge not required), tinted translucent glass. Sky gradient background (#eaf0f6 to #cfd8e3), hemisphere plus one soft directional light with shadows, ACES tone mapping, antialiasing. Room labels (name and area in m2) as sprites in dollhouse and top modes. Aim for a calm architectural-model look, not a game look.
+
+The viewer has two looks that share geometry, lights and cameras. **Clay** is the look above: plain colours. **Textured** (the default) keeps nearly the same palette (a light colour cannot exceed its texture average) and adds procedural textures, generated in code when the page loads (no image files, no network, no randomness: the same plan gives the same textures): wood boards, porcelain tile, carpet, stone slabs and concrete for the room `floor` kinds, plaster for walls and ceilings, oak veneer for furniture and door leaves (and, turned a quarter, for stair steps), woven fabric for sofas and bedding, a wool rug, paving for the ground in Walk mode. Textures are in metres: a 0.6 m tile is 0.6 m wherever it appears, boards are about 14 cm wide, a pattern runs on without a seam along a wall, over the pieces of a wall around a door, and over the steps of a stair, and a cutaway cuts the wall instead of squashing its texture. A textured material is tinted by its clay colour divided by the texture average, so a model keeps the colours of its clay version; normal maps add a faint relief to boards, joints, plaster and weave. The switch is the Textures toggle, `setMaterials('clay' | 'textured')` and `?materials=clay|textured`. How the textures are made and how to add one: `docs/TEXTURES.md`. The plan format has no fields for materials beyond the room `floor` kind.
+
+## 5. Validation (src/core/validate.js, tools/validate.mjs)
+
+Interface (isomorphic ES module, no Node-only imports):
+
+```js
+validatePlan(plan) -> { ok: boolean, errors: Issue[], warnings: Issue[], normalized: object | null }
+Issue = { code: 'E101', path: 'levels[0].rooms[2]', message: 'what is wrong, with numbers', fix: 'what to change, written for an AI that will paste it back' }
+```
+
+`ok` is true when `errors` is empty. `normalized` is `normalizePlan(plan)` when the plan is structurally usable, else `null`. Messages must be concrete (ids, names, coordinates, values) and every issue has a `fix` sentence, because the output is meant to be pasted back into a chat so the AI can repair the JSON.
+
+Error codes (minimum set; add more if needed, never reuse a code):
+- E001 not a JSON object / unreadable; E002 schema violation (the message names the JSON pointer and the rule); E003 duplicate id (within a level; level ids globally); E004 wall of zero length or shorter than its thickness; E005 opening refers to a missing wall; E006 opening does not fit its wall (`offset + width` beyond the wall length) or overlaps another opening on the same wall; E007 opening taller than the wall, or `sill + height` above the wall height; E008 room polygon has fewer than 3 distinct points, self-intersects, or has area below 0.5 m2; E009 stair whose `to_level` refers to a missing level or equals its own level (a stair without `to_level` is valid); E010 NaN or infinite number; E011 implausible scale after unit conversion (bounding box of the walls below 2 m or above 200 m: message suggests the likely correct `units`); E012 stair whose `from` and `to` are less than 0.2 m apart, or with a `rise` under 1 cm.
+Warning codes (minimum set):
+- W101 room boundary not backed by walls (more than 30% of the polygon perimeter is farther than the thickest adjacent wall from any wall centerline); W102 declared `area` matches neither the polygon along the wall centerlines (within 5%) nor the polygon net of its walls (within 10%; every edge that runs along a wall moves inward by half that wall's thickness, an edge with no wall stays), because printed room areas are net; W103 two rooms on a level overlap by more than 5% of the smaller one; W104 door width outside 0.6 to 1.2 m; W105 room not reachable from an entrance (a room behind an exterior door, or around the top of a stair without `to_level` and with a negative `rise`) through doors, passages, stairs and open edges (at least 0.7 m of shared boundary with no wall along it; an edge without a wall counts as an opening, so a wall that was forgotten between two rooms is not reported here: compare the render with the drawing); W106 wall end that lies within 0.5 m of another wall without touching it (a corner that probably should close; a free end farther away, for example a partition that stops at a column, is normal); W107 room area below 2 m2 or above 80 m2; W108 no door on an exterior wall (not raised when the lowest level has an `elevation` above 0.5 m, or when a stair without `to_level` and with a negative `rise` arrives from below: an upper floor is entered by its stair); W109 furniture whose centre lies outside every room on its level; W110 level without rooms.
+
+CLI: `node tools/validate.mjs plan.json [--json] [--strict]`. Text output is one issue per line: `E006 levels[0].openings[3] "d-hall-bath": ... Fix: ...`, then a summary line `N errors, M warnings`. `--json` prints `{ ok, errors, warnings }`. Exit code 0 when ok (and with `--strict` also no warnings), 1 when not, 2 on usage or unreadable file.
+
+## 6. Viewer (viewer/, built to dist/planwalk.html)
+
+Single self-contained HTML file after build (three.js and all code inlined, works from `file://`, makes no network requests of its own). Contents: canvas, a thin toolbar (mode buttons Dollhouse / Orbit / Top / Walk, level selector, explode slider, cutaway toggle, labels toggle, Textures toggle, Export GLB, Export PNG, Download standalone HTML, Help), a drop zone and a paste dialog for plan JSON, a sample dropdown when the build embeds examples, an issues panel that lists validator errors and warnings with their `fix` text and a button "Copy fix request" (copies a ready-to-paste message for a chat: the issues plus the plan). English UI; strings in one object so translations are easy.
+
+Plan sources, in order: `<script type="application/json" id="planwalk-plan">` embedded in the page; `#plan=<base64url JSON>` in the URL hash; `?plan=<url>` (http or https; the only thing the viewer ever fetches); drag and drop; paste.
+
+Modes: Dollhouse (default): orbit camera around the model at about 35 degrees elevation, walls cut down to 1.2 m ("cutaway", toggle for full height), ceilings hidden, labels on. Explode 0..1 separates levels vertically by `explode * 1.2 * level.height` per level (animated with easing). Top: orthographic plan view with labels. Orbit: free orbit, full-height walls, ceilings hidden. Walk: first person, eye 1.6 m, radius 0.2 m, walking speed 1.4 m/s (shift 2.8), WASD or arrows plus mouse look (pointer lock) plus touch (left stick moves, right drag looks), ceilings visible, labels off, a small minimap in a corner. Switching to Walk drops the player at the centre of the entrance room (the room with an exterior door; else the largest room); Escape returns to Dollhouse.
+
+Public API on `window.planwalk` (also used by tests and by `tools/capture.mjs`):
+
+```js
+load(planOrJsonString) -> { ok, errors, warnings }       // validates, builds, resets camera
+setMode('dollhouse' | 'orbit' | 'top' | 'walk')
+setExplode(0..1)  setCutaway(bool)  setLabels(bool)  setLevel(levelId | null)
+setMaterials('clay' | 'textured')                        // the look; returns the look now in force; any other value is ignored
+zoomView(factor)                                         // dollhouse and orbit: camera toward the target (below 1) or away (above 1); top: scales the view
+tiltView(elevationDegrees)                               // dollhouse and orbit: camera elevation above the horizon, 5 to 85 (azimuth and distance stay)
+walkTo(x, y, levelId?, yawDegrees?, pitchDegrees?)         // teleport the player (plan coordinates, metres); a negative pitch looks down
+walkInput({ forward: -1..1, strafe: -1..1, turn: -1..1 }) // continuous input used by advanceTime
+advanceTime(ms)                                          // deterministic stepping of animations and physics; no requestAnimationFrame dependence
+state() -> object, renderGameToText() -> string          // JSON state: { mode, level, explode, cutaway, materials, camera:{x,y,z,yaw,pitch}, room, counts:{levels,walls,openings,rooms,furniture,stairs}, collisions, issues:{errors,warnings} }
+screenshot({ width, height }) -> dataURL (PNG)
+exportGLB({ materials?, normalMaps? }) -> Promise<ArrayBuffer>   // materials: 'clay' | 'textured' (default: the current look); normalMaps: true to embed them too (default false)
+```
+
+When `window.planwalk.manualClock = true` the viewer must not advance by itself (tests drive `advanceTime`). Console must stay free of errors and warnings during normal use.
+
+GLB export: whole model (walls, floors, ceilings, stairs, furniture, doors, windows) as one scene with named nodes (`level:<id>`, `wall:<id>`, `room:<id>`, `opening:<id>`), metres, Y up, via three's GLTFExporter, material colours preserved. The textured look embeds its colour maps as JPEG (repeating samplers, metric `TEXCOORD_0`); normal maps stay out by default because they are large and compress badly (`normalMaps: true` adds them as PNG). The clay look embeds no images. The toolbar button exports the current look.
+
+## 7. Tools (Node >= 18, ESM, zero runtime dependencies)
+
+- `tools/validate.mjs`: see section 5.
+- `tools/build.mjs`: esbuild (dev dependency) bundles `viewer/src/main.js` with three.js into `dist/planwalk.html` (all JS inlined, minified) and embeds `examples/*.plan.json` as samples. Also writes `dist/planwalk-empty.html` (no samples). The built files are committed.
+- `tools/serve.mjs [dir] [port]`: zero-dependency static server bound to 127.0.0.1 (default `dist`, 8080).
+- `tools/capture.mjs <plan.json> --out DIR [--views dollhouse,explode,top,walk] [--size 1280x720] [--gif FILE] [--materials clay|textured] [--zoom F] [--tilt DEG] [--gif-width PX] [--gif-fps N] [--no-panel] [--start "x,y,levelId,yawDeg[,pitchDeg]"] [--viewer PATH] [--chrome PATH]`: zero-dependency driver over the Chrome DevTools Protocol (Node global WebSocket), launches headless Chrome (`--headless=new --use-gl=angle --use-angle=swiftshader --enable-unsafe-swiftshader`, throwaway `--user-data-dir`, always killed at the end), loads the built viewer, sets `manualClock`, loads the plan, takes one PNG per view (`--materials` picks the look, which also decides what `--glb` exports; `--zoom F` and `--tilt DEG` set the distance and the elevation of the dollhouse camera before the pictures; `--no-panel` hides the issues panel, which would cover the lower left of the plan; `--start` puts the player there for the walk view), reports console errors, prints `state()` JSON per view, and with `--gif` renders a short dollhouse then explode then walk clip frame by frame through `advanceTime` and encodes it with ffmpeg if available (palettegen; `--gif-width` 160 to 1920 px, default 760, and `--gif-fps` 4 to 30, default 15, trade size for smoothness: a textured clip is heavy, 640 px at 10 fps keeps it small). Chrome path default `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`, then `google-chrome`, `chromium`. The viewer defaults to `dist/planwalk-empty.html`, or to `assets/planwalk.html` when the file runs from `skill/planwalk/scripts/` (it is the same file in both places).
+- `tools/build-skill.mjs [--out DIR]`: builds the self-contained agent skill. It bundles `tools/validate.mjs` with `src/core/` into `skill/planwalk/scripts/validate.mjs` (esbuild, one file, not minified, imports only `node:` built-ins), copies `tools/capture.mjs` to `skill/planwalk/scripts/capture.mjs` unchanged and `dist/planwalk-empty.html` to `skill/planwalk/assets/planwalk.html` unchanged. `npm run build:skill` rebuilds `dist/` first. The generated files are committed; `tests/skill/bundle.test.mjs` fails when one is stale (run `npm run build:skill` before `npm test`), when the skill prints something different from the repository tools, when `SKILL.md` names a file or a command path that does not exist, or when the skill folder does not work after being copied alone to another place (a path with spaces and a `#`, run from an unrelated directory). `skill/planwalk/scripts/embed.mjs` is hand written and stays where it is.
+- `eval/gen/gen-plans.mjs --seed N --count K --out DIR`: deterministic synthetic apartments (see section 8).
+- `eval/score.mjs <truth.json> <pred.json> [--json]`: scorer (section 8).
+
+## 8. Evaluation harness (eval/)
+
+Purpose: measure how well an AI reads a plan image into this JSON, on plans whose truth is known.
+
+Generator: deterministic from a seed. Families: studio, one-bedroom, two-bedroom with corridor, three-bedroom, L-shaped, flat with balcony, two-level duplex with a straight stair. Always connected (every room reachable by doors from an entrance), realistic sizes (rooms 3 to 30 m2), windows on exterior walls, doors 0.8 to 0.9 m, units metres. Outputs per plan: `truth/<id>.plan.json` and drawings `images/<id>.<style>.svg` and `.png` for styles `cad` (thick black walls, door arcs, window triple lines, room names and areas, one dimension line), `hatched` (wall hatch, furniture symbols), `sketch` (jittered strokes, no areas), `scan` (cad style rotated by 1 to 3 degrees, blurred, with paper tint and grain). Truth must never be needed to read the image: the image shows names and areas only in styles that normally do. PNGs are rendered with `chrome --headless --screenshot` (no dependency on the viewer).
+
+Scorer metrics (all in metres, after aligning prediction to truth by best uniform scale and translation of the wall bounding boxes; also report the scale error before alignment): level count match; room matching by greedy best IoU (match if IoU >= 0.5): precision, recall, mean IoU, mean absolute percentage error of room areas; wall total length ratio; door and window F1 (match: same wall within 0.4 m of centre and 0.3 m of width); connectivity F1 on the room adjacency graph through doors and passages; `valid` (validator reports no errors); composite 0 to 100 = 30 room F1 + 20 mean IoU + 15 openings F1 + 15 connectivity F1 + 10 area accuracy (100 at 0 percent error falling to 0 at 30 percent) + 10 valid.
+
+## 9. Repository layout
+
+```
+schema/plan.v1.schema.json     the format
+src/core/                      units, geom2d, defaults (normalizePlan), validate (isomorphic, no DOM, no Node-only APIs)
+viewer/src/                    viewer source (ES modules): geometry, scene, materials, textures (procedural, no DOM), uv, furniture, physics, main
+tools/                         validate, build, build-skill, serve, capture
+dist/                          built viewer (committed)
+examples/                      *.plan.json (CC0)
+eval/                          gen, score, results
+skill/planwalk/                agent skill, self-contained: SKILL.md, reference/, scripts/ (embed.mjs by hand; validate.mjs and capture.mjs generated), assets/planwalk.html (generated)
+docs/                          SPEC, PROMPT (for chat), TEXTURES, FAQ, BENCHMARK
+tests/                         node:test suites (core, tools, viewer, eval, skill)
+```
+
+## 10. Conventions
+
+- JavaScript ES modules, Node >= 18, no TypeScript, no transpilers except the esbuild bundling step. Python is not used by the product.
+- Runtime dependencies: none. Dev dependencies: `esbuild` (build only) and `three` (vendored into the bundle). Anything else needs a written reason and a permissive licence (MIT, Apache-2.0, BSD).
+- Tests with `npm test` (`tools/test.mjs` runs `node --test` over every file in `tests/`); viewer end to end tests need Chrome and skip with a clear message when it is missing.
+- Code comments in English, concise, no em dashes or en dashes anywhere in code or docs (use commas, colons, parentheses).
+- No private data anywhere: only synthetic or CC0 plans. No network at runtime (apart from the optional `?plan=<url>`). No telemetry.
+- Determinism: generator, scorer and physics are deterministic for the same input.

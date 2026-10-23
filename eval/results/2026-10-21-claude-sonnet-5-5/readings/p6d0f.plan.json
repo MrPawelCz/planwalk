@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "name": "p6d0f",
+  "units": "m",
+  "meta": {
+    "source": "image",
+    "scale_note": "sketch with no printed scale or areas: scale from standard door 0.85 m = about 68 px (the two door chords measure 73 and 64 px), so about 80 px per metre (a guess, not a measurement)",
+    "notes": "Wavy lines make positions good to about 15 cm. No room areas printed, so none given. The wide gap in the wall between Studio and Hall is read as a passage without a leaf."
+  },
+  "levels": [
+    {
+      "id": "L0",
+      "walls": [
+        { "id": "w1", "from": [0, 0], "to": [6.35, 0], "kind": "exterior" },
+        { "id": "w2", "from": [6.35, 0], "to": [6.35, 4.7], "kind": "exterior" },
+        { "id": "w3", "from": [0, 4.7], "to": [6.35, 4.7], "kind": "exterior" },
+        { "id": "w4", "from": [0, 0], "to": [0, 4.7], "kind": "exterior" },
+        { "id": "w5", "from": [0, 2.5], "to": [6.35, 2.5], "kind": "interior" },
+        { "id": "w6", "from": [4.15, 2.5], "to": [4.15, 4.7], "kind": "interior" }
+      ],
+      "openings": [
+        { "id": "o1", "wall": "w1", "type": "window", "offset": 0.7, "width": 1.8 },
+        { "id": "o2", "wall": "w1", "type": "window", "offset": 4.1, "width": 1.4 },
+        { "id": "o3", "wall": "w2", "type": "window", "offset": 0.2, "width": 1.8 },
+        { "id": "o4", "wall": "w3", "type": "door", "offset": 1.1, "width": 0.9, "hinge": "start", "opens_to": "left" },
+        { "id": "o5", "wall": "w3", "type": "window", "offset": 2.5, "width": 0.6 },
+        { "id": "o6", "wall": "w3", "type": "window", "offset": 4.95, "width": 0.6 },
+        { "id": "o7", "wall": "w4", "type": "window", "offset": 0.2, "width": 1.7 },
+        { "id": "o8", "wall": "w5", "type": "passage", "offset": 1.85, "width": 1.4 },
+        { "id": "o9", "wall": "w6", "type": "door", "offset": 0.85, "width": 0.8, "hinge": "start", "opens_to": "left" }
+      ],
+      "rooms": [
+        { "id": "r1", "name": "Studio", "polygon": [[0, 0], [6.35, 0], [6.35, 2.5], [0, 2.5]] },
+        { "id": "r2", "name": "Hall", "polygon": [[0, 2.5], [4.15, 2.5], [4.15, 4.7], [0, 4.7]] },
+        { "id": "r3", "name": "Bathroom", "polygon": [[4.15, 2.5], [6.35, 2.5], [6.35, 4.7], [4.15, 4.7]] }
+      ]
+    }
+  ]
+}
