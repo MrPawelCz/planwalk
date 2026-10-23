@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { CAPS, hasOwn, clip } from '../../src/core/caps.js';
+import { MAX_PLAN_CHARS } from '../../src/core/limits.js';
 import { normalizePlan } from '../../src/core/defaults.js';
 import { PLAN_SCHEMA, checkSchema, validatePlan } from '../../src/core/validate.js';
 
@@ -13,9 +14,10 @@ const flat = () => load('examples/flat-1.plan.json');
 const codes = (r) => [...r.errors, ...r.warnings].map((i) => i.code);
 
 const CHILD = new URL('./hostile-child.mjs', import.meta.url).pathname;
-function child(name) {
+function child(name, asObject = false) {
   const t0 = Date.now();
-  const r = spawnSync(process.execPath, ['--max-old-space-size=256', CHILD, name], { encoding: 'utf8', timeout: 60000, maxBuffer: 1 << 24 });
+  const env = asObject ? { ...process.env, HOSTILE_AS_OBJECT: '1' } : process.env;
+  const r = spawnSync(process.execPath, ['--max-old-space-size=256', CHILD, name], { encoding: 'utf8', timeout: 60000, maxBuffer: 1 << 24, env });
   assert.equal(r.status, 0, `${name}: child exited with ${r.status} ${r.signal || ''} ${(r.stderr || '').slice(0, 300)}`);
   return { ...JSON.parse(r.stdout.trim().split('\n').pop()), wallMs: Date.now() - t0 };
 }
@@ -37,20 +39,28 @@ test('ids of 20,000 characters (40 KB) do not crash the process, in every place 
   }
 });
 
-test('a 20 MB string in meta.notes is rejected cheaply', () => {
-  const o = child('notes20mb');
-  assert.ok(o.ms < 2000, `${o.ms} ms`);
-  assert.ok(o.codes.includes('E002'));
-  assert.ok(o.messageBytes < 4000);
+test('a 20 MB string in meta.notes is rejected cheaply, as text (size limit) and as an object (E002)', () => {
+  const asText = child('notes20mb');
+  assert.ok(asText.ms < 2000, `${asText.ms} ms`);
+  assert.deepEqual(asText.codes, ['E001']);
+  assert.ok(asText.messageBytes < 4000);
+  const asObject = child('notes20mb', true);
+  assert.ok(asObject.ms < 2000, `${asObject.ms} ms`);
+  assert.ok(asObject.codes.includes('E002'));
+  assert.ok(asObject.messageBytes < 4000);
 });
 
-test('plans over a count cap are rejected with E013 in under a second, whatever the array', () => {
+test('plans over a count cap are rejected in under a second, whatever the array: E013 for objects, and as text E013 or, above the size limit, E001', () => {
   for (const name of ['walls100k', 'walls20k', 'poly100k', 'furniture100k', 'levels5k']) {
-    const o = child(name);
+    const o = child(name, true);
     assert.deepEqual(o.codes, ['E013'], name);
     assert.equal(o.ok, false);
     assert.equal(o.normalized, false);
     assert.ok(o.ms < 1000, `${name}: ${o.ms} ms`);
+    const t = child(name);
+    assert.deepEqual(t.codes, [t.inputBytes > MAX_PLAN_CHARS ? 'E001' : 'E013'], `${name} as text`);
+    assert.equal(t.normalized, false);
+    assert.ok(t.ms < 1000, `${name} as text: ${t.ms} ms`);
   }
 });
 

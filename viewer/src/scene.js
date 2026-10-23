@@ -48,6 +48,17 @@ function slabGeometry(polygon, holes, depth, k = 1) {
   return g;
 }
 
+// CanvasRenderingContext2D.roundRect needs Safari 16 or Chrome 99; older browsers get the same outline from arcs.
+function roundedRect(ctx, x, y, w, h, r) {
+  if (typeof ctx.roundRect === 'function') { ctx.roundRect(x, y, w, h, r); return; }
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
 function makeLabel(name, areaText, widthWorld) {
   const c = document.createElement('canvas');
   c.width = 512; c.height = 176;
@@ -56,7 +67,7 @@ function makeLabel(name, areaText, widthWorld) {
   ctx.strokeStyle = 'rgba(80,72,62,0.22)';
   ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.roundRect(6, 6, 500, 164, 34);
+  roundedRect(ctx, 6, 6, 500, 164, 34);
   ctx.fill();
   ctx.stroke();
   ctx.textAlign = 'center';

@@ -46,7 +46,9 @@ const CASES = {
 };
 
 if (!CASES[name]) { console.error(`unknown case ${name}`); process.exit(2); }
-const input = CASES[name]();
+const text = CASES[name]();
+// HOSTILE_AS_OBJECT=1 hands analyzePlan the parsed object, the way api.load(object) does, so the caps behind the text size limit are tested too.
+const input = process.env.HOSTILE_AS_OBJECT ? JSON.parse(text) : text;
 const t0 = performance.now();
 let result = null, threw = null;
 try { result = analyzePlan(input); } catch (e) { threw = String(e && e.message ? e.message : e).slice(0, 120); }
@@ -54,7 +56,7 @@ const ms = performance.now() - t0;
 const issues = result ? [...result.errors, ...result.warnings] : [];
 const bad = result?.salvaged?.levels?.flatMap((l) => l.walls.map((w) => w.thickness)).filter((t) => !Number.isFinite(t)).length ?? 0;
 console.log(JSON.stringify({
-  name, inputBytes: input.length, ms: Math.round(ms * 10) / 10, rssMB: Math.round(process.resourceUsage().maxRSS / 1024), threw,
+  name, inputBytes: text.length, ms: Math.round(ms * 10) / 10, rssMB: Math.round(process.resourceUsage().maxRSS / 1024), threw,
   ok: result?.ok ?? null, codes: [...new Set(issues.map((i) => i.code))], issues: issues.length, normalized: !!result?.normalized,
   messageBytes: JSON.stringify(issues).length, nanThickness: bad,
   messages: issues.slice(0, 6).map((i) => `${i.code} ${i.message}`.slice(0, 160)),

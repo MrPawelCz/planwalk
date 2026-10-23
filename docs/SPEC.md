@@ -51,6 +51,8 @@ Issue = { code: 'E101', path: 'levels[0].rooms[2]', message: 'what is wrong, wit
 
 `ok` is true when `errors` is empty. `normalized` is `normalizePlan(plan)` when the plan is structurally usable, else `null`. Messages must be concrete (ids, names, coordinates, values) and every issue has a `fix` sentence, because the output is meant to be pasted back into a chat so the AI can repair the JSON.
 
+A string is read as text, so a whole chat answer works (`src/core/extract-json.js`): strict JSON is used as it is; otherwise the validator looks in the fenced blocks that contain a `{` (the first four), then in the whole text; it drops a leading line that is just `json`, cuts out balanced top level objects (the first three it finds, ignoring braces inside strings), prefers an object that has a `levels` key, and repairs typographic quotes used as delimiters (typographic quotes inside a value are kept), `//` and `/* */` comments, trailing commas, invisible characters and non-breaking spaces. The result carries `repairs`, a list of short English phrases for what was changed (empty for strict JSON). Text over 2,000,000 characters (`src/core/limits.js`) is refused with E001, before any other work.
+
 Error codes (minimum set; add more if needed, never reuse a code):
 - E001 not a JSON object / unreadable; E002 schema violation (the message names the JSON pointer and the rule); E003 duplicate id (within a level; level ids globally); E004 wall of zero length or shorter than its thickness; E005 opening refers to a missing wall; E006 opening does not fit its wall (`offset + width` beyond the wall length) or overlaps another opening on the same wall; E007 opening taller than the wall, or `sill + height` above the wall height; E008 room polygon has fewer than 3 distinct points, self-intersects, or has area below 0.5 m2; E009 stair whose `to_level` refers to a missing level or equals its own level (a stair without `to_level` is valid); E010 NaN or infinite number; E011 implausible scale after unit conversion (bounding box of the walls below 2 m or above 200 m: message suggests the likely correct `units`); E012 stair whose `from` and `to` are less than 0.2 m apart, or with a `rise` under 1 cm; E013 an array above its cap (see Limits below): the plan is not read any further.
 Warning codes (minimum set):
@@ -77,16 +79,16 @@ CLI: `node tools/validate.mjs plan.json [--json] [--strict]`. Text output is one
 
 ## 6. Viewer (viewer/, built to dist/planwalk.html)
 
-Single self-contained HTML file after build (three.js and all code inlined, works from `file://`, makes no network requests of its own). Contents: canvas, a thin toolbar (mode buttons Dollhouse / Orbit / Top / Walk, level selector, explode slider, cutaway toggle, labels toggle, Textures toggle, Export GLB, Export PNG, Download standalone HTML, Help), a drop zone and a paste dialog for plan JSON, a sample dropdown when the build embeds examples, an issues panel that lists validator errors and warnings with their `fix` text and a button "Copy fix request" (copies a ready-to-paste message for a chat: the issues plus the plan). English UI; strings in one object so translations are easy.
+Single self-contained HTML file after build (three.js and all code inlined, works from `file://`, makes no network requests of its own). Contents: canvas, a thin toolbar (mode buttons Dollhouse / Orbit / Top / Walk, level selector, explode slider, cutaway toggle, labels toggle, Textures toggle, Export GLB, Export PNG, Download standalone HTML, Help), a drop zone, an Open file button and a paste dialog for plan JSON (Cmd+V or Ctrl+V outside a text field also works for any text that contains a `{`, such as a whole chat answer), a sample dropdown when the build embeds examples, a dismissible banner in plain language (English or Polish) when a text holds no plan or a plan cannot become a model, in which case the model on screen stays as it was, an issues panel that lists validator errors and warnings with their `fix` text and a button "Copy fix request" (copies a ready-to-paste message for a chat: the issues plus the plan). English UI; strings in one object so translations are easy.
 
-Plan sources, in order: `<script type="application/json" id="planwalk-plan">` embedded in the page; `#plan=<base64url JSON>` in the URL hash; `?plan=<url>` (http or https; the only thing the viewer ever fetches); drag and drop; paste.
+Plan sources, in order: `<script type="application/json" id="planwalk-plan">` embedded in the page; `#plan=<base64url JSON>` in the URL hash; `?plan=<url>` (http or https; the only thing the viewer ever fetches; no cookies and no referrer are sent, and the download is stopped after 10 seconds or 2,000,000 characters); drag and drop; paste.
 
 Modes: Dollhouse (default): orbit camera around the model at about 35 degrees elevation, walls cut down to 1.2 m ("cutaway", toggle for full height), ceilings hidden, labels on. Explode 0..1 separates levels vertically by `explode * 1.2 * level.height` per level (animated with easing). Top: orthographic plan view with labels. Orbit: free orbit, full-height walls, ceilings hidden. Walk: first person, eye 1.6 m, radius 0.2 m, walking speed 1.4 m/s (shift 2.8), WASD or arrows plus mouse look (pointer lock) plus touch (left stick moves, right drag looks), ceilings visible, labels off, a small minimap in a corner. Switching to Walk drops the player at the centre of the entrance room (the room with an exterior door; else the largest room); Escape returns to Dollhouse.
 
 Public API on `window.planwalk` (also used by tests and by `tools/capture.mjs`):
 
 ```js
-load(planOrJsonString) -> { ok, errors, warnings }       // validates, builds, resets camera
+load(planOrText, source?) -> { ok, errors, warnings, repairs } // validates, builds, resets camera; text may be a whole chat answer; source ('link', 'download', 'file') only words a failure message
 setMode('dollhouse' | 'orbit' | 'top' | 'walk')
 setExplode(0..1)  setCutaway(bool)  setLabels(bool)  setLevel(levelId | null)
 setMaterials('clay' | 'textured')                        // the look; returns the look now in force; any other value is ignored
@@ -96,6 +98,7 @@ walkTo(x, y, levelId?, yawDegrees?, pitchDegrees?)         // teleport the playe
 walkInput({ forward: -1..1, strafe: -1..1, turn: -1..1 }) // continuous input used by advanceTime
 advanceTime(ms)                                          // deterministic stepping of animations and physics; no requestAnimationFrame dependence
 state() -> object, renderGameToText() -> string          // JSON state: { mode, level, explode, cutaway, materials, camera:{x,y,z,yaw,pitch}, room, counts:{levels,walls,openings,rooms,furniture,stairs}, collisions, issues:{errors,warnings} }
+error                                                    // string, set only when the viewer could not start (no WebGL) or failed while booting or loading; the page then shows a card instead (with Copy details when it was a failure)
 screenshot({ width, height }) -> dataURL (PNG)
 exportGLB({ materials?, normalMaps? }) -> Promise<ArrayBuffer>   // materials: 'clay' | 'textured' (default: the current look); normalMaps: true to embed them too (default false)
 ```

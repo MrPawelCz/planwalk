@@ -3,6 +3,8 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
 import { validatePlan } from '../../src/core/validate.js';
+import { extractJson } from '../../src/core/extract-json.js';
+import { createNotices, fetchPlanText, readPlanFile, reportCrash, loadMessage, downloadMessage, noWebglText } from './load-errors.js';
 import { buildModel, roomAt, modelExtent, CUT_HEIGHT, PLAYER } from './geometry.js';
 import { PlanScene, Stage } from './scene.js';
 import { LOOKS, setTextureAnisotropy, withoutNormalMaps } from './materials.js';
@@ -94,6 +96,10 @@ function download(blob, name) {
   setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
 }
 
+// <dialog> needs Safari 15.4; without it the open attribute alone shows and hides the dialog (see .pw-dlg in load-errors.js).
+const openDialog = (d) => { if (typeof d.showModal === 'function') d.showModal(); else d.setAttribute('open', ''); };
+const closeDialog = (d) => { if (typeof d.close === 'function') d.close(); else d.removeAttribute('open'); };
+
 function b64urlDecode(s) {
   const b = atob(s.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(s.length / 4) * 4, '='));
   return new TextDecoder().decode(Uint8Array.from(b, (c) => c.charCodeAt(0)));
@@ -108,11 +114,12 @@ function start() {
   const canvas = h('canvas', { id: 'pw-canvas', tabindex: '0' });
   const root = h('div', { id: 'pw-app' }, canvas);
   document.body.append(root);
+  const notes = createNotices(root, () => bar);
   let renderer;
   try {
     renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
   } catch (err) {
-    root.append(h('div', { class: 'pw-card' }, h('p', {}, T.noWebgl)));
+    root.append(h('div', { class: 'pw-card' }, h('p', {}, noWebglText())));
     window.planwalk = { error: String(err && err.message ? err.message : err) };
     return;
   }
@@ -138,11 +145,11 @@ function start() {
     h('label', { title: T.texturesTip }, texBox, T.textures),
     h('span', { class: 'pw-spacer' }),
     sampleSel,
-    h('button', { type: 'button', onclick: () => pasteDlg.showModal() }, T.paste),
+    h('button', { type: 'button', onclick: () => openDialog(pasteDlg) }, T.paste),
     h('button', { type: 'button', onclick: () => api.exportGLB().then((buf) => download(new Blob([buf], { type: 'model/gltf-binary' }), `${slug()}.glb`)) }, T.exportGlb),
     h('button', { type: 'button', onclick: () => fetch(api.screenshot()).then((r) => r.blob()).then((b) => download(b, `${slug()}.png`)) }, T.exportPng),
     h('button', { type: 'button', title: T.standaloneTip, onclick: () => download(new Blob([standaloneHtml()], { type: 'text/html' }), `${slug()}.html`) }, T.standalone),
-    h('button', { type: 'button', onclick: () => helpDlg.showModal() }, T.help));
+    h('button', { type: 'button', onclick: () => openDialog(helpDlg) }, T.help));
   const card = h('div', { class: 'pw-card' }, h('p', { id: 'pw-card-text' }, T.empty), h('div', { id: 'pw-card-samples' }));
   const issuesEl = h('div', { class: 'pw-issues', hidden: '' });
   const hint = h('div', { class: 'pw-hint', hidden: '' }, T.walkHint);
@@ -151,12 +158,14 @@ function start() {
   const pasteDlg = h('dialog', { class: 'pw-dlg' },
     h('form', { method: 'dialog' }, pasteArea,
       h('div', { style: 'margin-top:8px;display:flex;gap:8px;justify-content:flex-end' },
+        notes.openFileButton(openPicked),
         h('button', { type: 'submit', value: 'cancel' }, T.cancel),
-        h('button', { type: 'button', onclick: () => { api.load(pasteArea.value); pasteDlg.close(); } }, T.load))));
+        h('button', { type: 'button', onclick: () => { api.load(pasteArea.value); closeDialog(pasteDlg); } }, T.load))));
   const helpDlg = h('dialog', { class: 'pw-dlg' }, h('h2', {}, T.helpTitle),
     h('ol', {}, [T.help1, T.help2, T.help3, T.help4, T.help5].map((t) => h('li', {}, t))),
     h('form', { method: 'dialog' }, h('button', { type: 'submit' }, T.close)));
   root.append(bar, card, issuesEl, hint, mini, pasteDlg, helpDlg);
+  card.append(notes.openFileButton(openPicked));
 
   // ---------- three.js ----------
   const scene = new THREE.Scene();
@@ -257,9 +266,9 @@ function start() {
     h('ul', {}, all.map(([k, i]) => h('li', {}, h('span', { class: k }, i.code), ` ${i.path || ''} ${i.message} `, h('em', {}, `${T.fix}: ${i.fix}`)))));
   }
 
-  function fixRequest() {
-    const lines = [...issues.errors, ...issues.warnings].map((i) => `- ${i.code} ${i.path || ''}: ${i.message} ${T.fix}: ${i.fix}`);
-    const body = plan ? JSON.stringify(plan, null, 2) : rawText;
+  function fixRequest(p = plan, raw = rawText, shown = issues) {
+    const lines = [...shown.errors, ...shown.warnings].map((i) => `- ${i.code} ${i.path || ''}: ${i.message} ${T.fix}: ${i.fix}`);
+    const body = p ? JSON.stringify(p, null, 2) : raw;
     return `The floor plan JSON below failed validation in planwalk. Fix every error (and the warnings if you can) by correcting how the drawing was read. Return only the corrected JSON.\n\nIssues:\n${lines.join('\n')}\n\nPlan JSON:\n${body}`;
   }
 
@@ -336,13 +345,36 @@ function start() {
     player.collisions = 0;
   }
 
-  function load(input) {
-    rawText = typeof input === 'string' ? input : '';
-    let obj = input;
+  // input: plan text (a chat answer is fine) or an object. source: 'link' (#plan=), 'download' (?plan=) or 'file', which only changes the wording of a failure.
+  // A text that holds no plan, or a plan that cannot become a model, leaves the model on screen alone and says so in the banner.
+  function load(input, source) {
+    try {
+      return loadPlan(input, source);
+    } catch (err) {
+      reportCrash(err);
+      return { ok: false, errors: [{ code: 'E001', path: '', message: String(err && err.message ? err.message : err), fix: 'Reload the page.' }], warnings: [], repairs: [] };
+    }
+  }
+
+  function loadPlan(input, source) {
+    let obj = input, repairs = [];
     if (typeof input === 'string') {
-      try { obj = JSON.parse(input); } catch (err) { obj = null; rawText = input; issues = { errors: [{ code: 'E001', path: '', message: `The text is not valid JSON (${err.message}).`, fix: 'Return a single valid JSON object with no comments, no trailing commas and no surrounding text.' }], warnings: [] }; clearModel(); plan = null; renderIssues(); syncUi(); return { ok: false, errors: issues.errors, warnings: issues.warnings }; }
+      const found = extractJson(input);
+      if (!found.ok) {
+        notes.show(loadMessage(found.kind, source));
+        const bad = validatePlan(input);
+        return { ok: false, errors: bad.errors, warnings: bad.warnings, repairs: [] };
+      }
+      obj = found.value; repairs = found.repairs;
     }
     const res = validatePlan(obj);
+    if (!res.normalized && model) {
+      const failed = { errors: res.errors, warnings: res.warnings };
+      notes.show(loadMessage('unusable'), notes.copyFixAction(() => fixRequest(obj && typeof obj === 'object' ? obj : null, typeof input === 'string' ? input : '', failed)));
+      return { ok: res.ok, errors: res.errors, warnings: res.warnings, repairs };
+    }
+    notes.hide();
+    rawText = typeof input === 'string' ? input : '';
     issues = { errors: res.errors, warnings: res.warnings };
     plan = obj && typeof obj === 'object' ? obj : null;
     clearModel();
@@ -368,7 +400,13 @@ function start() {
     renderIssues();
     syncUi();
     render();
-    return { ok: res.ok, errors: res.errors, warnings: res.warnings };
+    return { ok: res.ok, errors: res.errors, warnings: res.warnings, repairs };
+  }
+
+  // A file the person chose or dropped.
+  function openPicked(file) {
+    if (pasteDlg.hasAttribute('open')) closeDialog(pasteDlg);
+    readPlanFile(file).then((r) => (r.ok ? load(r.text, 'file') : notes.show(downloadMessage(r))));
   }
 
   function rebuildLevelSelect() {
@@ -681,12 +719,12 @@ function start() {
   window.addEventListener('drop', (e) => {
     e.preventDefault();
     const f = e.dataTransfer?.files?.[0];
-    if (f) f.text().then((t) => api.load(t));
+    if (f) openPicked(f);
   });
   window.addEventListener('paste', (e) => {
     if (typing(e)) return;
     const t = e.clipboardData?.getData('text');
-    if (t && t.trim().startsWith('{')) api.load(t);
+    if (t && t.includes('{')) api.load(t); // a whole chat answer is fine; text without a { is not meant for planwalk
   });
 
   // ---------- boot ----------
@@ -708,11 +746,12 @@ function start() {
   if (LOOKS.includes(q.get('materials'))) api.setMaterials(q.get('materials'));
   const hash = /^#plan=([A-Za-z0-9_-]+)/.exec(location.hash);
   if (embedded && embedded.textContent.trim()) api.load(embedded.textContent);
-  else if (hash) { try { api.load(b64urlDecode(hash[1])); } catch { api.load('{'); } }
-  else if (/^https?:\/\//i.test(q.get('plan') || '')) fetch(q.get('plan')).then((r) => r.text()).then((t) => api.load(t)).catch((err) => api.load(`{"error":"${String(err.message)}"`));
+  else if (hash) { try { api.load(b64urlDecode(hash[1]), 'link'); } catch { notes.show(loadMessage('invalid', 'link')); } }
+  else if (/^https?:\/\//i.test(q.get('plan') || '')) fetchPlanText(q.get('plan')).then((r) => (r.ok ? api.load(r.text, 'download') : notes.show(downloadMessage(r))));
   else if (sampleNames.length) api.load(samples[sampleNames[0]]);
   requestAnimationFrame(loop);
 }
 
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
-else start();
+const boot = () => { try { start(); } catch (err) { reportCrash(err); } };
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+else boot();

@@ -4,6 +4,7 @@
 //   Issue = { code, path, id?, message, fix }  (message and fix are written to be pasted back into an AI chat)
 // Extra exports for tools: PLAN_SCHEMA, analyzePlan (adds `salvaged`), roomGraph, checkSchema.
 import { normalizePlan } from './defaults.js';
+import { extractJson } from './extract-json.js';
 import { UNIT_TO_M } from './units.js';
 import { polygonArea, pointInPolygon, distancePointToSegment, polygonSelfIntersection, distinctPointCount } from './geom2d.js';
 import { CAPS, hasOwn, clip, codePointCount } from './caps.js';
@@ -545,22 +546,11 @@ export function roomGraph(norm, { open = false } = {}) {
 // Main analysis
 // ---------------------------------------------------------------------------------------------
 function parseText(text) {
-  try {
-    return { value: JSON.parse(text.charCodeAt(0) === 0xfeff ? text.slice(1) : text) };
-  } catch (e) {
-    const msg = String(e && e.message ? e.message : e);
-    const pos = /position (\d+)/.exec(msg);
-    let where = '';
-    if (pos && !/line \d+/.test(msg)) {
-      const upTo = text.slice(0, Number(pos[1]));
-      const line = upTo.split('\n').length, col = upTo.length - upTo.lastIndexOf('\n');
-      where = ` (line ${line}, column ${col})`;
-    }
-    const hints = [];
-    if (/^\s*```/.test(text) || /```\s*$/.test(text)) hints.push('remove the markdown code fence lines (```)');
-    if (/\b(NaN|Infinity)\b/.test(text)) hints.push('JSON has no NaN or Infinity, use a real number');
-    return { error: { msg, where, hints } };
-  }
+  const r = extractJson(text);
+  if (r.ok) return { value: r.value, repairs: r.repairs };
+  const hints = [];
+  if (r.kind === 'invalid' && /\b(NaN|Infinity)\b/.test(text)) hints.push('JSON has no NaN or Infinity, use a real number');
+  return { error: { msg: r.error, kind: r.kind, hints } };
 }
 
 // Arrays above their caps (CAPS, docs/SPEC.md "Limits"), found before anything walks them: [{ path, count, max }].
@@ -577,6 +567,14 @@ function overCaps(plan) {
   }
   return out;
 }
+
+const PARSE_FIX = {
+  empty: 'Paste the whole answer from the AI chat, or the plan as one JSON object.',
+  'too-long': 'Send only the plan JSON (a plan is a few tens of kilobytes at most).',
+  'no-object': 'Reply with the plan as one JSON object (see docs/PROMPT.md). A chat answer around the JSON is fine, but the JSON object has to be in it.',
+  truncated: 'The JSON stops before it is complete. Ask the AI to send the whole plan again as one JSON object.',
+  invalid: 'Reply with one valid JSON object: double quotes around every key and string, commas between items, every brace closed',
+};
 
 export function analyzePlan(input) {
   suggestBudget = SUGGEST_BUDGET;
@@ -606,16 +604,18 @@ function analyze(input) {
     issue.fix = clip(fix, CAPS.message);
     (code[0] === 'E' ? errors : warnings).push(issue);
   };
-  const result = (normalized, salvaged = null, dropped = 0) => ({ ok: errors.length === 0, errors, warnings, normalized, salvaged, dropped });
+  let repairs = []; // what extractJson had to change to read a text input, as short English phrases
+  const result = (normalized, salvaged = null, dropped = 0) => ({ ok: errors.length === 0, errors, warnings, normalized, salvaged, dropped, repairs });
 
   let plan = input;
   if (typeof input === 'string') {
     const parsed = parseText(input);
     if (parsed.error) {
-      add('E001', '', undefined, `the text is not valid JSON: ${parsed.error.msg}${parsed.error.where}`,
-        `Reply with one valid JSON object only: double quotes around every key and string, no comments, no trailing commas${parsed.error.hints.length ? `, and ${parsed.error.hints.join(', and ')}` : ''}.`);
+      add('E001', '', undefined, parsed.error.kind === 'invalid' ? `the text is not valid JSON: ${parsed.error.msg}` : parsed.error.msg,
+        `${PARSE_FIX[parsed.error.kind]}${parsed.error.hints.length ? `, and ${parsed.error.hints.join(', and ')}` : ''}${parsed.error.kind === 'invalid' ? '.' : ''}`);
       return result(null);
     }
+    repairs = parsed.repairs;
     plan = parsed.value;
   }
   if (!isObj(plan)) {
