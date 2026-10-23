@@ -7,9 +7,10 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const outIdx = process.argv.indexOf('--out');
-if (outIdx >= 0 && !process.argv[outIdx + 1]) { console.error('usage: node tools/build.mjs [--out DIR]'); process.exit(2); }
+const outIdx = process.argv.indexOf('--out'), docsIdx = process.argv.indexOf('--docs');
+if ((outIdx >= 0 && !process.argv[outIdx + 1]) || (docsIdx >= 0 && !process.argv[docsIdx + 1])) { console.error('usage: node tools/build.mjs [--out DIR] [--docs DIR]'); process.exit(2); }
 const dist = outIdx >= 0 ? resolve(process.argv[outIdx + 1]) : join(root, 'dist');
+const docsDir = docsIdx >= 0 ? resolve(process.argv[docsIdx + 1]) : join(root, 'docs'); // where PROMPT.md is read from (a test builds with its own)
 
 // The live site. Link previews need absolute addresses, so the address is one constant here; .github/workflows/pages.yml
 // publishes docs/social-preview.jpg next to index.html under the name used below.
@@ -48,7 +49,7 @@ for (const f of readdirSync(exDir).filter((n) => n.endsWith('.plan.json')).sort(
 const promptText = (md) => md.replace(/\r\n/g, '\n').trim();
 const prompts = {};
 for (const [lang, name] of [['en', 'PROMPT.md'], ['pl', 'PROMPT.pl.md']]) {
-  const file = join(root, 'docs', name);
+  const file = join(docsDir, name);
   if (!existsSync(file)) continue;
   prompts[lang] = promptText(readFileSync(file, 'utf8'));
   if (!prompts[lang]) throw new Error(`docs/${name} is empty`);

@@ -48,3 +48,28 @@ test('exits with code 2 when the plan is not JSON', () => {
   fs.rmSync(dir, { recursive: true, force: true });
   assert.equal(r.status, 2);
 });
+
+test('reads a plan from a chat answer like the validator and prints what it repaired', () => {
+  const plan = { version: 1, name: 'From a chat', levels: [] };
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'planwalk-embed-'));
+  fs.writeFileSync(path.join(dir, 'v.html'), '<html><body></body></html>');
+  fs.writeFileSync(path.join(dir, 'p.txt'), `Here is the plan:\n\`\`\`json\n{"version": 1, "name": "From a chat", "levels": [],}\n\`\`\`\nNotes: guessed the scale.`);
+  const out = path.join(dir, 'o.html');
+  const r = spawnSync(process.execPath, [script, path.join(dir, 'p.txt'), out, '--viewer', path.join(dir, 'v.html')], { encoding: 'utf8' });
+  const html = fs.existsSync(out) ? fs.readFileSync(out, 'utf8') : '';
+  fs.rmSync(dir, { recursive: true, force: true });
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(r.stdout, /^note: took the code block$/m);
+  assert.match(r.stdout, /^note: removed trailing commas$/m);
+  assert.deepEqual(extract(html), plan);
+});
+
+test('a text without a plan is refused with the reason, exit code 2', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'planwalk-embed-'));
+  fs.writeFileSync(path.join(dir, 'v.html'), '<body></body>');
+  fs.writeFileSync(path.join(dir, 'p.txt'), 'Sorry, I cannot read the image.');
+  const r = spawnSync(process.execPath, [script, path.join(dir, 'p.txt'), path.join(dir, 'o.html'), '--viewer', path.join(dir, 'v.html')], { encoding: 'utf8' });
+  fs.rmSync(dir, { recursive: true, force: true });
+  assert.equal(r.status, 2);
+  assert.match(r.stderr, /Cannot read plan JSON: there is no JSON object in the text/);
+});

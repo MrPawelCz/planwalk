@@ -9,7 +9,9 @@ export const strings = {
     noPlan: 'That text does not contain a plan. Paste the whole answer from the AI chat, planwalk finds the JSON in it.',
     cutOff: 'The plan in that text stops before the end. Ask the AI to send the whole plan again.',
     invalid: 'planwalk found a plan in that text, but there is a mistake in the JSON, so it cannot be read. Ask the AI to send the plan again as one JSON block.',
-    tooLong: 'That text is too long for a plan (over 2 MB). Paste only the JSON of the plan.',
+    decimalComma: 'The numbers need a decimal point, not a comma (2.5, not 2,5): ask the AI to write them that way.',
+    severalPlans: 'The answer held more than one plan. planwalk loaded the last one, which is usually the corrected version.',
+    tooLong: 'That text is too long for a plan (the limit is about 2 MB of text). Paste only the JSON of the plan.',
     emptyText: 'There is nothing to load. Paste the answer from the AI chat.',
     unusable: 'That plan has errors, so planwalk cannot build a model from it. The model you had is still shown.',
     badLink: 'The plan inside this link is damaged. Ask the sender for a new link.',
@@ -32,7 +34,9 @@ export const strings = {
     noPlan: 'W tym tekście nie ma planu. Wklej całą odpowiedź z czatu z AI, planwalk sam znajdzie w niej JSON.',
     cutOff: 'Plan w tym tekście urywa się w połowie. Poproś AI o wysłanie całego planu jeszcze raz.',
     invalid: 'planwalk znalazł w tym tekście plan, ale w JSON jest błąd, więc nie da się go odczytać. Poproś AI o ponowne wysłanie planu jako jednego bloku JSON.',
-    tooLong: 'Ten tekst jest za długi jak na plan (ponad 2 MB). Wklej sam JSON z planem.',
+    decimalComma: 'Liczby muszą mieć kropkę, nie przecinek (2.5, a nie 2,5): poproś AI, żeby tak je zapisało.',
+    severalPlans: 'W odpowiedzi było więcej niż jeden plan. planwalk wczytał ostatni, zwykle to wersja poprawiona.',
+    tooLong: 'Ten tekst jest za długi jak na plan (limit to około 2 MB tekstu). Wklej sam JSON z planem.',
     emptyText: 'Nie ma czego wczytać. Wklej odpowiedź z czatu z AI.',
     unusable: 'Ten plan zawiera błędy, więc planwalk nie zbuduje z niego modelu. Poprzedni model nadal jest na ekranie.',
     badLink: 'Plan zapisany w tym linku jest uszkodzony. Poproś nadawcę o nowy link.',
@@ -58,6 +62,7 @@ const CSS = `
 .pw-banner{position:absolute;left:50%;transform:translateX(-50%);z-index:5;box-sizing:border-box;width:max-content;max-width:min(560px,92vw);display:flex;gap:8px;align-items:center;padding:8px 8px 8px 12px;background:#fff6e5;color:#5b3a06;border:1px solid #e3b866;border-radius:10px;box-shadow:0 2px 10px rgba(60,50,40,.14)}
 .pw-banner button{font:inherit;color:inherit;background:#fbfaf7;border:1px solid rgba(80,72,62,.3);border-radius:7px;padding:3px 8px;cursor:pointer;white-space:nowrap}
 .pw-banner .pw-banner-x{border:0;background:none;font-size:20px;line-height:1;padding:0 6px}
+.pw-banner-detail div{margin-top:4px;font:12px/1.35 ui-monospace,Menlo,monospace;overflow-wrap:anywhere}
 .pw-dlg:not([open]){display:none}
 `;
 
@@ -68,11 +73,28 @@ const h = (tag, props = {}, ...kids) => {
   return el;
 };
 
+const DECIMAL_COMMA = /:\s*-?\d+,\d+(?!\d)/; // "thickness": 0,2 : the commonest reason a chat answer is not JSON
+
 // What to tell a person for a failed extractJson (kind) or a failed download. source: 'link' for #plan=, 'download' for ?plan=.
-export function loadMessage(kind, source) {
+// text (optional) is what was pasted: a syntax error in a text with a decimal comma in it gets the hint about the decimal point.
+export function loadMessage(kind, source, text) {
   if (source === 'link') return t('badLink');
   if (source === 'download' && (kind === 'no-object' || kind === 'empty')) return t('notPlanDownloaded');
-  return t({ empty: 'emptyText', 'too-long': 'tooLong', 'no-object': 'noPlan', truncated: 'cutOff', invalid: 'invalid', unusable: 'unusable' }[kind] || 'noPlan');
+  const message = t({ empty: 'emptyText', 'too-long': 'tooLong', 'no-object': 'noPlan', truncated: 'cutOff', invalid: 'invalid', unusable: 'unusable' }[kind] || 'noPlan');
+  return kind === 'invalid' && typeof text === 'string' && DECIMAL_COMMA.test(text) ? `${message} ${t('decimalComma')}` : message;
+}
+
+// The first errors of a plan that cannot be built, as short lines for the banner. They stay English: the fix request goes to an AI.
+export function issueLines(errors, max = 2, cut = 160) {
+  return (Array.isArray(errors) ? errors : []).slice(0, max).map((e) => {
+    const line = `${e.code}${e.path ? ` ${e.path}` : ''}: ${e.message}`;
+    return line.length > cut ? `${line.slice(0, cut - 3)}...` : line;
+  });
+}
+
+// extractJson says in its repairs when an answer held several plans and it took the last one; the person is told too.
+export function severalPlansMessage(repairs) {
+  return (repairs || []).some((r) => /^found \d+ plans/.test(r)) ? t('severalPlans') : null;
 }
 
 export function downloadMessage(r) {
@@ -128,9 +150,10 @@ export function createNotices(root, getBar) {
   style.textContent = CSS;
   document.head.append(style);
   const msg = h('span');
+  const detail = h('span', { class: 'pw-banner-detail' });
   const action = h('button', { type: 'button', hidden: '' });
   const x = h('button', { type: 'button', class: 'pw-banner-x', 'aria-label': t('close'), title: t('close') }, '×');
-  const el = h('div', { class: 'pw-banner', role: 'alert', hidden: '' }, msg, action, x);
+  const el = h('div', { class: 'pw-banner', role: 'alert', hidden: '' }, h('span', {}, msg, detail), action, x);
   const fileIn = h('input', { type: 'file', accept: '.json,.txt,application/json,text/plain', hidden: '' });
   root.append(el, fileIn);
   const hide = () => { el.hidden = true; };
@@ -143,8 +166,9 @@ export function createNotices(root, getBar) {
   });
   return {
     hide,
-    show(text, act) {
+    show(text, act, lines) {
       msg.textContent = text;
+      detail.replaceChildren(...(lines || []).map((line) => h('div', {}, line)));
       action.hidden = !act;
       if (act) { action.textContent = act.label; action.onclick = act.run; }
       const bar = getBar && getBar();

@@ -4,7 +4,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
 import { validatePlan } from '../../src/core/validate.js';
 import { extractJson } from '../../src/core/extract-json.js';
-import { createNotices, fetchPlanText, readPlanFile, reportCrash, loadMessage, downloadMessage, noWebglText } from './load-errors.js';
+import { createNotices, fetchPlanText, readPlanFile, reportCrash, loadMessage, downloadMessage, issueLines, severalPlansMessage, noWebglText } from './load-errors.js';
 import { buildModel, roomAt, modelExtent, CUT_HEIGHT, PLAYER } from './geometry.js';
 import { PlanScene, Stage } from './scene.js';
 import { LOOKS, setTextureAnisotropy, withoutNormalMaps } from './materials.js';
@@ -363,7 +363,7 @@ function start() {
     if (typeof input === 'string') {
       const found = extractJson(input);
       if (!found.ok) {
-        notes.show(loadMessage(found.kind, source));
+        notes.show(loadMessage(found.kind, source, input));
         const bad = validatePlan(input);
         return { ok: false, errors: bad.errors, warnings: bad.warnings, repairs: [] };
       }
@@ -372,10 +372,12 @@ function start() {
     const res = validatePlan(obj);
     if (!res.normalized && model) {
       const failed = { errors: res.errors, warnings: res.warnings };
-      notes.show(loadMessage('unusable'), notes.copyFixAction(() => fixRequest(obj && typeof obj === 'object' ? obj : null, typeof input === 'string' ? input : '', failed)));
+      notes.show(loadMessage('unusable'), notes.copyFixAction(() => fixRequest(obj && typeof obj === 'object' ? obj : null, typeof input === 'string' ? input : '', failed)), issueLines(res.errors));
       return { ok: res.ok, errors: res.errors, warnings: res.warnings, repairs };
     }
     notes.hide();
+    const several = severalPlansMessage(repairs);
+    if (several) notes.show(several);
     visit.hide();
     rawText = typeof input === 'string' ? input : '';
     issues = { errors: res.errors, warnings: res.warnings };
