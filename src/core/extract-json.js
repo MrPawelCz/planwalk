@@ -9,7 +9,7 @@ const INVISIBLE = /[\u200b\u2060\ufeff]/g; // zero width joiners stay: inside a 
 const OTHER_SPACE = /[\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]/;
 const TYPO_QUOTES = '\u201c\u201d\u201e\u201f\u00ab\u00bb\u2033\uff02';
 const HAS_TYPO_QUOTE = new RegExp(`[${TYPO_QUOTES}]`);
-const STARTS_LIKE_PLAN = new RegExp(`^\\{\\s*["${TYPO_QUOTES}]\\s*[A-Za-z_]`); // { then a quoted key
+const STARTS_LIKE_PLAN = new RegExp(`^\\{[\\s\u200c\u200d]*["${TYPO_QUOTES}][\\s\u200c\u200d]*[A-Za-z_]`); // { then a quoted key (joiners may sit in between)
 const FENCE = /(?:^|\n)[ \t]*(`{3,}(?!`)|~{3,}(?!~))[^\n]*\n([\s\S]*?)(?:\n[ \t]*\1[`~]*[ \t]*(?=\n|$)|$)/g; // (?!`): a run of fence marks is never retried one mark shorter (quadratic on a last line of marks)
 const JSON_LINE = /^\s*json[ \t]*:?[ \t]*\r?\n/i;
 const MAX_FENCES = 200, MAX_TRIES = 3, MAX_BAD = 500; // fenced blocks searched before the whole text; { that never closes tried per source (each reads to the end); objects that are not JSON tolerated per source
@@ -28,7 +28,7 @@ function cut(src, from, typo) {
   let i = from;
   const closesAt = (k) => {
     let j = k + 1;
-    while (j < n && (src[j] === ' ' || src[j] === '\n' || src[j] === '\r' || src[j] === '\t' || OTHER_SPACE.test(src[j]))) j++;
+    while (j < n && (src[j] === ' ' || src[j] === '\n' || src[j] === '\r' || src[j] === '\t' || src[j] === '\u200c' || src[j] === '\u200d' || OTHER_SPACE.test(src[j]))) j++;
     return j >= n || ',:}]'.includes(src[j]) || (src[j] === '/' && (src[j + 1] === '/' || src[j + 1] === '*'));
   };
   while (i < n) {

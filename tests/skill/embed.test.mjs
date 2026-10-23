@@ -73,3 +73,12 @@ test('a text without a plan is refused with the reason, exit code 2', () => {
   assert.equal(r.status, 2);
   assert.match(r.stderr, /Cannot read plan JSON: there is no JSON object in the text/);
 });
+
+test('refuses JSON that is not a plan (null, a list, an object without levels) and writes no file', () => {
+  for (const notPlan of [null, [1, 2, 3], { foo: 1 }, 'text']) {
+    const { r, out } = run('<html><body></body></html>', notPlan);
+    assert.equal(r.status, 2, `${JSON.stringify(notPlan)}: ${r.stderr}`);
+    assert.match(r.stderr, /not a plan/);
+    assert.equal(out, null);
+  }
+});

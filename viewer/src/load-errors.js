@@ -62,7 +62,7 @@ const CSS = `
 .pw-banner{position:absolute;left:50%;transform:translateX(-50%);z-index:5;box-sizing:border-box;width:max-content;max-width:min(560px,92vw);display:flex;gap:8px;align-items:center;padding:8px 8px 8px 12px;background:#fff6e5;color:#5b3a06;border:1px solid #e3b866;border-radius:10px;box-shadow:0 2px 10px rgba(60,50,40,.14)}
 .pw-banner button{font:inherit;color:inherit;background:#fbfaf7;border:1px solid rgba(80,72,62,.3);border-radius:7px;padding:3px 8px;cursor:pointer;white-space:nowrap}
 .pw-banner .pw-banner-x{border:0;background:none;font-size:20px;line-height:1;padding:0 6px}
-.pw-banner-detail div{margin-top:4px;font:12px/1.35 ui-monospace,Menlo,monospace;overflow-wrap:anywhere}
+.pw-banner-detail div{margin-top:4px;font:12px/1.35 ui-monospace,Menlo,monospace;word-break:break-word;overflow-wrap:anywhere}
 .pw-dlg:not([open]){display:none}
 `;
 
@@ -88,7 +88,9 @@ export function loadMessage(kind, source, text) {
 export function issueLines(errors, max = 2, cut = 160) {
   return (Array.isArray(errors) ? errors : []).slice(0, max).map((e) => {
     const line = `${e.code}${e.path ? ` ${e.path}` : ''}: ${e.message}`;
-    return line.length > cut ? `${line.slice(0, cut - 3)}...` : line;
+    if (line.length <= cut) return line;
+    const end = /[\ud800-\udbff]/.test(line[cut - 4]) ? cut - 4 : cut - 3; // do not cut a surrogate pair in half
+    return `${line.slice(0, end)}...`;
   });
 }
 

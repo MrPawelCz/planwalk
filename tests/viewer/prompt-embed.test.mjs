@@ -21,7 +21,7 @@ before(() => {
 after(() => rmSync(out, { recursive: true, force: true }));
 
 for (const [lang, name] of [['en', 'PROMPT.md'], ['pl', 'PROMPT.pl.md']]) {
-  test(`the embedded ${lang} prompt equals docs/${name}`, { skip: !existsSync(join(root, 'docs', name)) && lang !== 'en' ? `docs/${name} does not exist yet` : false }, () => {
+  test(`the embedded ${lang} prompt equals docs/${name}`, () => { // no skip: a missing prompt file has to fail
     const expected = promptOfFile(readFileSync(join(root, 'docs', name), 'utf8'));
     assert.ok(expected && expected.length > 1500, 'the file holds a long prompt');
     assert.match(expected, /"version"/, 'it is the JSON format prompt');

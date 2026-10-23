@@ -225,3 +225,14 @@ test('hostile input stays fast with the wider search', () => {
   assert.ok(Date.now() - t0 < 9000, `${Date.now() - t0} ms in all`);
   assert.deepEqual(extractJson(`${'{x} '.repeat(300000)}${bare}`.slice(-1800000)).value, plan, 'plain brace snippets are free, the plan behind them is found');
 });
+
+test('a zero width joiner or non-joiner after a typographic closing quote or before the first key does not break the plan', () => {
+  for (const z of ['‍', '‌']) {
+    const r = extractJson(`{“levels”: [], “name”: “x”${z}, }`);
+    assert.equal(r.ok, true, `U+${z.codePointAt(0).toString(16)} after a closing quote`);
+    assert.equal(r.value.name, 'x');
+    const lead = extractJson(`{${z}“levels”: [], “name”: “y”}`);
+    assert.equal(lead.ok, true, `U+${z.codePointAt(0).toString(16)} before the first key`);
+    assert.equal(lead.value.name, 'y');
+  }
+});
