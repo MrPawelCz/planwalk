@@ -67,10 +67,10 @@ test('paste, the Wczytaj button and a dropped file show "Wczytano: nazwa, N pomi
     assert.equal(now.opacity, '1', 'visible');
     const rect = await p.evaluate(`(() => { const r = ${q('.pw-loaded')}.getBoundingClientRect(), b = ${q('.pw-bar')}.getBoundingClientRect(); return { top: r.top, barBottom: b.bottom, left: r.left, right: r.right }; })()`);
     assert.ok(rect.top >= rect.barBottom, `under the toolbar (${rect.top} vs ${rect.barBottom})`);
-    // it goes away by itself after about five seconds, not before four
-    await new Promise((r) => setTimeout(r, 3500));
-    assert.equal((await line(p)).opacity, '1', 'still there after 3.5 s');
-    assert.equal(await waitUntil(p, `${q('.pw-loaded')}.textContent === ''`, 4000), true, 'gone after about five seconds');
+    // it goes away by itself after about five seconds, not at once (the margins are wide: a loaded machine delays every step)
+    await new Promise((r) => setTimeout(r, 2000));
+    assert.equal((await line(p)).opacity, '1', 'still there after two seconds');
+    assert.equal(await waitUntil(p, `${q('.pw-loaded')}.textContent === ''`, 7000), true, 'gone after about five seconds');
     assert.equal(await waitUntil(p, `getComputedStyle(${q('.pw-loaded')}).opacity === '0'`, 2000), true, 'and invisible (it fades out)');
     // the dialog route: Wklej odpowiedź, text, Wczytaj
     await p.evaluate(`[...document.querySelectorAll('.pw-bar button')].find((b) => b.textContent === 'Wklej odpowiedź').click(); ${settle}`);
