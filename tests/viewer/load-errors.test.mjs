@@ -102,3 +102,12 @@ test('severalPlansMessage speaks only when extractJson took the last of several 
   assert.match(severalPlansMessage(['found 3 plans, loaded the last one']), /więcej niż jeden plan.*ostatni/);
   setLang('en');
 });
+
+test('issueLines never cuts a surrogate pair in half', () => {
+  const lone = /[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/;
+  for (let k = 140; k <= 165; k++) {
+    const [line] = issueLines([{ code: 'E002', path: '', message: `${'a'.repeat(k)}${'\u{1F600}'.repeat(6)}` }]);
+    assert.doesNotMatch(line, lone, `message of ${k} letters then emoji: ${JSON.stringify(line.slice(-8))}`);
+    assert.ok(line.length <= 160);
+  }
+});

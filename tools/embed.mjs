@@ -36,6 +36,7 @@ try {
   const found = extractJson(fs.readFileSync(planPath, 'utf8'));
   if (!found.ok) throw new Error(found.error);
   plan = found.value;
+  if (!plan || typeof plan !== 'object' || Array.isArray(plan) || !Object.prototype.hasOwnProperty.call(plan, 'levels')) throw new Error('the JSON is not a plan (an object with "levels" is expected)');
   for (const r of found.repairs) console.log('note: ' + r);
 } catch (e) {
   console.error('Cannot read plan JSON: ' + e.message);

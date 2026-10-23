@@ -49,4 +49,4 @@ This folder holds the tools (`scripts/`) and the viewer (`assets/`). Below, `<sk
 - `scripts/embed.mjs`: writes the single-file viewer with the plan embedded (one file without dependencies, reads the plan as the validator does).
 - `assets/planwalk.html`: the viewer, one file with three.js inside, works offline.
 
-`scripts/validate.mjs`, `scripts/capture.mjs` and `assets/planwalk.html` are generated from the planwalk sources by `npm run build:skill`: do not edit them here.
+`scripts/validate.mjs`, `scripts/embed.mjs`, `scripts/capture.mjs` and `assets/planwalk.html` are generated from the planwalk sources by `npm run build:skill`: do not edit them here.

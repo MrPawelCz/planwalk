@@ -5,7 +5,7 @@
   "prompt": "v1",
   "promptFileCommit": "a959169",
   "promptBranchTip": "a9591698d34d",
-  "route": "openclaw infer model run (picture attached)",
+  "route": "command line gateway to the OpenAI API (picture attached)",
   "plans": 12,
   "plansRead": 12,
   "plansExtracted": 12,

@@ -779,7 +779,7 @@ function semanticChecks(plan, model, add, errors) {
           const far = points(e).find((p) => Math.abs(p[0]) > CAPS.coordinate || Math.abs(p[1]) > CAPS.coordinate);
           if (!far) return;
           add('E014', pathOf(l, key, j), e.id, `${key.replace(/s$/, '')} "${clip(e.id)}" has a point at ${pt(far)}, more than ${len(CAPS.coordinate)} from the origin`,
-            `Coordinates are measured from one corner of the drawing and a flat is rarely more than 30 m across: look for an extra digit in this point, or a wrong "units" for the whole plan.`);
+            `Coordinates are measured from one corner of the drawing and a flat is rarely more than 30 m across: look for an extra digit in this point, or a wrong "units" for the whole plan. If the whole plan only sits far from the origin, subtract the offset from every point.`);
         });
       }
     });

@@ -19,12 +19,12 @@
 **With a chat that can read images (nothing to install)**
 
 1. Open the [live viewer](https://mrpawelcz.github.io/planwalk/), or download `planwalk.html` from the [latest release](https://github.com/MrPawelCz/planwalk/releases/latest) and double click it (it works offline, straight from the file). From a clone, `npm start` serves it at http://127.0.0.1:8080/planwalk.html.
-2. Give your floor plan image and the prompt from [`docs/PROMPT.md`](docs/PROMPT.md) ([`docs/PROMPT.pl.md`](docs/PROMPT.pl.md) for Polish drawings) to a chat that can read images. Cover names, addresses and phone numbers on the drawing first. The prompt is designed for chats that can read images. It was measured on the models listed in the Runs by model table of [`docs/BENCHMARK.md`](docs/BENCHMARK.md); other chats that read images are expected to work, but that is an expectation, not a result (results are welcome).
+2. Give your floor plan image and the prompt from [`docs/PROMPT.md`](docs/PROMPT.md) ([`docs/PROMPT.pl.md`](docs/PROMPT.pl.md) for Polish drawings) to a chat that can read images. Cover names, addresses and phone numbers on the drawing first. The prompt is designed for chats that can read images. The English prompt was measured on the models listed in the Runs by model table of [`docs/BENCHMARK.md`](docs/BENCHMARK.md) (Claude Haiku 4.5 only with the first prompt version, gpt-6-astra with the current one on 7 of 12 plans); the Polish prompt and Polish drawings have not been measured. Other chats that read images are expected to work, but that is an expectation, not a result (results are welcome).
 3. Paste the JSON it returns into the viewer ("Paste JSON"). If the viewer lists problems, press "Copy fix request", paste that back into the same chat, repeat.
 
 **With an agent that loads skill folders**
 
-Give the agent the folder [`skill/planwalk`](skill/planwalk) (copy it into your agent's skills directory, for Claude Code that is `~/.claude/skills/`, or just point the agent at it) and say: "Turn this floor plan into a 3D walkthrough." The skill reads the plan, validates it, renders it, compares the render with your drawing, and hands you one HTML file. The folder is self-contained: the validator, the screenshot tool and the viewer are inside it, so no clone of this repository is needed. It needs Node 20 or newer; the render check also needs Node 22 and Chrome or Chromium. The skill is a standard `SKILL.md` folder, but this route has not been benchmarked: the numbers below measure the plain prompt route.
+Give the agent the folder [`skill/planwalk`](skill/planwalk) (copy it into your agent's skills directory, for Claude Code that is `~/.claude/skills/`, or just point the agent at it) and say: "Turn this floor plan into a 3D walkthrough." The skill reads the plan, validates it, renders it, compares the render with your drawing, and hands you one HTML file. The folder is self-contained: the validator, the screenshot tool and the viewer are inside it, so no clone of this repository is needed. It needs Node 20 or newer; the render check also needs Node 22 and Chrome or Chromium. The skill is a standard `SKILL.md` folder, but this route has not been benchmarked: the benchmark below measures a reading by hand and one call with the plain prompt, not the agent route.
 
 **Just look around**
 
@@ -86,7 +86,7 @@ The validator and the build are plain ES modules that need Node 20 or newer (CI 
 
 `eval/` generates synthetic plans with a known truth, draws them in four styles (clean CAD, hatched, hand-style sketch without any scale, scan) and scores how well an AI read the image back into the JSON (rooms, areas, openings, connectivity; composite 0 to 100).
 
-First run: Claude Sonnet 5.5 read 12 clean synthetic plans with a mean composite of **99.6 out of 100** (lowest 98.3). That shows the pipeline works. It does **not** show that real floor plans are read this well: the plans are easy, the reader was not blind to the harness, and it was one pass with no repeats. Every known leak and weak case is in [`docs/BENCHMARK.md`](docs/BENCHMARK.md), together with the readings, hashes and commands to reproduce or to run your own model.
+First run: Claude Sonnet 5.5 read 12 clean synthetic plans with a mean composite of **99.6 out of 100** (lowest 98.3). That was a reading by hand in an agent session. Reading the same plans in one call with the first prompt version, the way a person uses a chat, gave 92.4 and 95.3 (two runs of Claude Sonnet 5.5), 87.8 (gpt-6-astra) and 34.4 (Claude Haiku 4.5, where 4 of 12 answers loaded); every run and the later prompt versions are in the Runs by model table. The 99.6 shows the pipeline works. It does **not** show that real floor plans are read this well: the plans are easy, the reader was not blind to the harness, and it was one pass with no repeats. Every known leak and weak case is in [`docs/BENCHMARK.md`](docs/BENCHMARK.md), together with the readings, hashes and commands to reproduce or to run your own model.
 
 Real drawings have not been benchmarked yet: expect worse on sketches without a scale, scans and cluttered drawings. Plans that break the reading are the most useful contribution.
 
@@ -109,7 +109,7 @@ npm run build:skill   # writes dist/ and regenerates skill/planwalk/ (commit bot
 npm test              # node --test, fails when a generated skill file is stale (CI also checks dist/)
 ```
 
-Layout: `schema/` the format, `src/core/` units, geometry and validator, `viewer/` the viewer source, `tools/` command line tools, `eval/` the benchmark harness (generator, drawing styles, scorer, results), `skill/` the agent skill (its `scripts/validate.mjs`, `scripts/capture.mjs` and `assets/planwalk.html` are generated), `examples/` plans (synthetic, CC0), `docs/` specification and prompt. Contributions that help most: plans that break things, see [`CONTRIBUTING.md`](CONTRIBUTING.md).
+Layout: `schema/` the format, `src/core/` units, geometry and validator, `viewer/` the viewer source, `tools/` command line tools, `eval/` the benchmark harness (generator, drawing styles, scorer, results), `skill/` the agent skill (its `scripts/validate.mjs`, `scripts/embed.mjs`, `scripts/capture.mjs` and `assets/planwalk.html` are generated), `examples/` plans (synthetic, CC0), `docs/` specification and prompt. Contributions that help most: plans that break things, see [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ## Author
 

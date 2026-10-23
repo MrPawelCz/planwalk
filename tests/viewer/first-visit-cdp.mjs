@@ -11,7 +11,6 @@ import { chrome as chromePath, chromeSkip } from '../helpers/chrome.mjs';
 export { chromePath };
 export const skipReason = (...files) => chromeSkip || (files.find((f) => !existsSync(f)) ? `${files.find((f) => !existsSync(f))} is missing, run npm run build` : false);
 
-// The prompt of a docs/PROMPT*.md file: its longest fenced block (what tools/build.mjs embeds), found here with a second, line based reader.
 // The prompt is the whole file (docs/PROMPT*.md hold nothing but the prompt), the same normalisation as tools/build.mjs.
 export function promptOfFile(md) {
   return md.replace(/\r\n/g, '\n').trim();

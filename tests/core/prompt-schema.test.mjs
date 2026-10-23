@@ -91,3 +91,14 @@ test('the check itself catches the mistakes it exists for', () => {
   assert.match(problemsOf(text.replace('at most 120 characters', 'at most 130 characters')), /limit of name/);
   assert.match(problemsOf(text.replace(', rug.', '.')), /furniture types differ/);
 });
+
+// tools/build.mjs embeds the whole prompt file, so anything outside the prompt (a heading, tips, a changelog) would be pasted
+// into every chat that receives it. The files must hold nothing but the prompt.
+test('each prompt file starts with its first prompt sentence and holds no markdown heading', () => {
+  const FIRST = { 'docs/PROMPT.md': 'You turn a floor plan image', 'docs/PROMPT.pl.md': 'Zamień obraz rzutu' };
+  for (const [file] of PROMPTS) {
+    const text = read(file);
+    assert.ok(text.startsWith(FIRST[file]), `${file} has to start with the prompt itself, not a title or a note`);
+    assert.doesNotMatch(text, /^#{1,6} /m, `${file} holds a markdown heading: the whole file is sent to the chat`);
+  }
+});

@@ -14,7 +14,7 @@ var INVISIBLE = /[\u200b\u2060\ufeff]/g;
 var OTHER_SPACE = /[\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]/;
 var TYPO_QUOTES = "\u201C\u201D\u201E\u201F\xAB\xBB\u2033\uFF02";
 var HAS_TYPO_QUOTE = new RegExp(`[${TYPO_QUOTES}]`);
-var STARTS_LIKE_PLAN = new RegExp(`^\\{\\s*["${TYPO_QUOTES}]\\s*[A-Za-z_]`);
+var STARTS_LIKE_PLAN = new RegExp(`^\\{[\\s\u200C\u200D]*["${TYPO_QUOTES}][\\s\u200C\u200D]*[A-Za-z_]`);
 var FENCE = /(?:^|\n)[ \t]*(`{3,}(?!`)|~{3,}(?!~))[^\n]*\n([\s\S]*?)(?:\n[ \t]*\1[`~]*[ \t]*(?=\n|$)|$)/g;
 var JSON_LINE = /^\s*json[ \t]*:?[ \t]*\r?\n/i;
 var MAX_FENCES = 200;
@@ -30,7 +30,7 @@ function cut(src, from, typo) {
   let i = from;
   const closesAt = (k) => {
     let j = k + 1;
-    while (j < n && (src[j] === " " || src[j] === "\n" || src[j] === "\r" || src[j] === "	" || OTHER_SPACE.test(src[j]))) j++;
+    while (j < n && (src[j] === " " || src[j] === "\n" || src[j] === "\r" || src[j] === "	" || src[j] === "\u200C" || src[j] === "\u200D" || OTHER_SPACE.test(src[j]))) j++;
     return j >= n || ",:}]".includes(src[j]) || src[j] === "/" && (src[j + 1] === "/" || src[j + 1] === "*");
   };
   while (i < n) {
@@ -225,6 +225,7 @@ try {
   const found = extractJson(fs.readFileSync(planPath, "utf8"));
   if (!found.ok) throw new Error(found.error);
   plan = found.value;
+  if (!plan || typeof plan !== "object" || Array.isArray(plan) || !Object.prototype.hasOwnProperty.call(plan, "levels")) throw new Error('the JSON is not a plan (an object with "levels" is expected)');
   for (const r of found.repairs) console.log("note: " + r);
 } catch (e) {
   console.error("Cannot read plan JSON: " + e.message);

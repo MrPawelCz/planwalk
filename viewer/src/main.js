@@ -411,7 +411,7 @@ function start() {
     }
     notes.hide();
     const several = severalPlansMessage(repairs);
-    if (several) notes.show(() => severalPlansMessage(repairs));
+    if (several && res.normalized) notes.show(() => severalPlansMessage(repairs)); // never claim a load that did not happen
     visit.hide();
     rawText = typeof input === 'string' ? input : '';
     issues = { errors: res.errors, warnings: res.warnings };

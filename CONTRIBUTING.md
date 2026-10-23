@@ -3,7 +3,7 @@
 Thanks for looking. The most useful contributions, in order:
 
 1. **Plans that break things.** If an AI misreads a drawing, or the viewer builds something wrong, open an issue with the JSON (see the templates). Redrawn or synthetic plans are welcome, please do not share drawings you are not allowed to share.
-2. **Reading quality.** Better prompts, better skill instructions, new styles in `eval/` (hatched, scanned, photographed), results from other models in `docs/BENCHMARK.md`. The prompt on the page (the Copy prompt buttons) is the fenced block of `docs/PROMPT.md`, and of `docs/PROMPT.pl.md` when that file exists, embedded by `npm run build`: edit the file, not the page.
+2. **Reading quality.** Better prompts, better skill instructions, new styles in `eval/` (hatched, scanned, photographed), results from other models in `docs/BENCHMARK.md`. The prompt on the page (the Copy prompt buttons) is the whole of `docs/PROMPT.md`, and of `docs/PROMPT.pl.md` when that file exists (the files hold nothing but the prompt), embedded by `npm run build`: edit the file, not the page.
 3. **Viewer features.** Open an issue first for anything that changes the plan format (`schema/plan.v1.schema.json`, `docs/SPEC.md`): the format is the contract between the AI, the validator and the viewer. Textures are procedural and deterministic (`viewer/src/textures.js`, how it works and how to add one in `docs/TEXTURES.md`): a new texture is a generator and a test, not an image file.
 
 ## Setup
@@ -27,7 +27,7 @@ CI runs the tests on Node 20, 22 and 24 (Ubuntu) and on Windows with Node 22. Th
 Releases are cut by pushing a tag. The tag, `package.json` and `CHANGELOG.md` have to agree.
 
 1. Move the entries under `## [Unreleased]` in `CHANGELOG.md` into a new `## [x.y.z] - YYYY-MM-DD` section (its text becomes the release notes) and update the links at the bottom of the file.
-2. Set the same `x.y.z` in `package.json`, `package-lock.json` (`npm install --package-lock-only`) and the `version` of the API object in `viewer/src/main.js` (`tests/tools/version.test.mjs` checks all three). Run `npm run build:skill` and `npm test`, and commit the result including `dist/` and `skill/planwalk/`.
+2. Set the same `x.y.z` in `package.json` and `package-lock.json` (`npm install --package-lock-only`); the viewer takes its version from `package.json` (`tests/tools/version.test.mjs` checks the lock file and that import). Run `npm run build:skill` and `npm test`, and commit the result including `dist/` and `skill/planwalk/`.
 3. Tag the commit and push the tag: `git tag vX.Y.Z && git push origin main vX.Y.Z`.
 4. The `release` workflow checks that the tag matches `package.json` and that `dist/` is up to date, runs the full test suite (Chrome tests required), then publishes a GitHub release with `planwalk.html`, `planwalk.html.sha256` and a build provenance attestation, using the CHANGELOG section as notes.
 5. Verify a download: put `planwalk.html` and `planwalk.html.sha256` in one folder and run `sha256sum -c planwalk.html.sha256` (on macOS `shasum -a 256 -c planwalk.html.sha256`). With the GitHub CLI, `gh attestation verify planwalk.html --repo MrPawelCz/planwalk` shows that the file was built by the workflow from that tag.
