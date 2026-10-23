@@ -6,12 +6,20 @@ permissions:
   contents: read
 jobs:
   test:
+    name: test (node ${{ matrix.node }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20, 22, 24]
+    env:
+      # The Chrome based tests need the global WebSocket (Node 22 and newer): on 20 they skip, on 22 and 24 a skip is a failure
+      PLANWALK_REQUIRE_CHROME: ${{ matrix.node >= 22 && '1' || '0' }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: 22
+          node-version: ${{ matrix.node }}
           cache: npm
       # recent runner images restrict unprivileged user namespaces, which keeps Chrome's sandbox from starting
       - run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
@@ -22,3 +30,27 @@ jobs:
         run: |
           git status --porcelain dist/ skill/
           test -z "$(git status --porcelain dist/ skill/)"
+      # The official Khronos validator is an npm library, installed outside the repository (it is not a dependency of planwalk).
+      # Errors fail the job; warnings and infos are printed.
+      - name: GLB export passes the Khronos glTF validator
+        if: matrix.node == 22
+        run: |
+          mkdir "$RUNNER_TEMP/gltf-validator"
+          (cd "$RUNNER_TEMP/gltf-validator" && npm init -y > /dev/null && npm install gltf-validator@2.0.0-dev.3.10 --ignore-scripts --no-audit --no-fund)
+          mkdir "$RUNNER_TEMP/glb"
+          for look in clay textured; do
+            node tools/capture.mjs examples/duplex-1.plan.json --out "$RUNNER_TEMP/glb/$look" --views top --materials "$look" --glb "$RUNNER_TEMP/glb/duplex-$look.glb" --size 640x360
+          done
+          GLTF_VALIDATOR_DIR="$RUNNER_TEMP/gltf-validator" node tools/validate-glb.mjs "$RUNNER_TEMP"/glb/duplex-*.glb
+  # No Chrome on this job: the Chrome based tests skip, everything else (validator, geometry, build, skill, tools) must pass on Windows too
+  windows:
+    name: test (windows, node 22, without Chrome)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test

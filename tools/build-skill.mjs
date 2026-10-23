@@ -5,7 +5,8 @@
 //   scripts/validate.mjs   tools/validate.mjs with src/core/ bundled into one file (esbuild, not minified, no dependencies)
 //   scripts/capture.mjs    tools/capture.mjs, unchanged
 //   assets/planwalk.html   dist/planwalk-empty.html, unchanged (the viewer without sample plans)
-// These three files are generated: never edit them by hand. tests/skill/bundle.test.mjs fails when one of them differs from a fresh build.
+//   LICENSE                the repository LICENSE, unchanged
+// These four files are generated: never edit them by hand. tests/skill/bundle.test.mjs fails when one of them differs from a fresh build.
 import { build } from 'esbuild';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
@@ -43,6 +44,7 @@ const files = {
   'scripts/validate.mjs': validator.outputFiles[0].contents,
   'scripts/capture.mjs': readFileSync(join(root, 'tools/capture.mjs')),
   'assets/planwalk.html': readFileSync(viewer),
+  LICENSE: readFileSync(join(root, 'LICENSE')), // the folder is copied alone, so the licence travels with it
 };
 for (const [rel, data] of Object.entries(files)) {
   mkdirSync(dirname(join(out, rel)), { recursive: true });

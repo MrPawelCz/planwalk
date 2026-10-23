@@ -2,6 +2,8 @@
 
 planwalk itself is MIT licensed (see `LICENSE`). The product has no runtime dependencies. The built viewer
 (`dist/planwalk*.html`) contains a bundled copy of three.js, so its licence notice is reproduced here.
+The build copies that notice, together with `LICENSE`, into an HTML comment at the top of each built page
+(`tools/build.mjs` reads the "three.js" and "esbuild" headings below, keep them), and `skill/planwalk/LICENSE` is a copy of `LICENSE`.
 
 | Package | Version | Licence | Where it ends up |
 | --- | --- | --- | --- |

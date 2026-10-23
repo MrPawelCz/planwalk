@@ -1,0 +1,26 @@
+# One pull request per ecosystem and week, grouped, so the updates stay quiet. A new three.js changes the built viewer:
+# run npm run build:skill and commit dist/ and skill/planwalk/ on the pull request branch before merging.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 2
+    commit-message:
+      prefix: deps
+    groups:
+      dev-dependencies:
+        patterns: ['*']
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 2
+    commit-message:
+      prefix: ci
+    groups:
+      github-actions:
+        patterns: ['*']

@@ -96,8 +96,22 @@ ${withSamples ? `<script type="application/json" id="planwalk-samples">${JSON.st
 </html>
 `;
 
+// Licence text inside the shipped pages, so a copy of the single file stays a licensed work: the project's own LICENSE and
+// the three.js permission notice (esbuild keeps only its copyright line). It goes into an HTML comment right after the
+// charset declaration, which has to stay within the first 1024 bytes of the file.
+const thirdParty = readFileSync(join(root, 'THIRD_PARTY_LICENSES.md'), 'utf8');
+const threeFrom = thirdParty.indexOf('\n## three.js\n'), threeTo = thirdParty.indexOf('\n## esbuild\n');
+if (threeFrom < 0 || threeTo < threeFrom) throw new Error('THIRD_PARTY_LICENSES.md needs a "## three.js" section followed by "## esbuild"');
+const licenseText = `planwalk\n\n${readFileSync(join(root, 'LICENSE'), 'utf8').trim()}\n\nThis file also contains three.js:\n\n${thirdParty.slice(threeFrom + 13, threeTo).trim()}`;
+if (licenseText.includes('--')) throw new Error('the licence text cannot go into an HTML comment (it contains two hyphens)');
+const withLicense = (html) => {
+  const charset = /<meta charset="[^"]*">\n/;
+  if (!charset.test(html)) throw new Error('the page head needs <meta charset="..."> on its own line: the licence comment goes right after it');
+  return html.replace(charset, (m) => `${m}<!--\n${licenseText}\n-->\n`);
+};
+
 mkdirSync(dist, { recursive: true });
-writeFileSync(join(dist, 'planwalk.html'), page(true));
-writeFileSync(join(dist, 'planwalk-empty.html'), page(false));
+const pages = { 'planwalk.html': withLicense(page(true)), 'planwalk-empty.html': withLicense(page(false)) };
+for (const [name, html] of Object.entries(pages)) writeFileSync(join(dist, name), html);
 const kb = (n) => `${Math.round(n / 1024)} KB`;
-console.log(`${dist === join(root, 'dist') ? 'dist' : dist}/planwalk.html ${kb(Buffer.byteLength(page(true)))} (${Object.keys(samples).length} examples), planwalk-empty.html ${kb(Buffer.byteLength(page(false)))}`);
+console.log(`${dist === join(root, 'dist') ? 'dist' : dist}/planwalk.html ${kb(Buffer.byteLength(pages['planwalk.html']))} (${Object.keys(samples).length} examples), planwalk-empty.html ${kb(Buffer.byteLength(pages['planwalk-empty.html']))}`);

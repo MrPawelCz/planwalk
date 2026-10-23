@@ -9,10 +9,12 @@ import { copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync,
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { chrome, chromeSkip } from '../helpers/chrome.mjs';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const skill = join(root, 'skill/planwalk');
 const GENERATED = ['scripts/validate.mjs', 'scripts/capture.mjs', 'assets/planwalk.html'];
+const COPIED = [...GENERATED, 'LICENSE']; // LICENSE is a plain copy of the repository file, it travels with the folder
 const MAX = 64 * 1024 * 1024; // spawnSync stops a child whose output passes 1 MiB by default
 const run = (...args) => spawnSync(process.execPath, args, { encoding: 'utf8', timeout: 110000, maxBuffer: MAX });
 const runIn = (cwd, ...args) => spawnSync(process.execPath, args, { encoding: 'utf8', timeout: 110000, maxBuffer: MAX, cwd });
@@ -36,15 +38,13 @@ mkdirSync(work);
 copyFileSync(fx('examples/flat-1.plan.json'), join(work, 'flat.plan.json'));
 copyFileSync(fx('examples/duplex-1.plan.json'), join(work, 'duplex.plan.json'));
 
-const chrome = ['/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', ...['google-chrome', 'chromium', 'chromium-browser'].map((c) => (spawnSync('which', [c]).status === 0 ? c : null))]
-  .filter(Boolean).find((c) => !c.includes('/') || existsSync(c));
-const skip = !chrome ? 'Chrome or Chromium not found' : typeof WebSocket === 'undefined' ? 'Node 22 or newer is needed for the global WebSocket' : false;
+const skip = chromeSkip;
 
 test('generated skill files are byte for byte a fresh build (run npm run build:skill when this fails)', () => {
   const fresh = join(tmp, 'fresh');
   const r = runIn(tmp, fx('tools/build-skill.mjs'), '--out', fresh); // from another directory: the output must not depend on it
   assert.equal(r.status, 0, `${r.stdout}\n${r.stderr}`);
-  for (const f of GENERATED) {
+  for (const f of COPIED) {
     assert.ok(existsSync(join(skill, f)), `skill/planwalk/${f} is missing: run npm run build:skill and commit it`);
     assert.ok(readFileSync(join(skill, f)).equals(readFileSync(join(fresh, f))), `skill/planwalk/${f} is stale: run npm run build:skill and commit it`);
   }

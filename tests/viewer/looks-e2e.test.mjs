@@ -8,11 +8,10 @@ import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { chrome, chromeSkip } from '../helpers/chrome.mjs';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
-const chrome = ['/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', ...['google-chrome', 'chromium', 'chromium-browser'].map((c) => (spawnSync('which', [c]).status === 0 ? c : null))]
-  .filter(Boolean).find((c) => !c.includes('/') || existsSync(c));
-const skip = !chrome ? 'Chrome or Chromium not found' : !existsSync(join(root, 'dist/planwalk-empty.html')) ? 'dist/planwalk-empty.html missing, run npm run build' : typeof WebSocket === 'undefined' ? 'Node 22 or newer is needed for the global WebSocket' : false;
+const skip = chromeSkip || (!existsSync(join(root, 'dist/planwalk-empty.html')) ? 'dist/planwalk-empty.html missing, run npm run build' : false);
 
 function readGlb(file) {
   const buf = readFileSync(file);
