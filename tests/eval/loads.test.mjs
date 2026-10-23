@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -23,9 +23,10 @@ function table(header) {
 }
 
 test('the strict counts are the "Loads" column of docs/BENCHMARK.md in every row', () => {
-  const main = table('| Model | Prompt | Route | Plans read |');
+  const all = table('| Model | Prompt | Route | Plans read |');
+  const main = { head: all.head, rows: all.rows.filter((row) => !/^not run/.test(row[all.head.indexOf('Route')])) }; // a model that was not run has no folder
   const viewer = table('| Model, prompt | Run folder |');
-  assert.equal(main.rows.length, viewer.rows.length, 'one viewer row per row of "Runs by model"');
+  assert.equal(main.rows.length, viewer.rows.length, 'one viewer row per row of "Runs by model" that has a run');
   const loads = main.head.indexOf('Loads'), read = main.head.indexOf('Plans read');
   assert.ok(loads > 0 && read > 0);
   main.rows.forEach((row, i) => {
@@ -118,12 +119,13 @@ test('every stored run folder is scored again to the byte (scores.md and scores-
     let n = 0;
     for (const run of readdirSync(RESULTS_DIR, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name).sort()) {
       for (const [bench, readings, scores] of [['bench-401', 'readings', 'scores.md'], ['bench-501', 'readings-sketch-zoom', 'scores-sketch-zoom.md']]) {
+        if (!existsSync(join(RESULTS_DIR, run, readings))) continue; // a run that did not read this set has no scores for it
         const res = spawnSync(process.execPath, [`${root}eval/report.mjs`, join(tmp, bench), join(RESULTS_DIR, run, readings)], { encoding: 'utf8' });
         assert.equal(res.status, 0, res.stderr);
         assert.equal(res.stdout, readFileSync(join(RESULTS_DIR, run, scores), 'utf8'), `${run}/${scores}`);
         n++;
       }
     }
-    assert.ok(n >= 20, `${n} score files compared`);
+    assert.ok(n >= 19, `${n} score files compared`);
   } finally { rmSync(tmp, { recursive: true, force: true }); }
 });
