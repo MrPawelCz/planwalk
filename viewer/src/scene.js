@@ -60,7 +60,8 @@ function roundedRect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-function makeLabel(name, areaText, widthWorld) {
+// The picture of a room label: the room name and its area text ("12,3 m²" in Polish, "~12.3 m²" for an estimate in English).
+function labelTexture(name, areaText) {
   const c = document.createElement('canvas');
   c.width = 512; c.height = 176;
   const ctx = c.getContext('2d');
@@ -85,9 +86,15 @@ function makeLabel(name, areaText, widthWorld) {
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.anisotropy = 4;
-  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false, depthWrite: false, toneMapped: false }));
+  return tex;
+}
+
+// pw keeps what the picture was made from, so relabel() can draw it again in another language (not in userData: that goes into the GLB).
+function makeLabel(name, area, widthWorld) {
+  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: labelTexture(name, formatArea(area.m2, area.estimated)), transparent: true, depthTest: false, depthWrite: false, toneMapped: false }));
   sprite.scale.set(widthWorld, (widthWorld * 176) / 512, 1);
   sprite.renderOrder = 20;
+  sprite.pw = { name, area };
   return sprite;
 }
 
@@ -220,7 +227,7 @@ export class PlanScene {
       g.add(rg);
       const xs = r.polygon.map((p) => p[0]), ys = r.polygon.map((p) => p[1]);
       const short = Math.min(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys));
-      const label = makeLabel(r.name || r.id, formatArea(shown.m2, shown.estimated), clamp(short * 0.75, 1.1, 2.4));
+      const label = makeLabel(r.name || r.id, shown, clamp(short * 0.75, 1.1, 2.4));
       label.name = `label:${r.id}`;
       label.position.set(r.label[0], 0.9, r.label[1]);
       g.add(label);
@@ -270,6 +277,15 @@ export class PlanScene {
 
   setCeilings(on) { for (const c of this.ceilings) c.visible = on; }
   setLabels(on) { for (const l of this.labels) l.visible = on; }
+  // Draws every label again after a change of language (decimal comma, units); the sprites, their place and their visibility stay.
+  relabel() {
+    for (const l of this.labels) {
+      const old = l.material.map;
+      l.material.map = labelTexture(l.pw.name, formatArea(l.pw.area.m2, l.pw.area.estimated));
+      l.material.needsUpdate = true;
+      old.dispose();
+    }
+  }
   setArcs(on) { for (const a of this.arcs) a.visible = on; }
   // In Walk mode floors and ceilings stop casting shadows so the sun reaches the rooms under virtual roofs.
   setWalkShadows(walk) { for (const m of this.floors) m.castShadow = !walk && m.name.endsWith('/slab'); }

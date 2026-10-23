@@ -11,26 +11,15 @@ import { LOOKS, setTextureAnisotropy, withoutNormalMaps } from './materials.js';
 import { createWorld, createPlayer, teleport, stepPlayer, defaultSpawn } from './physics.js';
 import { createAbout, ABOUT_CSS } from './about.js';
 import { version as PW_VERSION } from '../../package.json'; // the one place the version lives; esbuild inlines just this field
-import { getLang } from './i18n.js';
+import { getLang, setLang } from './i18n.js';
 import { createFirstVisit } from './first-visit.js';
 import { createHelp } from './help.js';
 import { createCompact } from './compact.js';
 import { boxCorners, fitView, ndcRect, projectedBox, marginsOf } from './framing.js';
-
-// All user-facing strings live here so a translation is one object.
-const T = {
-  dollhouse: 'Dollhouse', orbit: 'Orbit', top: 'Top', walk: 'Walk',
-  level: 'Level', allLevels: 'All levels', explode: 'Explode', cutaway: 'Cutaway', labels: 'Labels', textures: 'Textures',
-  texturesTip: 'Procedural wood, tile, plaster and fabric textures instead of plain clay colours',
-  exportGlb: 'Export GLB', exportPng: 'Export PNG', standalone: 'Standalone HTML', standaloneTip: 'Download one HTML file with this plan embedded', help: 'Help',
-  paste: 'Paste JSON', load: 'Load', cancel: 'Cancel', examples: 'Examples',
-  empty: 'Drop a plan JSON file here, paste one, or pick an example.',
-  unusable: 'The plan could not be turned into a model. See the issues below.',
-  noWebgl: 'WebGL is not available in this browser, so the 3D view cannot start.',
-  copyFix: 'Copy fix request', copied: 'Copied', issues: 'Issues', fix: 'Fix',
-  pastePrompt: 'Paste the plan JSON here',
-  walkHint: 'Click to look around. WASD or arrows move, Shift runs, Esc goes back.',
-};
+import { refreshLangSwitches } from './lang-switch.js';
+import { openDialog, closeDialog } from './dialogs.js';
+import { fileSlug } from './slug.js';
+import { T, issuesHeading, fixRequestText } from './strings.js'; // every caption of this window, English and Polish
 
 const MODES = ['dollhouse', 'orbit', 'top', 'walk'];
 const MODE_DEFAULTS = {
@@ -69,6 +58,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#dfe6ee;font:13px/1.35
 .pw-issues li{padding:4px 0;border-top:1px solid rgba(80,72,62,.12)}
 .pw-issues .e{color:#b3321f;font-weight:600}.pw-issues .w{color:#9a6a12;font-weight:600}
 .pw-issues em{display:block;color:#6a6358;font-style:normal}
+.pw-issues .pw-issue-note{margin:0 0 6px;color:#6a6358}
 .pw-hint{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);padding:5px 12px;background:rgba(40,36,30,.72);color:#fff;border-radius:999px;pointer-events:none}
 .pw-mini{position:absolute;right:12px;bottom:12px;width:180px;height:180px;border:1px solid rgba(80,72,62,.3);border-radius:10px;background:rgba(255,255,255,.82)}
 .pw-dlg{border:1px solid rgba(80,72,62,.3);border-radius:12px;padding:14px 16px;max-width:min(560px,92vw);color:#37332d}
@@ -78,16 +68,31 @@ html,body{margin:0;height:100%;overflow:hidden;background:#dfe6ee;font:13px/1.35
 [hidden]{display:none!important}
 `;
 
+// A caption taken from T (a String object that knows its key) stays bound to its text node or attribute, so relabel() can
+// give it the new language without rebuilding the toolbar.
+const bound = [];
 const h = (tag, props = {}, ...kids) => {
   const el = document.createElement(tag);
   for (const [k, v] of Object.entries(props)) {
     if (k === 'class') el.className = v;
     else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
-    else el.setAttribute(k, v);
+    else { el.setAttribute(k, v); if (v instanceof String) bound.push([el, k, v.key]); }
   }
-  for (const kid of kids.flat()) if (kid != null) el.append(kid);
+  for (const kid of kids.flat()) {
+    if (kid instanceof String) {
+      const node = document.createTextNode(String(kid));
+      bound.push([node, null, kid.key]);
+      el.append(node);
+    } else if (kid != null) el.append(kid);
+  }
   return el;
 };
+function relabel() {
+  if (bound.length > 4000) bound.splice(0, bound.length - 2000); // only the "All levels" option of earlier models piles up
+  for (const [node, attr, key] of bound) {
+    if (attr) node.setAttribute(attr, String(T[key])); else node.nodeValue = String(T[key]);
+  }
+}
 
 function download(blob, name) {
   const a = h('a', { href: URL.createObjectURL(blob), download: name });
@@ -95,10 +100,6 @@ function download(blob, name) {
   a.click();
   setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
 }
-
-// <dialog> needs Safari 15.4; without it the open attribute alone shows and hides the dialog (see .pw-dlg in load-errors.js).
-const openDialog = (d) => { if (typeof d.showModal === 'function') d.showModal(); else d.setAttribute('open', ''); };
-const closeDialog = (d) => { if (typeof d.close === 'function') d.close(); else d.removeAttribute('open'); };
 
 function b64urlDecode(s) {
   const b = atob(s.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(s.length / 4) * 4, '='));
@@ -138,7 +139,7 @@ function start() {
   const nameEl = h('span', { class: 'pw-name' });
   const about = createAbout(h, () => ({ plan, model, warnings: issues.warnings.length, version: PW_VERSION }));
   const visit = createFirstVisit({ h, onPaste: () => openDialog(pasteDlg) });
-  const help = createHelp({ h });
+  const help = createHelp({ h, onLang: (l) => applyLang(l) });
   const bar = h('div', { class: 'pw-bar' },
     h('span', { class: 'pw-brand' }, 'planwalk'), nameEl, about.badge, visit.tag,
     h('div', { class: 'pw-seg' }, MODES.map((m) => modeBtns[m])),
@@ -191,6 +192,8 @@ function start() {
   let explodeT = 0, explodeV = 0;
   let issues = { errors: [], warnings: [] };
   let samples = {};
+  let cardKey = 'empty'; // the caption of the empty card; '' once a model is on screen
+  const setCardText = () => { document.getElementById('pw-card-text').textContent = cardKey ? String(T[cardKey]) : ''; };
   let topView = { cx: 0, cz: 0, half: 5 };
   const apiIn = { forward: 0, strafe: 0, turn: 0, run: false };
   const kb = new Set();
@@ -198,7 +201,7 @@ function start() {
   let shift = false;
   let last = performance.now();
 
-  const slug = () => (plan?.name || 'planwalk').toString().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 48) || 'planwalk';
+  const slug = () => fileSlug(plan?.name);
 
   function size() {
     const w = Math.max(1, root.clientWidth || window.innerWidth), hgt = Math.max(1, root.clientHeight || window.innerHeight);
@@ -265,19 +268,21 @@ function start() {
     compact.sync({ mode, hasModel: !!model, issues: issues.errors.length + issues.warnings.length, errors: issues.errors.length });
   }
 
+  // The heading, one plain line per kind of issue and the list. The codes, paths, messages and fixes are the validator's English:
+  // they are written for the AI the fix request goes to.
   function renderIssues() {
     issuesEl.replaceChildren(compact.issuesRenewed());
     const all =[...issues.errors.map((i) => ['e', i]), ...issues.warnings.map((i) => ['w', i])];
     if (!all.length) return;
-    issuesEl.append(h('h3', {}, `${T.issues}: ${issues.errors.length} errors, ${issues.warnings.length} warnings`,
+    issuesEl.append(h('h3', {}, issuesHeading(issues.errors.length, issues.warnings.length),
       h('button', { type: 'button', onclick: (e) => { copyText(fixRequest()); e.target.textContent = T.copied; setTimeout(() => { e.target.textContent = T.copyFix; }, 1500); } }, T.copyFix)),
+    ...(issues.errors.length ? [h('p', { class: 'pw-issue-note' }, T.noteErrors)] : []), // append(null) would write the word "null"
+    ...(issues.warnings.length ? [h('p', { class: 'pw-issue-note' }, T.noteWarnings)] : []),
     h('ul', {}, all.map(([k, i]) => h('li', {}, h('span', { class: k }, i.code), ` ${i.path || ''} ${i.message} `, h('em', {}, `${T.fix}: ${i.fix}`)))));
   }
 
   function fixRequest(p = plan, raw = rawText, shown = issues) {
-    const lines = [...shown.errors, ...shown.warnings].map((i) => `- ${i.code} ${i.path || ''}: ${i.message} ${T.fix}: ${i.fix}`);
-    const body = p ? JSON.stringify(p, null, 2) : raw;
-    return `The floor plan JSON below failed validation in planwalk. Fix every error (and the warnings if you can) by correcting how the drawing was read. Return only the corrected JSON.\n\nIssues:\n${lines.join('\n')}\n\nPlan JSON:\n${body}`;
+    return fixRequestText({ errors: shown.errors, warnings: shown.warnings, body: p ? JSON.stringify(p, null, 2) : raw });
   }
 
   function copyText(text) {
@@ -387,7 +392,7 @@ function start() {
     if (typeof input === 'string') {
       const found = extractJson(input);
       if (!found.ok) {
-        notes.show(loadMessage(found.kind, source));
+        notes.show(() => loadMessage(found.kind, source));
         const bad = validatePlan(input);
         return { ok: false, errors: bad.errors, warnings: bad.warnings, repairs: [] };
       }
@@ -396,7 +401,7 @@ function start() {
     const res = validatePlan(obj);
     if (!res.normalized && model) {
       const failed = { errors: res.errors, warnings: res.warnings };
-      notes.show(loadMessage('unusable'), notes.copyFixAction(() => fixRequest(obj && typeof obj === 'object' ? obj : null, typeof input === 'string' ? input : '', failed)));
+      notes.show(() => loadMessage('unusable'), notes.copyFixAction(() => fixRequest(obj && typeof obj === 'object' ? obj : null, typeof input === 'string' ? input : '', failed)));
       return { ok: res.ok, errors: res.errors, warnings: res.warnings, repairs };
     }
     notes.hide();
@@ -423,7 +428,8 @@ function start() {
       frame();
       applyVisuals();
     }
-    document.getElementById('pw-card-text').textContent = res.normalized ? '' : T.unusable;
+    cardKey = res.normalized ? '' : 'unusable';
+    setCardText();
     renderIssues();
     syncUi();
     render();
@@ -433,7 +439,7 @@ function start() {
   // A file the person chose or dropped.
   function openPicked(file) {
     if (pasteDlg.hasAttribute('open')) closeDialog(pasteDlg);
-    readPlanFile(file).then((r) => (r.ok ? load(r.text, 'file') : notes.show(downloadMessage(r))));
+    readPlanFile(file).then((r) => (r.ok ? load(r.text, 'file') : notes.show(() => downloadMessage(r))));
   }
 
   function rebuildLevelSelect() {
@@ -548,6 +554,23 @@ function start() {
     last = now;
   }
 
+  // ---------- language ----------
+  // Switches the page language without a reload: the captions bound in h(), the modules' own texts, the issues panel and the
+  // room labels in the 3D scene are redrawn. The model, the camera and the choices made stay as they are. Memory only.
+  function applyLang(lang) {
+    setLang(lang);
+    document.documentElement.lang = getLang();
+    relabel();
+    setCardText();
+    renderIssues();
+    syncUi();
+    refreshLangSwitches(); // before help.refresh(), which puts the focus on the pressed button
+    visit.refresh(); help.refresh(); about.refresh(); notes.refresh();
+    if (planScene) planScene.relabel();
+    render();
+    return getLang();
+  }
+
   // ---------- public API ----------
   function state() {
     let cam;
@@ -659,6 +682,7 @@ function start() {
     manualClock: false,
     load,
     setMode,
+    setLang: applyLang, // 'en' or 'pl'; returns the language now in force
     setExplode(v) { if (!model || mode === 'walk') return; explodeT = clamp(+v || 0, 0, 1); explodeIn.value = String(explodeT); },
     setCutaway(on) { cutaway = !!on; applyVisuals(); syncUi(); render(); },
     setLabels(on) { labels = !!on; applyVisuals(); syncUi(); render(); },
@@ -822,8 +846,8 @@ function start() {
   if (LOOKS.includes(q.get('materials'))) api.setMaterials(q.get('materials'));
   const hash = /^#plan=([A-Za-z0-9_-]+)/.exec(location.hash);
   if (embedded && embedded.textContent.trim()) api.load(embedded.textContent);
-  else if (hash) { try { api.load(b64urlDecode(hash[1]), 'link'); } catch { notes.show(loadMessage('invalid', 'link')); } }
-  else if (/^https?:\/\//i.test(q.get('plan') || '')) fetchPlanText(q.get('plan')).then((r) => (r.ok ? api.load(r.text, 'download') : notes.show(downloadMessage(r))));
+  else if (hash) { try { api.load(b64urlDecode(hash[1]), 'link'); } catch { notes.show(() => loadMessage('invalid', 'link')); } }
+  else if (/^https?:\/\//i.test(q.get('plan') || '')) fetchPlanText(q.get('plan')).then((r) => (r.ok ? api.load(r.text, 'download') : notes.show(() => downloadMessage(r))));
   else if (sampleNames.length) { api.load(samples[sampleNames[0]]); visit.show(); refreshFrame(); render(); } // the card is up now, so frame the model above it
   requestAnimationFrame(loop);
 }

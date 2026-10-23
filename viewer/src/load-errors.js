@@ -27,14 +27,16 @@ export const strings = {
     copyDetails: 'Copy details',
     reload: 'Reload',
     noWebgl: 'This browser cannot show 3D (WebGL is missing or switched off). Try an up to date Safari, Chrome or Firefox, and check that hardware acceleration is on.',
+    noPlanFile: 'That file does not contain a plan. Open the file with the AI answer that holds the plan.',
   },
   pl: {
-    noPlan: 'W tym tekście nie ma planu. Wklej całą odpowiedź z czatu z AI, planwalk sam znajdzie w niej JSON.',
-    cutOff: 'Plan w tym tekście urywa się w połowie. Poproś AI o wysłanie całego planu jeszcze raz.',
-    invalid: 'planwalk znalazł w tym tekście plan, ale w JSON jest błąd, więc nie da się go odczytać. Poproś AI o ponowne wysłanie planu jako jednego bloku JSON.',
+    noPlan: 'W tym tekście nie ma planu. Wklej całą odpowiedź z czatu z AI, planwalk sam ją przeszuka. Jeśli czat napisał, że nie widzi zdjęcia, dodaj je jeszcze raz.',
+    noPlanFile: 'W tym pliku nie ma planu. Otwórz plik z odpowiedzią AI, w której jest plan.',
+    cutOff: 'Plan w tym tekście jest ucięty, brakuje końca. Poproś AI, żeby wysłało cały plan jeszcze raz.',
+    invalid: 'planwalk znalazł w tym tekście plan, ale w zapisie jest błąd, więc nie da się go odczytać. Poproś AI, żeby wysłało plan jeszcze raz w jednym bloku kodu, z kropką dziesiętną (2.5, nie 2,5).',
     tooLong: 'Ten tekst jest za długi jak na plan (ponad 2 MB). Wklej sam JSON z planem.',
-    emptyText: 'Nie ma czego wczytać. Wklej odpowiedź z czatu z AI.',
-    unusable: 'Ten plan zawiera błędy, więc planwalk nie zbuduje z niego modelu. Poprzedni model nadal jest na ekranie.',
+    emptyText: 'Pole jest puste. Wklej odpowiedź z czatu z AI.',
+    unusable: 'W tym planie są błędy, więc planwalk nie zbuduje z niego modelu. Nadal widzisz poprzedni model. Kliknij „Kopiuj prośbę o poprawkę” i wklej ją do czatu z AI.',
     badLink: 'Plan zapisany w tym linku jest uszkodzony. Poproś nadawcę o nowy link.',
     notPlanDownloaded: 'Pobieranie się udało, ale ten plik to nie plan. Sprawdź, czy link prowadzi do pliku JSON z planem.',
     download: 'Nie udało się pobrać planu. Sprawdź link; możliwe też, że serwer nie pozwala innym stronom go czytać.',
@@ -46,10 +48,10 @@ export const strings = {
     copied: 'Skopiowano',
     close: 'Zamknij',
     crashTitle: 'Coś poszło nie tak i planwalk się zatrzymał.',
-    crashHelp: 'Odśwież stronę. Jeśli to się powtórzy, kliknij Kopiuj szczegóły i dołącz je do zgłoszenia.',
+    crashHelp: 'Odśwież stronę. Jeśli to się powtórzy, kliknij „Kopiuj szczegóły” i dołącz je do zgłoszenia.',
     copyDetails: 'Kopiuj szczegóły',
     reload: 'Odśwież',
-    noWebgl: 'Ta przeglądarka nie pokaże 3D (brakuje WebGL albo jest wyłączony). Spróbuj aktualnej przeglądarki Safari, Chrome lub Firefox i sprawdź, czy przyspieszanie sprzętowe jest włączone.',
+    noWebgl: 'Ta przeglądarka nie pokaże grafiki 3D (WebGL jest niedostępny lub wyłączony). Otwórz stronę w aktualnym Safari, Chrome lub Firefoksie. Na komputerze sprawdź też, czy włączone jest przyspieszanie sprzętowe.',
   },
 };
 export const t = makeT(strings);
@@ -72,6 +74,7 @@ const h = (tag, props = {}, ...kids) => {
 export function loadMessage(kind, source) {
   if (source === 'link') return t('badLink');
   if (source === 'download' && (kind === 'no-object' || kind === 'empty')) return t('notPlanDownloaded');
+  if (source === 'file' && kind === 'no-object') return t('noPlanFile');
   return t({ empty: 'emptyText', 'too-long': 'tooLong', 'no-object': 'noPlan', truncated: 'cutOff', invalid: 'invalid', unusable: 'unusable' }[kind] || 'noPlan');
 }
 
@@ -129,8 +132,17 @@ export function createNotices(root, getBar) {
   document.head.append(style);
   const msg = h('span');
   const action = h('button', { type: 'button', hidden: '' });
-  const x = h('button', { type: 'button', class: 'pw-banner-x', 'aria-label': t('close'), title: t('close') }, '×');
+  const x = h('button', { type: 'button', class: 'pw-banner-x' }, '×');
   const el = h('div', { class: 'pw-banner', role: 'alert', hidden: '' }, msg, action, x);
+  const openers = [];
+  let shown = null; // { text, act } of the banner on screen; text may be a function, which is asked again after a change of language
+  const captions = () => { x.setAttribute('aria-label', t('close')); x.title = t('close'); for (const b of openers) b.textContent = t('openFile'); };
+  const draw = () => {
+    msg.textContent = typeof shown.text === 'function' ? shown.text() : shown.text;
+    action.hidden = !shown.act;
+    if (shown.act) { action.textContent = shown.act.label; action.onclick = shown.act.run; }
+  };
+  captions();
   const fileIn = h('input', { type: 'file', accept: '.json,.txt,application/json,text/plain', hidden: '' });
   root.append(el, fileIn);
   const hide = () => { el.hidden = true; };
@@ -143,23 +155,29 @@ export function createNotices(root, getBar) {
   });
   return {
     hide,
+    // text: the message, or a function that makes it (so the banner can follow a change of language); act: { label, run } or nothing.
     show(text, act) {
-      msg.textContent = text;
-      action.hidden = !act;
-      if (act) { action.textContent = act.label; action.onclick = act.run; }
+      shown = { text, act };
+      draw();
       const bar = getBar && getBar();
       el.style.top = `${bar ? Math.round(bar.getBoundingClientRect().bottom) + 8 : 10}px`;
       el.hidden = false;
+    },
+    // Redraws every caption in the current language, the banner on screen included.
+    refresh() {
+      captions();
+      if (shown && !el.hidden) draw();
     },
     // A button that opens the file picker; onFile(file) gets the chosen file. Several buttons share one picker.
     openFileButton(onFile) {
       onPick = onFile;
       const b = h('button', { type: 'button' }, t('openFile'));
       b.addEventListener('click', () => fileIn.click());
+      openers.push(b);
       return b;
     },
     copyFixAction(build) {
-      return { label: t('copyFix'), run: (e) => { copyToClipboard(build()); const b = e.target; b.textContent = t('copied'); setTimeout(() => { b.textContent = t('copyFix'); }, 1500); } };
+      return { get label() { return t('copyFix'); }, run: (e) => { copyToClipboard(build()); const b = e.target; b.textContent = t('copied'); setTimeout(() => { b.textContent = t('copyFix'); }, 1500); } };
     },
   };
 }

@@ -10,9 +10,16 @@ export function detectLang(search = typeof location !== 'undefined' ? location.s
   return /^pl\b/i.test(first) ? 'pl' : 'en';
 }
 
+// True when Polish is anywhere in the browser's language list, not only first (an English phone of a Polish landlord).
+export function prefersPolish(nav = typeof navigator !== 'undefined' ? navigator : {}) {
+  return (nav.languages && nav.languages.length ? [...nav.languages] : [nav.language]).some((l) => /^pl\b/i.test(l || ''));
+}
+
 let current = detectLang();
+let chosen = false; // set once the language was picked by hand (the PL | EN buttons, setLang), not just detected
 export const getLang = () => current;
-export function setLang(lang) { if (SUPPORTED.includes(lang)) current = lang; }
+export const langChosen = () => chosen;
+export function setLang(lang) { if (SUPPORTED.includes(lang)) { current = lang; chosen = true; } }
 
 export function makeT(dict) {
   return (key, params) => {

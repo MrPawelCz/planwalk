@@ -93,6 +93,7 @@ load(planOrText, source?) -> { ok, errors, warnings, repairs } // validates, bui
 setMode('dollhouse' | 'orbit' | 'top' | 'walk')
 setExplode(0..1)  setCutaway(bool)  setLabels(bool)  setLevel(levelId | null)
 setMaterials('clay' | 'textured')                        // the look; returns the look now in force; any other value is ignored
+setLang('en' | 'pl')                                     // the page language, as the PL | EN buttons in Help; returns the language now in force; kept in memory only
 zoomView(factor)                                         // dollhouse and orbit: camera toward the target (below 1) or away (above 1); top: scales the view
 tiltView(elevationDegrees)                               // dollhouse and orbit: camera elevation above the horizon, 5 to 85 (azimuth and distance stay)
 walkTo(x, y, levelId?, yawDegrees?, pitchDegrees?)         // teleport the player (plan coordinates, metres); a negative pitch looks down

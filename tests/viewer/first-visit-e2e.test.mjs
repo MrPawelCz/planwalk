@@ -41,7 +41,7 @@ test('the card shows on the example: three steps, the buttons, the privacy line,
   assert.equal(info.title, 'This is an example');
   assert.deepEqual(info.steps, ['Copy the prompt', 'Give it to an AI chat together with a picture of your floor plan', 'Paste the answer here']);
   assert.ok(info.buttons.includes('Copy prompt') && info.buttons.includes('Paste answer'), info.buttons.join(','));
-  assert.equal(info.note, 'Your plan stays in this page. Nothing is uploaded or stored.');
+  assert.equal(info.note, 'planwalk uploads and stores nothing. The picture of your plan goes only to the AI chat you choose: crop out names and addresses first.');
   assert.equal(info.tagHidden, false);
   assert.equal(info.tagText, 'Example');
   assert.ok(info.name.length > 0, 'the plan name is still shown');
@@ -122,7 +122,7 @@ test('loading another plan hides the card and the caption; so does entering Walk
 
 test('a Polish browser gets the Polish card, the Polish page language and the Polish prompt when the file exists', { skip, timeout: 90000 }, withPage({ search: '?lang=pl' }, async (p) => {
   const info = await p.evaluate(`(() => ({ title: ${q('.pw-visit h2')}.textContent, copy: ${q('.pw-visit .pw-primary')}.textContent, tag: ${q('.pw-tag')}.textContent, lang: document.documentElement.lang, note: ${q('.pw-visit-note:last-child')}.textContent }))()`);
-  assert.deepEqual(info, { title: 'To jest przykład', copy: 'Kopiuj prompt', tag: 'To jest przykład', lang: 'pl', note: 'Twój plan zostaje na tej stronie. Nic nie jest wysyłane ani zapisywane.' });
+  assert.deepEqual(info, { title: 'To jest przykład', copy: 'Kopiuj polecenie', tag: 'To jest przykład', lang: 'pl', note: 'planwalk niczego nie wysyła ani nie zapisuje. Zdjęcie rzutu trafia tylko do czatu z AI, który sam wybierasz: wytnij z niego imiona i adresy.' });
   await p.evaluate(`${q('.pw-visit .pw-primary')}.click(); ${settle}`);
   assert.equal(await p.evaluate('window.__copied'), prompt('PROMPT.pl.md') ?? prompt('PROMPT.md'));
   assert.equal(await p.evaluate(`${q('.pw-visit-note button')} !== null`), prompt('PROMPT.pl.md') !== null, 'the prompt language switch appears only when both prompts are embedded');
@@ -130,7 +130,7 @@ test('a Polish browser gets the Polish card, the Polish page language and the Po
 
 test('with both prompts embedded the card offers a switch: the page language is the default, the other prompt is one tap away', { skip, timeout: 90000 }, withPage({ search: '?lang=pl' }, async (p) => {
   const pressed = () => p.evaluate(`[...document.querySelectorAll('.pw-visit-note button')].map((b) => b.textContent + ':' + b.getAttribute('aria-pressed'))`);
-  assert.equal(await p.evaluate(`${q('.pw-visit-note')}.textContent.startsWith('Język promptu:')`), true);
+  assert.equal(await p.evaluate(`${q('.pw-visit-note')}.textContent.startsWith('Język polecenia:')`), true);
   assert.deepEqual(await pressed(), ['EN:false', 'PL:true']);
   await p.evaluate(`${q('.pw-visit .pw-primary')}.click(); ${settle}`);
   assert.equal(await p.evaluate('window.__copied'), TEST_PL);

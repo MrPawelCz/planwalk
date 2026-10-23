@@ -67,7 +67,7 @@ test('without WebGL the card says what to do', { skip, timeout: 90000 }, async (
   }
   const pl = await openPage({ query: '?lang=pl', beforeLoad: noGl });
   try {
-    assert.match(await pl.evaluate('document.querySelector(".pw-card").textContent'), /Ta przeglądarka nie pokaże 3D/);
+    assert.match(await pl.evaluate('document.querySelector(".pw-card").textContent'), /Ta przeglądarka nie pokaże grafiki 3D .*Safari, Chrome lub Firefoksie/);
   } finally {
     pl.close();
   }

@@ -1,5 +1,7 @@
 // The prompt a newcomer gives to an AI chat. tools/build.mjs embeds the fenced prompt block of docs/PROMPT.md (and of
 // docs/PROMPT.pl.md when it exists) as <script type="text/plain" id="planwalk-prompt-en|pl">, with "</script" and "<!--" escaped.
+import { getLang, langChosen, prefersPolish } from './i18n.js';
+
 const LANGS = ['en', 'pl'];
 
 // The prompt text of one language, or null when that language is not embedded in this page.
@@ -9,6 +11,12 @@ export function getPrompt(lang) {
 }
 
 export const promptLangs = () => LANGS.filter((l) => getPrompt(l) !== null);
+// The language of the prompt to copy: the page language, and also Polish for a browser that lists Polish anywhere until the
+// language is picked by hand (Polish drawings, English phone). English when the Polish prompt is not embedded in this page.
+export function defaultPromptLang() {
+  const want = getLang() === 'pl' || (!langChosen() && prefersPolish()) ? 'pl' : 'en';
+  return promptLangs().includes(want) ? want : 'en';
+}
 // The prompt in the wanted language, English when that one is missing.
 export const promptFor = (lang) => getPrompt(lang) ?? getPrompt('en') ?? '';
 

@@ -4,6 +4,7 @@
 import { PLAN_SCHEMA } from '../../src/core/validate.js';
 import { makeT } from './i18n.js';
 import { totalArea, formatArea } from './areas.js';
+import { openDialog } from './dialogs.js';
 
 export const STRINGS = {
   en: {
@@ -21,12 +22,12 @@ export const STRINGS = {
   pl: {
     about: 'O modelu', aboutTip: 'Liczby, powierzchnia, skala i uwagi do tego modelu',
     title: 'O tym modelu', close: 'Zamknij',
-    scaleBadge: 'Skala szacowana', scaleBadgeTip: 'Z notatki o skali wynika, że skala jest przybliżona. Otwórz arkusz O modelu.',
-    name: 'Plan', untitled: '(bez nazwy)', levels: 'Poziomy', rooms: 'Pomieszczenia', area: 'Łączna powierzchnia pomieszczeń',
-    areaHint: 'Znak ~, bo część pomieszczeń nie ma powierzchni na rysunku: ich powierzchnia jest szacowana bez grubości ścian.',
+    scaleBadge: 'Skala szacowana', scaleBadgeTip: 'Z notatki o skali wynika, że skala jest przybliżona. Otwórz „O modelu”.',
+    name: 'Plan', untitled: '(bez nazwy)', levels: 'Piętra', rooms: 'Pomieszczenia', area: 'Łączna powierzchnia pomieszczeń',
+    areaHint: 'Znak ~ oznacza, że część pomieszczeń nie ma na rysunku podanej powierzchni, więc oszacowano ją bez grubości ścian.',
     areaSkipped: 'Bardzo duży plan: przy części pomieszczeń powierzchnia liczona jest po osiach ścian, więc jest większa niż widoczna podłoga.',
     scale: 'Skala', noScale: 'Brak informacji w pliku', scaleGuess: 'Notatka mówi, że skala jest przybliżona. Sprawdź wymiary na swoim rysunku.',
-    notes: 'Uwagi z odczytu rysunku', source: 'Źródło', warnings: 'Ostrzeżenia z kontroli', version: 'Wersja planwalk',
+    notes: 'Uwagi z odczytu rysunku', source: 'Źródło', warnings: 'Ostrzeżenia z kontroli planu', version: 'Wersja planwalk',
     src_image: 'Obraz', src_pdf: 'PDF', src_sketch: 'Szkic', src_synthetic: 'Przykład syntetyczny', src_manual: 'Wpisany ręcznie',
     disclaimer: 'Wizualizacja przekazanego rysunku, nie pomiar. Sprawdź wymiary, zanim zaczniesz na nich polegać.',
   },
@@ -102,14 +103,23 @@ export function createAbout(h, getInfo) {
     button.disabled = !info.model;
     badge.hidden = !(info.model && scaleGuessed(metaOf(info.plan).scale_note));
   }
+  function fill(info) {
+    texts();
+    body.replaceChildren(...aboutRows(info).flatMap((r) => [h('dt', {}, r.label), h('dd', {}, r.value, r.hint ? h('em', {}, r.hint) : null)]));
+  }
   function open() {
     const info = getInfo();
     if (!info.model) return;
-    texts();
-    body.replaceChildren(...aboutRows(info).flatMap((r) => [h('dt', {}, r.label), h('dd', {}, r.value, r.hint ? h('em', {}, r.hint) : null)]));
-    dialog.showModal();
+    fill(info);
+    openDialog(dialog);
     dialog.scrollTop = 0; // opening focuses the Close button at the end, which would scroll a long sheet down to it
   }
+  // After a change of language: the captions again and, when the sheet is open, its rows.
+  function refresh() {
+    update();
+    const info = getInfo();
+    if (info.model && dialog.hasAttribute('open')) fill(info);
+  }
   texts();
-  return { button, badge, dialog, update, open };
+  return { button, badge, dialog, update, open, refresh };
 }
