@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { validatePlan } from '../../src/core/validate.js';
 import { buildModel, levelOffsets, modelExtent, EXPLODE_FACTOR } from '../../viewer/src/geometry.js';
-import { createWorld, createPlayer, stepPlayer, teleport, defaultSpawn, maxPenetration } from '../../viewer/src/physics.js';
+import { createWorld, createPlayer, stepPlayer, teleport, defaultSpawn, maxPenetration, freeDistance, longestView } from '../../viewer/src/physics.js';
 
 const modelOf = (p) => buildModel(validatePlan(JSON.parse(readFileSync(new URL(`../../${p}`, import.meta.url), 'utf8'))).normalized);
 const flat = () => modelOf('examples/flat-1.plan.json');
@@ -126,6 +126,76 @@ test('walking speed matches the spec (1.4 m/s, 2.8 m/s running)', () => {
   assert.ok(Math.abs(a.x - (4.5 + 1.4)) < 0.05, `x = ${a.x}`);
   const b = walk(w, player(w, 4.5, 0.8, 0), { forward: 1, run: true }, 1);
   assert.ok(Math.abs(b.x - (4.5 + 2.8)) < 0.05, `x = ${b.x}`);
+});
+
+// ---- the start direction of Walk: the longest free view, not the nearest wall ----
+const ahead = (m, sp, deg = sp.yawDeg) => freeDistance(m.levels[sp.level], sp.x, sp.y, Math.cos((deg * Math.PI) / 180), Math.sin((deg * Math.PI) / 180));
+
+test('freeDistance: a ray stops at the first wall, ignores what lies behind it and stops at the limit', () => {
+  const m = duplex();
+  const lv = m.levels[0];
+  // g5 (x = 4, thickness 0.12) is solid at y = 1: from (3, 1) going east the first face is at x = 3.94
+  assert.ok(Math.abs(freeDistance(lv, 3, 1, 1, 0) - 0.94) < 0.01);
+  assert.ok(Math.abs(freeDistance(lv, 6, 1, -1, 0) - 1.94) < 0.01, 'the other side of g5, going west');
+  // through the passage (y 2 to 3, clear of the coffee table) the ray reaches the east wall g2 (x = 8, thickness 0.3, face at 7.85)
+  assert.ok(Math.abs(freeDistance(lv, 3, 2.05, 1, 0) - 4.85) < 0.01);
+  assert.ok(Math.abs(freeDistance(lv, 3, 2.05, 0.6, 0.8) - freeDistance(lv, 3, 2.05, 0.6, 0.8, 100)) < 1e-9, 'a slanted ray works too, and the default limit is not what stops it');
+  assert.equal(freeDistance(lv, 3, 2.05, 1, 0, 2), 2, 'the limit caps the answer');
+  assert.equal(freeDistance(lv, 4, 1, 1, 0), 0, 'a start inside a wall is 0');
+  assert.equal(freeDistance({ colliders: [] }, 0, 0, 1, 0), 40);
+});
+
+test('the start of Walk looks along the longest free view in every example and fixture', () => {
+  // [file, the free distance the old start (towards the room from the door) had, the least the new one must give]
+  for (const [file, old, least] of [['tests/fixtures/duplex-min.plan.json', 1.68, 6], ['examples/duplex-1.plan.json', 3.06, 3.2], ['examples/flat-1.plan.json', 2.86, 2.8], ['tests/fixtures/flat-stairs-out.plan.json', 3.14, 3]]) {
+    const m = modelOf(file), sp = defaultSpawn(m);
+    const d = ahead(m, sp);
+    assert.ok(d >= least, `${file}: ${d.toFixed(2)} m ahead, wanted at least ${least} (the old start had ${old})`);
+    assert.ok(d >= old - 0.1, `${file}: not worse than before`);
+    assert.deepEqual(defaultSpawn(m), sp, `${file}: the same answer every time`);
+    assert.ok(sp.yawDeg > -180 && sp.yawDeg <= 180, `${file}: yaw ${sp.yawDeg} is a plain angle in degrees`);
+  }
+});
+
+test('a long room is entered looking along its length, not at the wall opposite the door', () => {
+  const plan = {
+    version: 1, name: 'Long room', units: 'm',
+    levels: [{
+      id: 'L0', name: 'Ground', height: 2.6,
+      walls: [
+        { id: 'w1', from: [0, 0], to: [9, 0], kind: 'exterior' }, { id: 'w2', from: [9, 0], to: [9, 3], kind: 'exterior' },
+        { id: 'w3', from: [9, 3], to: [0, 3], kind: 'exterior' }, { id: 'w4', from: [0, 3], to: [0, 0], kind: 'exterior' },
+      ],
+      openings: [{ id: 'd1', wall: 'w3', type: 'door', offset: 4.5, width: 0.9 }],
+      rooms: [{ id: 'room', name: 'Room', polygon: [[0, 0], [9, 0], [9, 3], [0, 3]], floor: 'wood', ceiling: true }],
+      stairs: [], furniture: [],
+    }],
+  };
+  const res = validatePlan(plan);
+  assert.ok(res.normalized, JSON.stringify(res.errors));
+  const m = buildModel(res.normalized), sp = defaultSpawn(m);
+  // the old start looked from the door at the middle of the room: north, at a wall 1.4 m away
+  assert.ok(Math.abs(Math.sin((sp.yawDeg * Math.PI) / 180)) < 0.45, `yaw ${sp.yawDeg} runs within 25 degrees of the 9 m side`);
+  assert.ok(ahead(m, sp) > 4, `${ahead(m, sp).toFixed(2)} m ahead`);
+});
+
+test('longestView: the length of a corridor wins, equal views go to the preferred direction, an open end stops at the model bounds', () => {
+  const rect = (cx, cy, hx, hy) => ({ cx, cy, hx, hy, ux: 1, uy: 0, minX: cx - hx, maxX: cx + hx, minY: cy - hy, maxY: cy + hy });
+  // a corridor 10 x 1 with the point in the middle: both ends are 5 m away, the sides 0.5 m
+  const sides = [rect(5, 0, 5, 0.05), rect(5, 1, 5, 0.05)];
+  const closed = { colliders: [...sides, rect(0, 0.5, 0.05, 0.5), rect(10, 0.5, 0.05, 0.5)] };
+  const b = { minX: 0, maxX: 10, minY: 0, maxY: 1 };
+  assert.equal(longestView(closed, 5, 0.5, b, 0), 0);
+  assert.equal(longestView(closed, 5, 0.5, b, 180), 180);
+  assert.equal(longestView(closed, 5, 0.5, b, 175), 180, 'the closer of two equal views');
+  assert.equal(longestView(closed, 5, 0.5, b, -90), 0, 'a direction facing the side wall is not an equal view: ties go to the first, which is 0');
+  // a slanted ray down the corridor is longer than the straight one, but only the axis has long neighbours: the axis wins
+  assert.equal(longestView(closed, 5, 0.5, b, 20), 0);
+  // both ends open: the bounds end the views at 7 m (east) and 3 m (west) from x = 3, so the east end wins whatever is preferred
+  const open = { colliders: sides };
+  assert.equal(longestView(open, 3, 0.5, b, 180), 0);
+  assert.equal(longestView(open, 3, 0.5, null, 180), 180, 'no bounds: both ends are as long as the limit, the preferred one wins');
+  assert.equal(longestView({ colliders: [] }, 3, 3, null, 90), 90, 'an empty level and no bounds: the preferred direction');
 });
 
 // Stairs without to_level leave the plan (a drawing of one floor): drawn, solid, not a way to another level.

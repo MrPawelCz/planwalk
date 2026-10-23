@@ -3,7 +3,8 @@
 // other control. main.js builds the desktop toolbar as always; this module moves the same elements between the toolbar and the
 // sheet, so their handlers and state stay where they were. The layout is decided here in JS and shown as classes on the root
 // (pw-compact, plus pw-landscape for the one-bar variant), so a test can drive it by resizing the window.
-// Strings live here as { en, pl }; other modules put their controls into the Menu with registerExtra().
+// Strings live here as { en, pl }; other modules put their controls into the Menu with registerExtra() (the end of the Menu, and the
+// desktop toolbar) or registerMenuHead() (the title row, phone only).
 import { makeT } from './i18n.js';
 
 export const STRINGS = {
@@ -55,6 +56,9 @@ const CSS = `
 .pw-compact .pw-sheet[hidden]{display:none}
 .pw-sheet-head{position:sticky;top:0;z-index:1;display:flex;align-items:center;justify-content:space-between;padding:6px 0 4px;background:#fff}
 .pw-sheet-head h2{margin:0;font-size:17px}
+.pw-sheet-head-extra{display:flex;align-items:center;margin:0 4px 0 auto}
+.pw-sheet-head .pw-lang{gap:6px;border:0;border-radius:0;overflow:visible}
+.pw-sheet-head .pw-lang button,.pw-sheet-head .pw-lang button:last-child{min-width:48px;min-height:44px;padding:4px 10px;font-size:16px;border:1px solid rgba(80,72,62,.25);border-radius:10px}
 .pw-sheet-x{width:44px;height:44px;padding:0;font:inherit;font-size:26px;line-height:1;color:inherit;background:none;border:0;cursor:pointer}
 .pw-menu-body{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .pw-menu-body > *{min-width:0}
@@ -87,7 +91,7 @@ const CSS = `
 .pw-compact .pw-dlg-xrow{display:block;position:sticky;top:0;height:0;z-index:3}
 .pw-dlg-x{position:absolute;top:-8px;right:-10px;width:44px;height:44px;padding:0;font:inherit;font-size:28px;line-height:1;color:inherit;background:none;border:0;cursor:pointer}
 .pw-compact .pw-dlg{box-sizing:border-box;margin:12px auto auto;max-height:calc(100vh - 24px);max-height:calc(100dvh - 24px);overflow:auto;-webkit-overflow-scrolling:touch}
-.pw-compact .pw-dlg h2{padding-right:44px}
+.pw-compact .pw-dlg h2,.pw-compact .pw-share-dlg form > p:first-child{padding-right:44px}
 .pw-compact .pw-dlg textarea{display:block;box-sizing:border-box;width:100%;height:min(150px,34vh);margin-top:34px}
 .pw-compact.pw-landscape .pw-dlg textarea{height:min(96px,26vh)}
 .pw-compact .pw-visit-note button{min-height:44px;min-width:44px;font-size:14px}
@@ -130,8 +134,10 @@ export function createCompact({ h, root, bar, nameEl, badge, tag, issuesEl, hint
   const menuBody = h('div', { class: 'pw-menu-body' });
   // Anything you append to menuExtras shows at the end of the Menu in the compact layout; registerExtra() also keeps the element in the toolbar otherwise.
   const menuExtras = h('div', { class: 'pw-full pw-menu-extras' });
+  // registerMenuHead() puts a control in the Menu's title row (between the title and the close cross), where it stays in view while the sheet scrolls.
+  const menuHead = h('div', { class: 'pw-sheet-head-extra' });
   const menu = h('div', { class: 'pw-sheet pw-menu', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'pw-menu-title', hidden: '' },
-    h('div', { class: 'pw-sheet-head' }, menuTitle, menuX), menuBody);
+    h('div', { class: 'pw-sheet-head' }, menuTitle, menuHead, menuX), menuBody);
   const zoneL = h('div'), zoneR = h('div');
   const zones = h('div', { class: 'pw-walkzones', hidden: '', 'aria-hidden': 'true' }, zoneL, zoneR);
   const touchHint = h('div', { class: 'pw-touchhint', hidden: '', 'aria-hidden': 'true' });
@@ -247,6 +253,9 @@ export function createCompact({ h, root, bar, nameEl, badge, tag, issuesEl, hint
     if (kind === 'desktop' || kind === null) bar.append(el); else menuExtras.append(el);
   }
 
+  // A control that lives only in the phone Menu's title row (the page language switch); the desktop toolbar does not get it.
+  function registerMenuHead(el) { menuHead.append(el); }
+
   // Dialogs: a 44 px cross in the top right corner (phone layout) and a tap on the dimmed page closes them. The cross is the first
   // control, so opening the paste dialog on a phone does not focus its text box and raise the keyboard; Help rebuilds its content on
   // every opening, so the cross is put back when the dialog opens.
@@ -264,8 +273,12 @@ export function createCompact({ h, root, bar, nameEl, badge, tag, issuesEl, hint
       if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) shut();
     });
   }
-  // A button in the Menu is an action (export, paste, About, Help): the Menu gets out of its way. Switches and the sliders stay open.
-  menuBody.addEventListener('click', (e) => { if (e.target.closest && e.target.closest('button')) closeSheets(); });
+  // A button in the Menu is an action (export, paste, About, Help): the Menu gets out of its way. Switches, the sliders and buttons marked
+  // data-keep-menu stay open: the copy buttons answer "Copied" on themselves, which a closed Menu would hide.
+  menuBody.addEventListener('click', (e) => {
+    const b = e.target.closest && e.target.closest('button');
+    if (b && !b.hasAttribute('data-keep-menu')) closeSheets();
+  });
   for (const s of actionSelects) s.addEventListener('change', () => closeSheets());
   window.addEventListener('keydown', (e) => {
     if (e.code !== 'Escape' || kind === 'desktop') return;
@@ -275,5 +288,5 @@ export function createCompact({ h, root, bar, nameEl, badge, tag, issuesEl, hint
   window.addEventListener('orientationchange', () => setTimeout(update, 60));
   update();
 
-  return { update, sync, freeRect, issuesRenewed, registerExtra, menuExtras, closeSheets, get kind() { return kind; }, get touch() { return touchDevice(); } };
+  return { update, sync, freeRect, issuesRenewed, registerExtra, registerMenuHead, menuExtras, closeSheets, get kind() { return kind; }, get touch() { return touchDevice(); } };
 }

@@ -97,6 +97,12 @@ export async function openPhone(file, { width = 390, height = 664, dpr = 3, mobi
         await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
         await settle(150);
       },
+      // Raw touch input for gestures: type is touchStart, touchMove or touchEnd; points are the fingers on the screen ([{ x, y, id }]).
+      // A touchEnd takes an empty list and lifts every finger.
+      async touch(type, points) {
+        await cdp.send('Input.dispatchTouchEvent', { type, touchPoints: points.map((q, i) => ({ x: q.x, y: q.y, id: q.id ?? i })) });
+        await sleep(40);
+      },
       async shot(out, quality = 55) {
         const r = await cdp.send('Page.captureScreenshot', { format: 'jpeg', quality, fromSurface: true });
         writeFileSync(out, Buffer.from(r.data, 'base64'));
