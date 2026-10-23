@@ -56,7 +56,7 @@ export async function openPage(file, { width = 1280, height = 800, mobile = fals
   };
   try {
     let target = null;
-    for (let i = 0; i < 100 && !target; i++) {
+    for (let i = 0; i < 400 && !target; i++) {
       try { target = (await (await fetch(`http://127.0.0.1:${port}/json/list`)).json()).find((t) => t.type === 'page'); } catch { /* still starting */ }
       if (!target) await sleep(150);
     }

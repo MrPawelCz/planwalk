@@ -24,7 +24,7 @@ async function openPage(lang) {
   const close = () => { try { proc.kill('SIGKILL'); } catch { /* gone */ } try { rmSync(profile, { recursive: true, force: true, maxRetries: 8, retryDelay: 250 }); } catch { /* best effort */ } };
   try {
     let target = null;
-    for (let i = 0; i < 100 && !target; i++) {
+    for (let i = 0; i < 400 && !target; i++) {
       try { target = (await (await fetch(`http://127.0.0.1:${port}/json/list`)).json()).find((t) => t.type === 'page'); } catch { /* starting */ }
       if (!target) await sleep(150);
     }
