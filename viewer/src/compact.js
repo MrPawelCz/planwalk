@@ -91,7 +91,7 @@ const CSS = `
 .pw-compact .pw-dlg-xrow{display:block;position:sticky;top:0;height:0;z-index:3}
 .pw-dlg-x{position:absolute;top:-8px;right:-10px;width:44px;height:44px;padding:0;font:inherit;font-size:28px;line-height:1;color:inherit;background:none;border:0;cursor:pointer}
 .pw-compact .pw-dlg{box-sizing:border-box;margin:12px auto auto;max-height:calc(100vh - 24px);max-height:calc(100dvh - 24px);overflow:auto;-webkit-overflow-scrolling:touch}
-.pw-compact .pw-dlg h2{padding-right:44px}
+.pw-compact .pw-dlg h2,.pw-compact .pw-share-dlg form > p:first-child{padding-right:44px}
 .pw-compact .pw-dlg textarea{display:block;box-sizing:border-box;width:100%;height:min(150px,34vh);margin-top:34px}
 .pw-compact.pw-landscape .pw-dlg textarea{height:min(96px,26vh)}
 .pw-compact .pw-visit-note button{min-height:44px;min-width:44px;font-size:14px}
