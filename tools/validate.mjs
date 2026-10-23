@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // planwalk plan validator CLI (docs/SPEC.md section 5).
 //   node tools/validate.mjs plan.json [--json] [--strict]     ("-" reads the plan from stdin)
-// Exit codes: 0 ok (with --strict also no warnings), 1 not ok, 2 usage error or unreadable file.
+// Exit codes: 0 ok (with --strict also no warnings and nothing repaired), 1 not ok, 2 usage error or unreadable file.
+// A chat answer is read like the viewer reads it; each change made to read it is printed as a "note:" line (the "repairs" list with --json).
 // Invalid JSON is reported as error E001 (exit 1), so the message can be pasted back into a chat.
 // npm run build:skill bundles this file with src/core/ into skill/planwalk/scripts/validate.mjs.
 import { readFileSync } from 'node:fs';
@@ -15,8 +16,8 @@ const self = () => { try { return relative(process.cwd(), process.argv[1]); } ca
 function usage(code) {
   const out = code === 0 ? process.stdout : process.stderr;
   out.write(`usage: node ${self()} <plan.json | -> [--json] [--strict]\n`);
-  out.write('  --json    print { ok, errors, warnings } as JSON\n');
-  out.write('  --strict  exit 1 when there are warnings too\n');
+  out.write('  --json    print { ok, errors, warnings, repairs } as JSON\n');
+  out.write('  --strict  exit 1 when there are warnings too, or when the text had to be repaired to be read\n');
   process.exit(code);
 }
 
@@ -35,17 +36,17 @@ try {
   process.exit(2);
 }
 
-const { ok, errors, warnings } = analyzePlan(text);
+const { ok, errors, warnings, repairs } = analyzePlan(text);
 
 if (flags.has('--json')) {
-  process.stdout.write(`${JSON.stringify({ ok, errors, warnings }, null, 2)}\n`);
+  process.stdout.write(`${JSON.stringify({ ok, errors, warnings, repairs }, null, 2)}\n`);
 } else {
   const line = (i) => {
     const where = `${i.path || '(plan)'}${i.id !== undefined && !i.message.includes(`"${i.id}"`) ? ` "${i.id}"` : ''}`;
     return `${i.code} ${where}: ${i.message}. Fix: ${i.fix}`.replace(/\.\. /g, '. ');
   };
   const counts = new Map();
-  const lines = [];
+  const lines = repairs.map((r) => `note: ${r}`);
   for (const i of [...errors, ...warnings]) {
     const n = (counts.get(i.code) || 0) + 1;
     counts.set(i.code, n);
@@ -56,4 +57,4 @@ if (flags.has('--json')) {
   process.stdout.write(`${errors.length} errors, ${warnings.length} warnings\n`);
 }
 
-process.exitCode = ok && !(flags.has('--strict') && warnings.length) ? 0 : 1; // not process.exit(): a large report on a pipe must be flushed first
+process.exitCode = ok && !(flags.has('--strict') && (warnings.length || repairs.length)) ? 0 : 1; // not process.exit(): a large report on a pipe must be flushed first

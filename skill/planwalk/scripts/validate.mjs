@@ -206,20 +206,22 @@ function normalizePlan(input) {
 var MAX_PLAN_CHARS = 2e6;
 
 // src/core/extract-json.js
-var INVISIBLE = /[\u200b\u200c\u200d\u2060\ufeff]/g;
+var INVISIBLE = /[\u200b\u2060\ufeff]/g;
 var OTHER_SPACE = /[\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]/;
 var TYPO_QUOTES = "\u201C\u201D\u201E\u201F\xAB\xBB\u2033\uFF02";
 var HAS_TYPO_QUOTE = new RegExp(`[${TYPO_QUOTES}]`);
 var STARTS_LIKE_PLAN = new RegExp(`^\\{\\s*["${TYPO_QUOTES}]\\s*[A-Za-z_]`);
 var FENCE = /(?:^|\n)[ \t]*(`{3,}(?!`)|~{3,}(?!~))[^\n]*\n([\s\S]*?)(?:\n[ \t]*\1[`~]*[ \t]*(?=\n|$)|$)/g;
 var JSON_LINE = /^\s*json[ \t]*:?[ \t]*\r?\n/i;
-var MAX_FENCES = 4;
+var MAX_FENCES = 200;
 var MAX_TRIES = 3;
+var MAX_BAD = 500;
+var REST_HAS_TEXT = /\s*\S/y;
 var isObj = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 var hasLevels = (v) => isObj(v) && Object.prototype.hasOwnProperty.call(v, "levels");
 function cut(src, from, typo) {
   const n = src.length;
-  const flags2 = { quotes: false, comments: false, commas: false, spaces: false, breaks: false };
+  const flags2 = { quotes: false, comments: false, commas: false, spaces: false, breaks: false, invisible: false };
   const out = [], closers = [];
   let i = from;
   const closesAt = (k) => {
@@ -277,6 +279,8 @@ function cut(src, from, typo) {
     } else if (OTHER_SPACE.test(c)) {
       flags2.spaces = true;
       out.push(" ");
+    } else if (c === "\u200C" || c === "\u200D") {
+      flags2.invisible = true;
     } else {
       out.push(c);
     }
@@ -301,6 +305,18 @@ function* sources(text2) {
   }
   yield { fence: false, ...dropLabel(text2) };
 }
+function unlist(value) {
+  const plans = Array.isArray(value) ? value.filter(hasLevels) : [];
+  if (!plans.length) return { ok: true, value, repairs: [] };
+  const repairs2 = ["took the plan out of a list"];
+  if (plans.length > 1) repairs2.push(`found ${plans.length} plans, loaded the last one`);
+  return { ok: true, value: plans[plans.length - 1], repairs: repairs2 };
+}
+function inList(body, from) {
+  let k = from - 1;
+  while (k >= 0 && /\s/.test(body[k])) k--;
+  return k >= 0 && body[k] === "[";
+}
 function extractJson(text2) {
   const fail = (kind, error) => ({ ok: false, kind, error, repairs: [] });
   try {
@@ -308,53 +324,66 @@ function extractJson(text2) {
     if (text2.length > MAX_PLAN_CHARS) return fail("too-long", `the text is too long (${text2.length} characters, the limit is ${MAX_PLAN_CHARS})`);
     if (!text2.trim()) return fail("empty", "the text is empty");
     try {
-      return { ok: true, value: JSON.parse(text2.charCodeAt(0) === 65279 ? text2.slice(1) : text2), repairs: [] };
+      return unlist(JSON.parse(text2.charCodeAt(0) === 65279 ? text2.slice(1) : text2));
     } catch {
     }
     const cleaned = text2.replace(INVISIBLE, "");
     const invisible = cleaned.length !== text2.length;
-    let unbalanced = false, firstError = null, plain = null;
+    let unbalanced = false, firstError = null, plain = null, last = null, count = 0;
     for (const src of sources(cleaned)) {
+      if (count && !src.fence) break;
+      const before = count;
       for (const typo of [false, true]) {
-        if (typo && !HAS_TYPO_QUOTE.test(src.body)) continue;
-        let from = src.body.indexOf("{"), nested = false;
-        for (let tries = 0; from >= 0 && tries < MAX_TRIES; tries++) {
+        if (typo && (!HAS_TYPO_QUOTE.test(src.body) || count > before)) continue;
+        let from = src.body.indexOf("{"), nested = false, unclosed = 0, bad = 0;
+        while (from >= 0) {
           const found = cut(src.body, from, typo);
           if (!found) {
             unbalanced = unbalanced || STARTS_LIKE_PLAN.test(src.body.slice(from, from + 40));
             nested = true;
+            if (++unclosed >= MAX_TRIES) break;
             from = src.body.indexOf("{", from + 1);
             continue;
           }
+          const start = from;
+          from = src.body.indexOf("{", found.end);
           let value;
+          if (!found.text.includes(":") && !/^\{\s*\}$/.test(found.text)) continue;
           try {
             value = JSON.parse(found.text);
           } catch (e) {
-            if (found.text.includes(":")) firstError = firstError ?? { message: String(e && e.message ? e.message : e), text: found.text };
-            from = src.body.indexOf("{", found.end);
+            firstError = firstError ?? { message: String(e && e.message ? e.message : e), text: found.text };
+            if (++bad >= MAX_BAD) break;
             continue;
           }
-          if (nested && !hasLevels(value)) {
-            from = src.body.indexOf("{", found.end);
-            continue;
-          }
+          const isPlan = hasLevels(value);
+          if (nested && !isPlan || !isPlan && plain) continue;
           const f = found.flags;
-          const repairs = [];
-          if (invisible) repairs.push("removed invisible characters");
-          if (src.fence) repairs.push("took the code block");
-          if (src.label) repairs.push("dropped a leading json line");
-          if (!src.fence && (from > 0 || src.body.slice(found.end).trim())) repairs.push("ignored the text around the JSON object");
-          if (f.quotes) repairs.push("replaced typographic quotes with plain quotes");
-          if (f.comments) repairs.push("removed comments");
-          if (f.commas) repairs.push("removed trailing commas");
-          if (f.spaces) repairs.push("replaced non-breaking spaces");
-          if (f.breaks) repairs.push("escaped line breaks inside text");
-          const hit = { ok: true, value, repairs };
-          if (hasLevels(value)) return hit;
-          plain = plain ?? hit;
-          break;
+          const repairs2 = [];
+          if (invisible || f.invisible) repairs2.push("removed invisible characters");
+          if (src.fence) repairs2.push("took the code block");
+          if (src.label) repairs2.push("dropped a leading json line");
+          if (!src.fence) {
+            REST_HAS_TEXT.lastIndex = found.end;
+            if (start > 0 || REST_HAS_TEXT.test(src.body)) repairs2.push("ignored the text around the JSON object");
+          }
+          if (inList(src.body, start)) repairs2.push("took the plan out of a list");
+          if (f.quotes) repairs2.push("replaced typographic quotes with plain quotes");
+          if (f.comments) repairs2.push("removed comments");
+          if (f.commas) repairs2.push("removed trailing commas");
+          if (f.spaces) repairs2.push("replaced non-breaking spaces");
+          if (f.breaks) repairs2.push("escaped line breaks inside text");
+          const hit = { ok: true, value, repairs: repairs2 };
+          if (isPlan) {
+            last = hit;
+            count++;
+          } else plain = hit;
         }
       }
+    }
+    if (last) {
+      if (count > 1) last.repairs.push(`found ${count} plans, loaded the last one`);
+      return last;
     }
     if (plain) return plain;
     if (firstError) return fail("invalid", `${firstError.message}${where(firstError.text, firstError.message)}`);
@@ -973,8 +1002,8 @@ function analyze(input) {
     issue.fix = clip(fix, CAPS.message);
     (code[0] === "E" ? errors2 : warnings2).push(issue);
   };
-  let repairs = [];
-  const result = (normalized, salvaged = null, dropped2 = 0) => ({ ok: errors2.length === 0, errors: errors2, warnings: warnings2, normalized, salvaged, dropped: dropped2, repairs });
+  let repairs2 = [];
+  const result = (normalized, salvaged = null, dropped2 = 0) => ({ ok: errors2.length === 0, errors: errors2, warnings: warnings2, normalized, salvaged, dropped: dropped2, repairs: repairs2 });
   let plan = input;
   if (typeof input === "string") {
     const parsed = parseText(input);
@@ -988,7 +1017,7 @@ function analyze(input) {
       );
       return result(null);
     }
-    repairs = parsed.repairs;
+    repairs2 = parsed.repairs;
     plan = parsed.value;
   }
   if (!isObj2(plan)) {
@@ -1683,8 +1712,8 @@ function usage(code) {
   const out = code === 0 ? process.stdout : process.stderr;
   out.write(`usage: node ${self()} <plan.json | -> [--json] [--strict]
 `);
-  out.write("  --json    print { ok, errors, warnings } as JSON\n");
-  out.write("  --strict  exit 1 when there are warnings too\n");
+  out.write("  --json    print { ok, errors, warnings, repairs } as JSON\n");
+  out.write("  --strict  exit 1 when there are warnings too, or when the text had to be repaired to be read\n");
   process.exit(code);
 }
 var args = process.argv.slice(2);
@@ -1705,9 +1734,9 @@ try {
 `);
   process.exit(2);
 }
-var { ok, errors, warnings } = analyzePlan(text);
+var { ok, errors, warnings, repairs } = analyzePlan(text);
 if (flags.has("--json")) {
-  process.stdout.write(`${JSON.stringify({ ok, errors, warnings }, null, 2)}
+  process.stdout.write(`${JSON.stringify({ ok, errors, warnings, repairs }, null, 2)}
 `);
 } else {
   const line = (i) => {
@@ -1715,7 +1744,7 @@ if (flags.has("--json")) {
     return `${i.code} ${where2}: ${i.message}. Fix: ${i.fix}`.replace(/\.\. /g, ". ");
   };
   const counts = /* @__PURE__ */ new Map();
-  const lines = [];
+  const lines = repairs.map((r) => `note: ${r}`);
   for (const i of [...errors, ...warnings]) {
     const n = (counts.get(i.code) || 0) + 1;
     counts.set(i.code, n);
@@ -1727,4 +1756,4 @@ if (flags.has("--json")) {
   process.stdout.write(`${errors.length} errors, ${warnings.length} warnings
 `);
 }
-process.exitCode = ok && !(flags.has("--strict") && warnings.length) ? 0 : 1;
+process.exitCode = ok && !(flags.has("--strict") && (warnings.length || repairs.length)) ? 0 : 1;

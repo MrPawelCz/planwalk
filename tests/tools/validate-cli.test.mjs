@@ -59,3 +59,29 @@ test('text that is not JSON is reported as E001 with a fix, exit 1, so it can be
   assert.match(r.stdout, /^E001 /);
   assert.match(r.stdout, /Fix: /);
 });
+
+test('a chat answer is read, every repair is printed as a note line and --strict refuses it', () => {
+  const answer = `Here is your plan:\n\`\`\`json\n${JSON.stringify(flat(), null, 2).replace(/\n(\s*[}\]])/g, ',\n$1')}\n\`\`\`\nNotes: scale from the door.`;
+  const f = put('answer.txt', answer);
+  const r = run(f);
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(r.stdout, /^note: took the code block$/m);
+  assert.match(r.stdout, /^note: removed trailing commas$/m);
+  assert.match(r.stdout, /0 errors, 0 warnings/);
+  const j = JSON.parse(run(f, '--json').stdout);
+  assert.equal(j.ok, true);
+  assert.deepEqual(j.repairs, ['took the code block', 'removed trailing commas']);
+  assert.equal(run(f, '--strict').status, 1, 'a repaired text is not strictly valid');
+  const clean = run(join(root, 'examples/flat-1.plan.json'), '--json', '--strict');
+  assert.equal(clean.status, 0);
+  assert.deepEqual(JSON.parse(clean.stdout).repairs, []);
+  assert.doesNotMatch(run(join(root, 'examples/flat-1.plan.json')).stdout, /note:/);
+});
+
+test('two plans in one answer: the CLI says which one it read', () => {
+  const second = { ...flat(), name: 'Corrected' };
+  const r = run(put('two.txt', `First:\n${JSON.stringify(flat())}\nCorrected:\n${JSON.stringify(second)}`), '--json');
+  const out = JSON.parse(r.stdout);
+  assert.equal(out.ok, true);
+  assert.ok(out.repairs.includes('found 2 plans, loaded the last one'), out.repairs.join('|'));
+});

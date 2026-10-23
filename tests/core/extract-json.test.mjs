@@ -138,3 +138,90 @@ test('validator E001 messages tell the person what to do', () => {
   assert.match(nan.errors[0].fix, /NaN or Infinity/);
   assert.equal(analyzePlan('x'.repeat(MAX_PLAN_CHARS + 1)).errors[0].code, 'E001');
 });
+
+test('many snippets before the plan do not hide it or replace it (fenced and unfenced)', () => {
+  const junk = (i) => `Example ${i}:\n\`\`\`json\n{"example": ${i}}\n\`\`\`\n`;
+  for (const n of [3, 4, 5, 12]) {
+    const r = extractJson(`${Array.from({ length: n }, (_, i) => junk(i)).join('')}Your plan:\n\`\`\`json\n${bare}\n\`\`\``);
+    assert.equal(r.ok, true, `${n} snippets`);
+    assert.deepEqual(r.value, plan, `${n} snippets: the plan, not {"example": ...}`);
+  }
+  for (const n of [2, 3, 6, 40]) {
+    const r = extractJson(`Use ${Array.from({ length: n }, (_, i) => `{name${i}}`).join(', ')} as you like. Plan: ${bare}`);
+    assert.equal(r.ok, true, `${n} brace snippets`);
+    assert.deepEqual(r.value, plan, `${n} brace snippets`);
+  }
+  // junk objects that do parse are skipped for the plan, and still returned when nothing else is there
+  assert.deepEqual(extractJson('Look: {"a": 1} and {"b": 2}. Done.').value, { a: 1 });
+  assert.deepEqual(extractJson(`{"a": 1}, {"b": 2}, {"c": 3}, {"d": 4}, ${bare} // ok`).value, plan);
+});
+
+test('two plans in one answer: the last one is loaded and the repairs say so', () => {
+  const second = { ...plan, name: 'Corrected version' };
+  const fenced = `First try:\n\`\`\`json\n${bare}\n\`\`\`\nCorrected:\n\`\`\`json\n${JSON.stringify(second, null, 2)}\n\`\`\`\nDone.`;
+  const r = extractJson(fenced);
+  assert.equal(r.ok, true);
+  assert.equal(r.value.name, 'Corrected version');
+  assert.ok(r.repairs.includes('found 2 plans, loaded the last one'), r.repairs.join(' | '));
+  assert.ok(r.repairs.includes('took the code block'));
+  const loose = extractJson(`Plan: ${bare}\nCorrected: ${JSON.stringify(second)} Thanks`);
+  assert.equal(loose.value.name, 'Corrected version');
+  assert.ok(loose.repairs.includes('found 2 plans, loaded the last one'));
+  const three = extractJson(`${bare}\n${JSON.stringify(second)}\n${bare}`);
+  assert.deepEqual(three.value, plan);
+  assert.ok(three.repairs.includes('found 3 plans, loaded the last one'));
+  // one plan seen twice in different sources (a fence inside the text) is still one plan
+  const once = extractJson(`Here:\n\`\`\`json\n${bare}\n\`\`\``);
+  assert.ok(!once.repairs.some((x) => /found/.test(x)));
+  const smart = extractJson(`“Quote” in a note.\n${bare}\n`);
+  assert.ok(!smart.repairs.some((x) => /found/.test(x)), 'typographic quotes elsewhere do not read the plan twice');
+});
+
+test('a plan inside a list is taken out of it', () => {
+  const r = extractJson(`[${bare}]`);
+  assert.equal(r.ok, true);
+  assert.deepEqual(r.value, plan);
+  assert.deepEqual(r.repairs, ['took the plan out of a list']);
+  const second = { ...plan, name: 'Second' };
+  const two = extractJson(JSON.stringify([plan, second]));
+  assert.equal(two.value.name, 'Second');
+  assert.deepEqual(two.repairs, ['took the plan out of a list', 'found 2 plans, loaded the last one']);
+  const fenced = extractJson(`\`\`\`json\n[\n${bare}, // note\n]\n\`\`\``);
+  assert.deepEqual(fenced.value, plan);
+  assert.ok(fenced.repairs.includes('took the plan out of a list'));
+  assert.deepEqual(extractJson('[1, 2, 3]').value, [1, 2, 3], 'a list without a plan is left to the validator');
+  assert.deepEqual(extractJson('[]').repairs, []);
+});
+
+test('zero width joiners and non-joiners inside strings are kept, noise between tokens goes', () => {
+  const name = 'Family \u{1F468}‍\u{1F469}‍\u{1F467} flat, می‌خواهم';
+  const r = extractJson(`Plan:\n\`\`\`json\n{"name": "${name}", "levels": [],}\n\`\`\``);
+  assert.equal(r.ok, true);
+  assert.equal(r.value.name, name);
+  const between = extractJson('{"name": "x",‍ "levels": []‌}');
+  assert.equal(between.ok, true);
+  assert.deepEqual(between.value, { name: 'x', levels: [] });
+  assert.ok(between.repairs.includes('removed invisible characters'));
+  assert.equal(extractJson('{"na​me": "x​", "levels": [],}').value.name, 'x', 'a zero width space is still dropped everywhere');
+});
+
+test('hostile input stays fast with the wider search', () => {
+  const t0 = Date.now();
+  const cases = [
+    '{ '.repeat(600000),
+    '{"a":'.repeat(300000),
+    '```\n{\n```\n'.repeat(200000),
+    '{"levels": [] '.repeat(100000),
+    '{"levels": []}'.repeat(100000),
+    '{"a": 1}'.repeat(200000),
+    `${'{x} '.repeat(300000)}${bare}`,
+  ];
+  for (const c of cases) {
+    const t1 = Date.now();
+    const r = extractJson(c.slice(0, MAX_PLAN_CHARS));
+    assert.equal(typeof r.ok, 'boolean');
+    assert.ok(Date.now() - t1 < 2500, `${c.slice(0, 12)}: ${Date.now() - t1} ms`);
+  }
+  assert.ok(Date.now() - t0 < 9000, `${Date.now() - t0} ms in all`);
+  assert.deepEqual(extractJson(`${'{x} '.repeat(300000)}${bare}`.slice(-1800000)).value, plan, 'plain brace snippets are free, the plan behind them is found');
+});

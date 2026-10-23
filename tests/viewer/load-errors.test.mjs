@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { MAX_PLAN_CHARS } from '../../src/core/limits.js';
 import { setLang } from '../../viewer/src/i18n.js';
-import { downloadMessage, fetchPlanText, loadMessage, strings } from '../../viewer/src/load-errors.js';
+import { downloadMessage, fetchPlanText, issueLines, loadMessage, severalPlansMessage, strings } from '../../viewer/src/load-errors.js';
 
 test('every message exists in English and Polish, with the same placeholders and no long dashes', () => {
   assert.deepEqual(Object.keys(strings.pl).sort(), Object.keys(strings.en).sort());
@@ -19,7 +19,7 @@ test('failure kinds map to plain messages in the current language', () => {
   assert.match(loadMessage('no-object'), /does not contain a plan\. Paste the whole answer from the AI chat/);
   assert.match(loadMessage('truncated'), /stops before the end/);
   assert.match(loadMessage('invalid'), /mistake in the JSON/);
-  assert.match(loadMessage('too-long'), /2 MB/);
+  assert.match(loadMessage('too-long'), /about 2 MB of text/);
   assert.match(loadMessage('no-object', 'download'), /download worked, but the file is not a plan/);
   assert.match(loadMessage('invalid', 'link'), /damaged/);
   assert.match(downloadMessage({ kind: 'status', status: 404 }), /\(404\)/);
@@ -58,4 +58,47 @@ test('fetchPlanText: ok, error status, timeout, size cap and refused connection 
     server.close();
   }
   assert.deepEqual(await fetchPlanText('http://127.0.0.1:1/nothing-here'), { ok: false, kind: 'network' });
+});
+
+test('issueLines: the first two errors, code and path included, each cut to 160 characters', () => {
+  const errors = [
+    { code: 'E005', path: 'levels[0].openings[3]', message: 'opening "d1" sits on wall "ghost", which does not exist', fix: 'x' },
+    { code: 'E002', path: '', message: 'm'.repeat(400), fix: 'y' },
+    { code: 'E009', path: 'z', message: 'third', fix: 'z' },
+  ];
+  const lines = issueLines(errors);
+  assert.equal(lines.length, 2);
+  assert.equal(lines[0], 'E005 levels[0].openings[3]: opening "d1" sits on wall "ghost", which does not exist');
+  assert.equal(lines[1].length, 160);
+  assert.match(lines[1], /^E002: m+\.\.\.$/);
+  assert.deepEqual(issueLines([]), []);
+  assert.deepEqual(issueLines(undefined), []);
+});
+
+test('the invalid JSON message adds the decimal point hint only when the text has a decimal comma', () => {
+  const comma = '{"version": 1, "levels": [{"id": "L0", "wall_thickness": 0,2, "height": 2,5}]}';
+  const other = '{"version": 1, "levels": [}';
+  setLang('en');
+  assert.match(loadMessage('invalid', undefined, comma), /decimal point, not a comma \(2\.5, not 2,5\)/);
+  assert.doesNotMatch(loadMessage('invalid', undefined, other), /decimal point/);
+  assert.doesNotMatch(loadMessage('invalid'), /decimal point/);
+  assert.doesNotMatch(loadMessage('invalid', undefined, '{"from": [1,2], "to": [3,4], "x": }'), /decimal point/, 'a list of two whole numbers is not a decimal comma');
+  assert.doesNotMatch(loadMessage('truncated', undefined, comma), /decimal point/, 'only the syntax error kind gets the hint');
+  assert.doesNotMatch(loadMessage('invalid', 'link', comma), /decimal point/);
+  setLang('pl');
+  assert.match(loadMessage('invalid', undefined, comma), /kropk[ąę], nie przecinek \(2\.5, a nie 2,5\)/);
+  assert.match(loadMessage('too-long'), /około 2 MB tekstu/);
+  assert.doesNotMatch(loadMessage('invalid', undefined, other), /kropk/);
+  setLang('en');
+});
+
+test('severalPlansMessage speaks only when extractJson took the last of several plans', () => {
+  setLang('en');
+  assert.match(severalPlansMessage(['took the code block', 'found 2 plans, loaded the last one']), /more than one plan.*loaded the last one/);
+  assert.equal(severalPlansMessage(['took the code block']), null);
+  assert.equal(severalPlansMessage([]), null);
+  assert.equal(severalPlansMessage(undefined), null);
+  setLang('pl');
+  assert.match(severalPlansMessage(['found 3 plans, loaded the last one']), /więcej niż jeden plan.*ostatni/);
+  setLang('en');
 });
