@@ -4,6 +4,8 @@ All notable changes to planwalk are listed here. The format follows [Keep a Chan
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-24
+
 ### Added
 
 - Copy link makes a short link that holds the plan (`#z=`, compressed, about 70 to 76 percent shorter than the `#plan=` form for the two examples); Copy long link makes the older `#plan=` form for browsers without compression. Older `#plan=` links keep opening. Share image hands the current view to the share sheet where the browser supports it, otherwise it downloads the PNG. On a page opened from a file (or from any address that is not http or https) the link starts with the public page address, the Polish page for a Polish interface, so it never carries a local path.
@@ -82,6 +84,7 @@ First public version.
 - A benchmark harness in `eval/` (synthetic plan generator, four drawing styles, scorer) with the first results in `docs/BENCHMARK.md`.
 - Continuous integration (tests on Node 22), deployment of the viewer to GitHub Pages, issue templates, and the MIT licence with the third-party notices in `THIRD_PARTY_LICENSES.md`.
 
-[Unreleased]: https://github.com/MrPawelCz/planwalk/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/MrPawelCz/planwalk/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/MrPawelCz/planwalk/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/MrPawelCz/planwalk/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/MrPawelCz/planwalk/releases/tag/v0.1.0
