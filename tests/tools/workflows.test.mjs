@@ -80,8 +80,10 @@ test('pages publishes the Polish page and both preview images next to the Englis
 test('pages publishes the sample drawings next to the examples, before the site folder is uploaded, and the release does not carry them', () => {
   const pages = read('.github/workflows/pages.yml');
   assert.match(pages, /^ {10}cp -r examples site\/examples$/m);
-  assert.match(pages, /^ {10}cp -r docs\/samples site\/samples$/m);
-  assert.ok(pages.indexOf('cp -r docs/samples site/samples') < pages.indexOf('upload-pages-artifact'), 'the samples are copied before the site folder is uploaded');
+  assert.match(pages, /^ {10}mkdir site\/samples$/m);
+  assert.match(pages, /^ {10}cp docs\/samples\/sample-\*\.png site\/samples\/$/m);
+  assert.doesNotMatch(pages, /cp -r docs\/samples/, 'only the drawings are published, not the README next to them');
+  assert.ok(pages.indexOf('cp docs/samples/sample-*.png site/samples/') < pages.indexOf('upload-pages-artifact'), 'the samples are copied before the site folder is uploaded');
   assert.doesNotMatch(release, /docs\/samples|site\/samples/);
 });
 
