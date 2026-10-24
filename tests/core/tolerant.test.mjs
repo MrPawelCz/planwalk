@@ -208,12 +208,42 @@ test('caps are unchanged: a plan over a cap is not read any further and is not p
 
 test('a plan with so many violations that the check gives up is not read leniently', () => {
   const p = flat();
-  p.levels[0].walls = Array.from({ length: 300 }, (_, i) => ({ id: `w${i}`, from: [0, 0], to: [1, 1], a: 1, b: 2, c: 3, d: 4 }));
+  p.levels[0].walls = Array.from({ length: 400 }, (_, i) => ({ id: `w${i}`, from: [0, 0], to: [1, 1], thickness: 'a', height: 'b', kind: 'c' }));
   const r = analyzePlan(p);
   assert.equal(r.ok, false);
   assert.ok(r.errors.some((e) => e.code === 'E002'));
   assert.equal(r.normalized, null);
   assert.equal(r.partial, false);
+});
+
+test('unknown properties do not count toward that limit: 1000 walls with two ignored keys each are still read', () => {
+  const p = flat();
+  const wall = (i) => ({ id: `w${i}`, from: [i % 40, Math.floor(i / 40) * 2], to: [(i % 40) + 0.9, Math.floor(i / 40) * 2], label: `wall ${i}`, confidence: 0.9 });
+  p.levels = [0, 1].map((k) => ({ id: `L${k}`, walls: Array.from({ length: 500 }, (_, i) => wall(i)) }));
+  const r = analyzePlan(p);
+  assert.equal(r.ok, true, JSON.stringify(r.errors.slice(0, 3)));
+  assert.ok(r.normalized, 'the whole plan is built');
+  assert.equal(r.partial, false);
+  assert.equal(r.normalized.levels[0].walls.length + r.normalized.levels[1].walls.length, 1000);
+  const w = r.warnings.filter((i) => i.code === 'W116');
+  assert.equal(w.length, 101, 'listed up to the usual limit with one closing line');
+  assert.match(w[100].message, /more issues with the code W116 are not listed/);
+  assert.ok(!JSON.stringify(r.normalized).includes('confidence'));
+  const strict = analyzePlan(p, { strict: true });
+  assert.equal(strict.ok, false, 'strict still reports them');
+  assert.ok(strict.errors.some((e) => e.code === 'E002' && /unknown property/.test(e.message)));
+});
+
+test('a plan with far more unknown properties than are collected is still read, and a real violation next to them is still reported', () => {
+  const p = flat();
+  p.levels[0].walls[0] = { ...p.levels[0].walls[0], ...Object.fromEntries(Array.from({ length: 5000 }, (_, i) => [`extra${i}`, i])) };
+  p.levels[0].walls[1].thickness = 'thick';
+  const r = analyzePlan(p);
+  assert.deepEqual(r.errors.map((e) => e.path), ['levels[0].walls[1].thickness']);
+  assert.equal(r.partial, true);
+  assert.equal(r.skipped.length > 0, true);
+  assert.equal(r.warnings.filter((i) => i.code === 'W116').length, 101);
+  assert.equal(modelOf(r).levels[0].walls.length, flat().levels[0].walls.length - 1);
 });
 
 test('many unknown properties are listed up to the usual limit with one closing line', () => {
@@ -235,4 +265,137 @@ test('a number that is not finite drops its element and the model is built from 
   assert.equal(r.partial, true);
   assert.equal(r.skipped.length, 1);
   assert.equal(modelOf(r).levels[0].furniture.length, 8);
+});
+
+test('a "units" value that is not understood makes the whole plan unusable: nothing is salvaged and the fix names "units"', () => {
+  for (const units of ['feet', 'inches', 'meters', 'centimeters', 'M', '', 5, null, true, ['m'], {}]) {
+    const label = JSON.stringify(units);
+    const p = flat();
+    p.units = units;
+    const r = analyzePlan(p);
+    assert.equal(r.ok, false, label);
+    assert.equal(r.normalized, null, label);
+    assert.equal(r.salvaged, null, label);
+    assert.equal(r.partial, false, label);
+    assert.equal(modelOf(r), null, label);
+    assert.deepEqual(r.skipped, [], label);
+    assert.equal(r.dropped, 0, label);
+    assert.deepEqual(codes(r.errors), ['E002'], `${label}: no other check runs on a plan whose scale is not known`);
+    assert.equal(r.errors[0].path, 'units', label);
+    assert.match(r.errors[0].fix, /Use one of "m", "cm", "mm", "ft", "in".* at units\./, label);
+    assert.equal(validatePlan(p).normalized, null, label);
+  }
+  const feet = flat();
+  feet.units = 'feet';
+  assert.match(analyzePlan(feet).errors[0].fix, /closest: "ft"/);
+  const many = duplex();
+  many.units = 'centimeters';
+  many.levels[0].walls[0].from = 'x'; // an element error next to it changes nothing: the plan is refused whole
+  const r = analyzePlan(many);
+  assert.equal(r.partial, false);
+  assert.equal(modelOf(r), null);
+  assert.deepEqual(r.skipped, []);
+});
+
+test('a missing "units" is metres, as before, and every unit the schema lists still gives a model', () => {
+  const p = flat();
+  delete p.units;
+  let r = analyzePlan(p);
+  assert.equal(r.ok, true, JSON.stringify(r.errors));
+  assert.equal(r.normalized.sourceUnits, 'm');
+  for (const units of ['m', 'cm', 'mm', 'ft', 'in']) {
+    p.units = units;
+    r = analyzePlan(p);
+    assert.ok(modelOf(r), units);
+    assert.equal(r.normalized.sourceUnits, units);
+    assert.ok(!r.errors.some((e) => e.path === 'units'), units);
+  }
+});
+
+test('a number that is not finite outside every element refuses the whole plan, as before, and is not partial', () => {
+  const p = flat();
+  p.meta = { scale: 1e999 };
+  let r = analyzePlan(p);
+  assert.equal(r.ok, false);
+  assert.deepEqual(codes(r.errors), ['E010']);
+  assert.equal(r.normalized, null);
+  assert.deepEqual(r.skipped, []);
+  assert.equal(r.partial, false, 'nothing was skipped, so there is no banner to show: the plan is refused');
+  assert.equal(modelOf(r), null);
+  p.levels[0].furniture[0].center = 'x'; // with a skipped element the rest is shown, and the error in meta stays listed
+  r = analyzePlan(p);
+  assert.equal(r.partial, true);
+  assert.equal(r.skipped.length, 1);
+  assert.ok(codes(r.errors).includes('E010'));
+  assert.equal(modelOf(r).levels[0].furniture.length, 8);
+});
+
+test('a number that is not finite inside an ignored property (W116, "$schema", "x-...") is no error and drops nothing', () => {
+  const p = flat();
+  p.levels[0].walls[0].conf = 1e999;
+  p.levels[0].rooms[0].guess = { areas: [12, -1e999] };
+  p['x-source'] = { score: 1e999 };
+  p.levels[0]['x-conf'] = [1e999];
+  const r = analyzePlan(p);
+  assert.equal(r.ok, true, JSON.stringify(r.errors));
+  assert.deepEqual(codes(r.warnings).filter((c) => c === 'W116'), ['W116', 'W116']);
+  assert.deepEqual(r.skipped, []);
+  assert.equal(r.partial, false);
+  assert.equal(r.normalized.levels[0].walls.length, flat().levels[0].walls.length);
+  const q = flat(); // a known property of the same wall still counts
+  q.levels[0].walls[0].conf = 1e999;
+  q.levels[0].walls[0].thickness = Infinity;
+  const s = analyzePlan(q);
+  assert.deepEqual(s.errors.map((e) => [e.code, e.path]), [['E010', 'levels[0].walls[0].thickness']]);
+  assert.equal(s.partial, true);
+  assert.equal(s.skipped.filter((k) => k.kind === 'wall').length, 1);
+});
+
+test('a stair that leads to a skipped level is skipped too, with its own reason', () => {
+  const p = duplex();
+  p.levels[1].height = -3; // the upper level cannot be read
+  const r = analyzePlan(p);
+  assert.equal(r.partial, true);
+  assert.deepEqual(r.skipped.map((s) => [s.kind, s.id, s.path, s.reason]), [
+    ['stair', 'stair-1', 'levels[0].stairs[0]', 'level-skipped'],
+    ['level', 'L1', 'levels[1]', 'invalid'],
+  ]);
+  assert.equal(r.skipped[0].why, 'the level it leads to was skipped');
+  assert.equal(r.dropped, r.skipped.length, 'the dropped count includes the stair');
+  assert.ok(!codes(r.errors).includes('E009'), 'the stair is not reported as one that leads to a missing level');
+  const m = modelOf(r);
+  assert.equal(m.levels.length, 1);
+  assert.equal(m.levels[0].stairs.length, 0);
+});
+
+test('a stair stays when the skipped level shares its id with a level that is kept, and a stair without to_level is never skipped for a level', () => {
+  const p = duplex();
+  const loose = { ...p.levels[0].stairs[0], id: 'out' };
+  delete loose.to_level;
+  p.levels[0].stairs.push(loose);
+  p.levels[1].height = -3;
+  let r = analyzePlan(p);
+  assert.deepEqual(r.skipped.map((s) => s.kind + ':' + s.id), ['stair:stair-1', 'level:L1']);
+  assert.deepEqual(modelOf(r).levels[0].stairs.map((s) => s.id), ['out']);
+  const twin = JSON.parse(JSON.stringify(p.levels[1]));
+  twin.height = 2.6;
+  p.levels.push(twin); // a second level called L1 that can be read
+  r = analyzePlan(p);
+  assert.deepEqual(r.skipped.map((s) => s.kind + ':' + s.id), ['level:L1']);
+  assert.deepEqual(modelOf(r).levels[0].stairs.map((s) => s.id), ['stair-1', 'out']);
+});
+
+test('ignored lists the unknown properties that were left out, with their path and name', () => {
+  const p = flat();
+  p.levels[0].rooms[0].furniture = [];
+  p.levels[0].rooms[1].furniture = [];
+  p.levels[0].walls[0].conf = 0.9;
+  p.notes = 'drawn from a photo';
+  p['x-tool'] = 1; // allowed silently, so it is not listed
+  const r = analyzePlan(p);
+  assert.deepEqual(r.ignored.map((i) => `${i.path}|${i.key}`).sort(), ['levels[0].rooms[0]|furniture', 'levels[0].rooms[1]|furniture', 'levels[0].walls[0]|conf', '|notes']);
+  assert.equal(r.warnings.filter((i) => i.code === 'W116').length, r.ignored.length);
+  assert.deepEqual(analyzePlan(flat()).ignored, []);
+  assert.deepEqual(analyzePlan(p, { strict: true }).ignored, [], 'with strict they are errors, not ignored');
+  assert.deepEqual(analyzePlan('not a plan').ignored, []);
 });

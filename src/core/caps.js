@@ -13,7 +13,8 @@ export const CAPS = Object.freeze({
   coordinate: 1000, // metres from the origin: a wall end, room corner, stair end or furniture centre farther out is E014 (a mistyped number)
   echo: 80, // characters of a user supplied value that a message may repeat
   message: 1500, // characters of one message or fix text
-  violations: 1000, // schema violations collected before the check gives up
+  violations: 1000, // schema violations collected before the check gives up (unknown properties are not counted)
+  unknownProperties: 1000, // unknown properties collected (W116); the rest are left out without a word and the plan is still read
 });
 
 // Own property test without Object.hasOwn (Safari before 15.4 has none). Plan keys such as "__proto__",

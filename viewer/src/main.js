@@ -4,7 +4,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
 import { analyzePlan, validatePlan, modelOf } from '../../src/core/validate.js';
 import { extractJson } from '../../src/core/extract-json.js';
-import { createNotices, fetchPlanText, readPlanFile, reportCrash, loadMessage, downloadMessage, issueLines, severalPlansMessage, skippedMessage, skippedLines, noWebglText } from './load-errors.js';
+import { createNotices, fetchPlanText, readPlanFile, reportCrash, loadMessage, downloadMessage, issueLines, severalPlansMessage, skippedMessage, skippedLines, ignoredMessage, noWebglText } from './load-errors.js';
 import { buildModel, roomAt, modelExtent, CUT_HEIGHT, PLAYER } from './geometry.js';
 import { PlanScene, Stage } from './scene.js';
 import { LOOKS, setTextureAnisotropy, withoutNormalMaps } from './materials.js';
@@ -426,6 +426,7 @@ function start() {
     const several = severalPlansMessage(repairs);
     if (several && res.normalized) notes.show(() => severalPlansMessage(repairs)); // never claim a load that did not happen
     if (res.partial && res.skipped.length) notes.show(() => [skippedMessage(res.skipped), several && severalPlansMessage(repairs)].filter(Boolean).join(' '), fixAction(), () => skippedLines(res.skipped));
+    else if (built && res.ignored.length && !res.skipped.length) notes.show(() => [ignoredMessage(res.ignored), several && severalPlansMessage(repairs)].filter(Boolean).join(' '), fixAction());
     visit.hide();
     rawText = typeof input === 'string' ? input : '';
     issues = { errors: res.errors, warnings: res.warnings };
