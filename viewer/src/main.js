@@ -456,18 +456,23 @@ function start() {
   }
 
   // A shared link: '#plan=' (the plain form, read as before) or '#z=' (compressed). One that cannot be read says so in the banner and leaves
-  // the model on screen alone; when nothing is on screen yet, the bundled example comes up behind the banner.
+  // the model on screen alone; when nothing is on screen yet, the bundled example comes up behind the banner. A '#z=' link takes a
+  // moment to inflate, so the newest link wins: an older one that finishes later is dropped. The banner is a function, so a language
+  // switch redraws it.
+  let linkSeq = 0;
   async function openLink(link) {
-    let problem = null;
+    const mine = ++linkSeq;
+    let reason = null; // why the link could not be read (the codes of decodeShort), or null
     if (link.form === 'plan') {
-      try { api.load(b64urlDecode(link.value), 'link'); } catch { problem = linkProblem('base64'); }
+      try { api.load(b64urlDecode(link.value), 'link'); } catch { reason = 'base64'; }
     } else {
       const got = await decodeShort(link.value);
-      if (got.ok) api.load(got.text, 'link'); else problem = linkProblem(got.reason);
+      if (mine !== linkSeq) return;
+      if (got.ok) api.load(got.text, 'link'); else reason = got.reason;
     }
-    if (!problem && !model) problem = linkProblem('inflate'); // the text held no usable plan
-    if (problem && !model && Object.keys(samples).length) { api.load(Object.values(samples)[0]); visit.show(); }
-    if (problem) notes.show(problem);
+    if (!reason && !model) reason = 'inflate'; // the text held no usable plan
+    if (reason && !model && Object.keys(samples).length) { api.load(Object.values(samples)[0]); visit.show(); }
+    if (reason) notes.show(() => linkProblem(reason));
   }
 
   // A file the person chose or dropped.

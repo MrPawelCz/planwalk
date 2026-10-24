@@ -112,6 +112,46 @@ test('a damaged or hostile #z= link gives the plain banner, quickly, with the ex
   }
 });
 
+test('the banner of a bad link follows a language switch, and of two links opened one after the other the newer one stays even when the older finishes later', { skip, timeout: 240000 }, async () => {
+  // While window.__gate is a pending promise the inflater gets no input, so a #z= link can be made to finish after the next one.
+  const hold = `(() => {
+    const Real = window.DecompressionStream;
+    window.DecompressionStream = function (format) {
+      const real = new Real(format), gate = window.__gate;
+      if (!gate) return real;
+      const out = real.writable.getWriter();
+      return { readable: real.readable, writable: new WritableStream({ write: async (c) => { await gate; await out.write(c); }, close: async () => { await gate; await out.close(); } }) };
+    };
+  })();`;
+  const page = await openPage({ query: '?lang=en', beforeLoad: hold });
+  try {
+    await openLink(page, EMPTY, '#z=!!!!not-base64!!!!');
+    assert.ok(await page.waitFor(hasBanner, 8000));
+    assert.match(await banner(page), /The plan inside this link is damaged/);
+    assert.equal(await page.evaluate('window.planwalk.setLang("pl")'), 'pl');
+    assert.match(await banner(page), /Plan zapisany w tym linku jest uszkodzony/, 'the banner on screen is redrawn in Polish');
+    assert.doesNotMatch(await banner(page), /damaged/);
+
+    // A compressed link that is held back, then a plain one: the plain one is on screen at once and stays.
+    const older = JSON.parse(raw('flat-1')), newer = JSON.parse(raw('duplex-1'));
+    await page.navigate(`${EMPTY}?lang=en`);
+    await page.evaluate(`window.__gate = new Promise((r) => { window.__open = r; }); location.hash = ${JSON.stringify(await encodeShort(older))}`);
+    await new Promise((r) => setTimeout(r, 200)); // the first link is being inflated now
+    assert.equal((await counts(page)).walls, 0, 'the first link is held back');
+    await page.evaluate(`location.hash = ${JSON.stringify(encodeLong(newer))}`);
+    assert.ok(await page.waitFor(hasModel));
+    const shown = await snapshot(page);
+    await page.evaluate('window.__open()');
+    await new Promise((r) => setTimeout(r, 800)); // long enough for the held link to finish
+    assert.equal(await snapshot(page), shown, 'the older link did not replace the newer one');
+    assert.equal(await banner(page), null);
+    assert.deepEqual(page.pageErrors, []);
+    assert.deepEqual(page.consoleErrors, []);
+  } finally {
+    page.close();
+  }
+});
+
 test('a browser without DecompressionStream is told to ask for the long link, and the long form still opens; Copy link falls back to it', { skip, timeout: 240000 }, async () => {
   const stubs = 'delete window.DecompressionStream; delete window.CompressionStream; window.__copied = null; Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: (t) => { window.__copied = t; return Promise.resolve(); } } });';
   const page = await openPage({ query: '?lang=en', beforeLoad: stubs });
