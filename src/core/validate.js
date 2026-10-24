@@ -233,15 +233,20 @@ function schemaHint(s, root) {
   return 'a valid value';
 }
 
+// Unknown properties have a cap of their own (CAPS.unknownProperties) and do not count toward CAPS.violations: a plan with a
+// thousand harmless extras is still read.
+let unknownKept = 0;
+
 // Collects violations as { segs, rule, detail, fix }. Never throws on bad data. Every call starts with a full "did you mean"
 // budget (analyzePlan shares it with the semantic checks that follow), so tools that call this alone keep getting suggestions.
 export function checkSchema(value, schema, root = schema, segs = [], out = []) {
   suggestBudget = SUGGEST_BUDGET;
+  unknownKept = 0;
   return checkNode(value, schema, root, segs, out);
 }
 
 function checkNode(value, schema, root, segs, out) {
-  if (out.length >= CAPS.violations) return out;
+  if (out.length - unknownKept >= CAPS.violations) return out;
   const push = (rule, detail, fix, at = segs, extra) => out.push({ segs: at.slice(), rule, detail, fix, ...extra });
   const where = segs.length ? formatPath(segs) : 'the plan';
   if (schema.$ref) checkNode(value, resolveRef(schema.$ref, root), root, segs, out);
@@ -299,6 +304,8 @@ function checkNode(value, schema, root, segs, out) {
     for (const k of Object.keys(value)) {
       if (hasOwn(props, k)) checkNode(value[k], props[k], root, [...segs, k], out);
       else if (schema.additionalProperties === false) {
+        if (unknownKept >= CAPS.unknownProperties) continue;
+        unknownKept++;
         const near = closest(k, Object.keys(props));
         push('additionalProperties', `${where} has the unknown property ${jq(k)}${near ? ` (did you mean ${JSON.stringify(near)}?)` : ''}`,
           `${near ? `Rename ${jq(k)} to ${JSON.stringify(near)} or delete it` : `Delete ${jq(k)}`} in ${where}. Allowed properties: ${Object.keys(props).join(', ')}.`, segs, { key: k });
@@ -676,7 +683,7 @@ function analyze(input, strict) {
   // E010 and E002: structure
   const viol = checkSchema(plan, PLAN_SCHEMA);
   const MAX_E002 = 40;
-  const truncated = viol.length >= CAPS.violations;
+  const truncated = viol.filter((v) => v.rule !== 'additionalProperties').length >= CAPS.violations;
   // A property the schema does not know is left out of the model and only warned about (W116), unless strict. "$schema" and "x-..." keys
   // are allowed silently. A key that every object has ("__proto__", "constructor", "toString") stays an error. A plan with so many
   // violations that the check gave up is not read leniently.

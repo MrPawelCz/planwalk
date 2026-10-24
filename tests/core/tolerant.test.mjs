@@ -208,12 +208,42 @@ test('caps are unchanged: a plan over a cap is not read any further and is not p
 
 test('a plan with so many violations that the check gives up is not read leniently', () => {
   const p = flat();
-  p.levels[0].walls = Array.from({ length: 300 }, (_, i) => ({ id: `w${i}`, from: [0, 0], to: [1, 1], a: 1, b: 2, c: 3, d: 4 }));
+  p.levels[0].walls = Array.from({ length: 400 }, (_, i) => ({ id: `w${i}`, from: [0, 0], to: [1, 1], thickness: 'a', height: 'b', kind: 'c' }));
   const r = analyzePlan(p);
   assert.equal(r.ok, false);
   assert.ok(r.errors.some((e) => e.code === 'E002'));
   assert.equal(r.normalized, null);
   assert.equal(r.partial, false);
+});
+
+test('unknown properties do not count toward that limit: 1000 walls with two ignored keys each are still read', () => {
+  const p = flat();
+  const wall = (i) => ({ id: `w${i}`, from: [i % 40, Math.floor(i / 40) * 2], to: [(i % 40) + 0.9, Math.floor(i / 40) * 2], label: `wall ${i}`, confidence: 0.9 });
+  p.levels = [0, 1].map((k) => ({ id: `L${k}`, walls: Array.from({ length: 500 }, (_, i) => wall(i)) }));
+  const r = analyzePlan(p);
+  assert.equal(r.ok, true, JSON.stringify(r.errors.slice(0, 3)));
+  assert.ok(r.normalized, 'the whole plan is built');
+  assert.equal(r.partial, false);
+  assert.equal(r.normalized.levels[0].walls.length + r.normalized.levels[1].walls.length, 1000);
+  const w = r.warnings.filter((i) => i.code === 'W116');
+  assert.equal(w.length, 101, 'listed up to the usual limit with one closing line');
+  assert.match(w[100].message, /more issues with the code W116 are not listed/);
+  assert.ok(!JSON.stringify(r.normalized).includes('confidence'));
+  const strict = analyzePlan(p, { strict: true });
+  assert.equal(strict.ok, false, 'strict still reports them');
+  assert.ok(strict.errors.some((e) => e.code === 'E002' && /unknown property/.test(e.message)));
+});
+
+test('a plan with far more unknown properties than are collected is still read, and a real violation next to them is still reported', () => {
+  const p = flat();
+  p.levels[0].walls[0] = { ...p.levels[0].walls[0], ...Object.fromEntries(Array.from({ length: 5000 }, (_, i) => [`extra${i}`, i])) };
+  p.levels[0].walls[1].thickness = 'thick';
+  const r = analyzePlan(p);
+  assert.deepEqual(r.errors.map((e) => e.path), ['levels[0].walls[1].thickness']);
+  assert.equal(r.partial, true);
+  assert.equal(r.skipped.length > 0, true);
+  assert.equal(r.warnings.filter((i) => i.code === 'W116').length, 101);
+  assert.equal(modelOf(r).levels[0].walls.length, flat().levels[0].walls.length - 1);
 });
 
 test('many unknown properties are listed up to the usual limit with one closing line', () => {

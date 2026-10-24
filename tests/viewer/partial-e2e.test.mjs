@@ -1,6 +1,7 @@
 // End to end: two stored AI readings that used to be refused or listed as failures are pasted into the page. One has unknown
 // properties (furniture inside rooms), the other has an opening of width 0. Both show a model; the second one with a banner that
-// says what was skipped. Chrome runs through tools/chrome-lock.sh. Skips with a message when Chrome or dist is missing.
+// says what was skipped (also a stair whose level was skipped). A plan whose units are not understood is refused. Chrome runs
+// through tools/chrome-lock.sh. Skips with a message when Chrome or dist is missing.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -88,6 +89,35 @@ test('a reading with unknown properties opens with warnings; a reading with one 
     assert.deepEqual(await counts(page), keep, 'the previous model is kept');
     assert.match(await banner(page), /cannot build a model/);
 
+    // A stair that leads to a level that was skipped goes with it, and is counted and named in the banner.
+    const upperGone = JSON.parse(zero);
+    upperGone.levels[1].height = -3;
+    const e = await loadWith(page, JSON.stringify(upperGone));
+    assert.equal(e.partial, true);
+    assert.deepEqual(e.skipped.map((k) => [k.kind, k.id, k.reason]), [['stair', 's0', 'level-skipped'], ['level', 'L1', 'invalid']]);
+    assert.equal((await counts(page)).levels, 1);
+    assert.equal((await counts(page)).stairs, 0);
+    assert.match(await banner(page), /^2 elements skipped\. The rest of the plan is shown\./);
+    assert.deepEqual((await lines(page)).map((l) => l.replace(/:.*/, '')), ['stair "s0" (levels[0].stairs[0])', 'level "L1" (levels[1])']);
+    assert.match((await lines(page))[0], /: the level it leads to was skipped$/);
+    await page.evaluate('window.planwalk.setLang("pl")');
+    assert.match(await banner(page), /^Pominięto 2 elementy, reszta planu jest widoczna\./);
+    assert.equal((await lines(page))[0], 'schody "s0" (levels[0].stairs[0]): piętro, do którego prowadzą, zostało pominięte');
+    if (evidence) await page.screenshot(join(evidence, 'partial-stair-level-pl.jpg'));
+    await page.evaluate('window.planwalk.setLang("en")');
+
+    // A unit that is not understood would show the flat at the wrong scale with nothing to say so: refused like a plan without walls.
+    const shown = await counts(page);
+    const feet = JSON.parse(zero);
+    feet.units = 'feet';
+    const g = await loadWith(page, JSON.stringify(feet));
+    assert.equal(g.ok, false);
+    assert.equal(g.partial, false);
+    assert.deepEqual(g.skipped, []);
+    assert.deepEqual(await counts(page), shown, 'the previous model is kept');
+    assert.match(await banner(page), /cannot build a model/);
+    assert.match((await lines(page))[0], /^E002 units: .*"feet"/, 'the banner names units');
+
     // The first thing on an empty page: a partial plan fills the page (no previous model to fall back on).
     const fresh = await openPage({ query: '?lang=en' });
     try {
@@ -97,6 +127,20 @@ test('a reading with unknown properties opens with warnings; a reading with one 
       assert.deepEqual(fresh.pageErrors, []);
     } finally {
       fresh.close();
+    }
+
+    // The first thing on an empty page is a plan with an unknown unit: no model, and the card and the issues say why.
+    const blank = await openPage({ query: '?lang=en' });
+    try {
+      const h = await blank.evaluate(`window.planwalk.load(${JSON.stringify(JSON.stringify(feet))})`);
+      assert.equal(h.partial, false);
+      assert.equal((await blank.evaluate('window.planwalk.state().counts')).walls, 0);
+      assert.equal(await blank.evaluate('document.querySelector(".pw-card").hidden'), false);
+      assert.match(await blank.evaluate('document.querySelector(".pw-card").textContent'), /could not be turned into a model/);
+      assert.match(await issues(blank), /E002.*units/s);
+      assert.deepEqual(blank.pageErrors, []);
+    } finally {
+      blank.close();
     }
 
     assert.deepEqual(page.pageErrors, [], 'no script error');
