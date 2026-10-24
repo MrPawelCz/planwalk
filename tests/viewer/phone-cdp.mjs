@@ -7,10 +7,13 @@ import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { chromeSkipReason } from '../helpers/chrome.mjs';
 
 export const chromePath = ['/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', ...['google-chrome', 'chromium', 'chromium-browser'].map((c) => (spawnSync('which', [c]).status === 0 ? c : null))]
   .filter(Boolean).find((c) => !c.includes('/') || existsSync(c));
-export const skipReason = (...files) => !chromePath ? 'Chrome or Chromium not found' : typeof WebSocket === 'undefined' ? 'Node 22 or newer is needed for the global WebSocket' : files.find((f) => !existsSync(f)) ? `${files.find((f) => !existsSync(f))} is missing, run npm run build` : false;
+// With PLANWALK_REQUIRE_CHROME=1 a missing browser throws (as for the other Chrome tests) instead of skipping these tests silently.
+export const skipReason = (...files) => chromeSkipReason({ chrome: chromePath, webSocket: typeof WebSocket !== 'undefined', required: process.env.PLANWALK_REQUIRE_CHROME === '1' })
+  || (files.find((f) => !existsSync(f)) ? `${files.find((f) => !existsSync(f))} is missing, run npm run build` : false);
 export const SAFARI = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
