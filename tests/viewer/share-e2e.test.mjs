@@ -262,9 +262,11 @@ test('Copy link on a page opened from a file links to the public page (the Polis
   const stub = 'window.__copied = null; Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: (t) => { window.__copied = t; return Promise.resolve(); } } });';
   const page = await openPage({ query: '?lang=en', beforeLoad: stub });
   try {
-    const copyFrom = async (url, caption) => {
+    // `name`: the plan that must be on screen before the button is pressed (a plan from a link replaces the example a moment after the load).
+    const copyFrom = async (url, caption, name) => {
       await page.navigate(url);
       assert.ok(await page.waitFor(hasModel), url);
+      if (name) assert.ok(await page.waitFor(`document.querySelector(".pw-name").textContent === ${JSON.stringify(name)}`), `${caption}: ${name} did not come up`);
       await page.evaluate(`${button(caption)}.click()`);
       assert.ok(await page.waitFor('window.__copied !== null'), `${url}: nothing was copied`);
       return page.evaluate('window.__copied');
@@ -275,8 +277,10 @@ test('Copy link on a page opened from a file links to the public page (the Polis
     await page.navigate(`${FULL}?lang=en`);
     assert.ok(await page.waitFor(hasModel));
     const mine = await snapshot(page);
+    const name = JSON.parse(mine).name;
     const english = split(await copyFrom(`${FULL}?lang=en`, 'Copy link'));
-    const polish = split(await copyFrom(`${FULL}?lang=pl`, 'Kopiuj link'));
+    // Only the example is translated; a plan that arrives in a link keeps its names in either language, so the Polish page gives back the same fragment.
+    const polish = split(await copyFrom(`${FULL}?lang=pl${english[1]}`, 'Kopiuj link', name));
     assert.equal(english[0], SITE);
     assert.equal(polish[0], SITE_PL, 'a Polish interface links to the Polish page, so the person who opens it lands in Polish');
     assert.equal(english[1], polish[1], 'the same plan in both');
@@ -290,10 +294,10 @@ test('Copy link on a page opened from a file links to the public page (the Polis
 
     // Over http (a local server, a fork): the real address of the page, without its query.
     const served = `http://127.0.0.1:${server.address().port}/x/y.html`;
-    for (const [query, caption] of [['?lang=en&materials=clay', 'Copy link'], ['?lang=pl', 'Kopiuj link']]) {
-      const [base, fragment] = split(await copyFrom(`${served}${query}`, caption));
-      assert.equal(base, served, `${query}: the page keeps its own address`);
-      assert.equal(fragment, english[1], `${query}: the same plan`);
+    for (const [label, query, caption] of [['English', '?lang=en&materials=clay', 'Copy link'], ['Polish', `?lang=pl${english[1]}`, 'Kopiuj link']]) {
+      const [base, fragment] = split(await copyFrom(`${served}${query}`, caption, name));
+      assert.equal(base, served, `${label}: the page keeps its own address`);
+      assert.equal(fragment, english[1], `${label}: the same plan`);
     }
     assert.deepEqual(page.pageErrors, []);
     assert.deepEqual(page.consoleErrors, []);
