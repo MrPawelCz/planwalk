@@ -12,4 +12,4 @@ Najczęstsze pytania po polsku. Dłuższa lista jest po angielsku w [`FAQ.md`](F
 
 **Czy mogę użyć tego w ogłoszeniu o nieruchomości?** Tak, jako wizualizację poglądową: planwalk pokazuje rysunek, który mu dasz, i nie jest pomiarem. Napisz o tym w ogłoszeniu, a powierzchnie podawaj z dokumentów (na przykład z karty lokalu), a nie z modelu. Nie używaj go do pozwoleń ani do budowy.
 
-**Jak wysłać komuś model na telefon?** Kliknij „Kopiuj link” i wyślij link: plan jest zapisany w samym linku, więc odczyta go każdy, kto go dostanie, także aplikacja, przez którą go wyślesz. Samodzielny plik HTML („Pobierz jako plik HTML”) jest do otwarcia na komputerze.
+**Jak wysłać komuś model na telefon?** Kliknij „Kopiuj link” i wyślij link: plan jest zapisany w samym linku, więc odczyta go każdy, kto go dostanie, także aplikacja, przez którą go wyślesz. Link skopiowany z pobranego pliku prowadzi do strony na żywo, więc do otwarcia potrzebuje połączenia z internetem. Samodzielny plik HTML („Pobierz jako plik HTML”) jest do otwarcia na komputerze.
