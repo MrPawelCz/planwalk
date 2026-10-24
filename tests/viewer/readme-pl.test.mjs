@@ -26,7 +26,7 @@ const EN_ONLY = new Set(TABLES.flatMap((t) => Object.entries(t.en).filter(([k, v
 // Quotes that are not words of the interface, and where the quoted thing lives.
 const NOT_UI = [
   { match: (q) => q === 'Runs by model', file: 'docs/BENCHMARK.md', has: '## Runs by model' },
-  { match: (q) => q.startsWith('Prowadź ściany po osi'), why: 'a sentence to say to the chat' },
+  { match: (q) => q.startsWith('Poprowadź ściany środkiem'), why: 'a sentence to say to the chat' },
 ];
 const quotes = (md) => [...md.matchAll(/„([^”]+)”/g)].map((m) => m[1]);
 
@@ -76,6 +76,10 @@ test('the facts of the English README are in README.pl.md too, and the two point
     if (en.includes(fact)) assert.ok(pl.includes(fact), `README.md says ${fact}, README.pl.md does not`);
   }
   assert.ok(en.includes('README.pl.md') && pl.includes('README.md'));
+});
+
+test('both Polish files say, like the English README, that only the English prompt was measured and the Polish prompt and drawings were not', () => {
+  for (const file of FILES) assert.match(read(file), /Polecenie po angielsku zmierzono na modelach z tabeli „Runs by model”.*Polskiego polecenia (ani|i) polskich rysunków jeszcze nie mierzono/, file);
 });
 
 test('the behaviour sentences of README.pl.md are backed by the code', () => {

@@ -1,6 +1,6 @@
 <h1 align="center">planwalk</h1>
 <p align="center"><b>Zamień rzut mieszkania w trójwymiarowe mieszkanie, po którym możesz się przejść.</b></p>
-<p align="center">Wysyłasz zdjęcie rzutu do czatu z AI (sztuczną inteligencją), który czyta obrazy, dostajesz krótki tekst w formacie JSON i wklejasz go na stronie planwalk.<br>Makieta, rozsunięte piętra, spacer po mieszkaniu, eksport do pliku 3D (GLB).<br>Bez serwera i bez kluczy API. Sam planwalk niczego nie wysyła.</p>
+<p align="center">Wysyłasz zdjęcie rzutu do czatu z AI (sztuczną inteligencją), który czyta obrazy, dostajesz krótki tekst w formacie JSON i wklejasz go na stronie planwalk.<br>Makieta, rozsunięte piętra, spacer po mieszkaniu, eksport do pliku 3D (GLB).<br>Bez konta i bez instalacji. Sam planwalk niczego nie wysyła.</p>
 
 <p align="center">English: <a href="README.md">README.md</a></p>
 
@@ -19,10 +19,10 @@ Czym planwalk nie jest: nie jest pomiarem, projektem ani dokumentem do pozwoleni
 ## Twoje mieszkanie w 3D: trzy kroki
 
 1. Otwórz [stronę planwalk po polsku](https://mrpawelcz.github.io/planwalk/pl/). Możesz też pobrać plik `planwalk.html` z [najnowszego wydania](https://github.com/MrPawelCz/planwalk/releases/latest) i otworzyć go dwukrotnym kliknięciem: działa bez internetu.
-2. Wyślij do czatu z AI, który czyta obrazy, zdjęcie swojego rzutu razem z poleceniem (promptem); zdjęcie dodasz zwykle przyciskiem ze spinaczem albo plusem przy polu do pisania. Najprościej: na stronie planwalk kliknij „Kopiuj polecenie” (przycisk jest na karcie „To jest przykład” i w oknie „Jak działa planwalk”, które otwiera przycisk „Pomoc”) i wklej do rozmowy. Ten sam tekst jest w pliku [`docs/PROMPT.pl.md`](docs/PROMPT.pl.md). Przed wysłaniem zasłoń lub przytnij imiona, adresy i numery telefonu widoczne na rysunku. Polecenie jest przygotowane dla czatów, które czytają obrazy. Sprawdzono je na modelach z tabeli „Runs by model” w [`docs/BENCHMARK.md`](docs/BENCHMARK.md) (po angielsku); inne czaty, które czytają obrazy, powinny działać, ale to oczekiwanie, a nie wynik (wyniki są mile widziane).
-3. Wklej odpowiedź czatu na stronie: kliknij „Wklej odpowiedź”, wklej tekst w okno i kliknij „Wczytaj” (cały tekst odpowiedzi wystarczy, planwalk sam znajdzie w nim plan). Zapisany plik `.json` otworzysz przyciskiem „Otwórz plik” w tym samym oknie albo, na komputerze, upuszczając go na stronę. Jeśli planwalk zgłosi problemy (panel „Problemy”), kliknij „Kopiuj prośbę o poprawkę”, wklej to do tej samej rozmowy i wczytaj poprawioną odpowiedź. Powtarzaj, aż się otworzy. Plan z kilkoma błędami też się otworzy: nieznana właściwość jest pomijana, element, którego nie da się odczytać (na przykład otwór o szerokości 0), jest pomijany, a baner pokazuje, co pominięto. Dopiero gdy nic nie zostaje, model się nie buduje, a poprzedni zostaje na ekranie.
+2. Wyślij do czatu z AI, który czyta obrazy, zdjęcie swojego rzutu razem z poleceniem (promptem); zdjęcie dodasz zwykle przyciskiem ze spinaczem albo plusem przy polu do pisania. Najprościej: na stronie planwalk kliknij „Kopiuj polecenie” (przycisk jest na karcie „To jest przykład” i w oknie „Jak działa planwalk”, które otwiera przycisk „Pomoc”) i wklej do rozmowy. Ten sam tekst jest w pliku [`docs/PROMPT.pl.md`](docs/PROMPT.pl.md). Przed wysłaniem zasłoń lub przytnij imiona, adresy i numery telefonu widoczne na rysunku. Polecenie po angielsku zmierzono na modelach z tabeli „Runs by model” w [`docs/BENCHMARK.md`](docs/BENCHMARK.md) (po angielsku). Polskiego polecenia ani polskich rysunków jeszcze nie mierzono. Inne czaty, które czytają obrazy, powinny działać, ale to oczekiwanie, a nie wynik (wyniki są mile widziane).
+3. Wklej odpowiedź czatu na stronie: kliknij „Wklej odpowiedź”, wklej tekst w okno i kliknij „Wczytaj” (cały tekst odpowiedzi wystarczy, planwalk sam znajdzie w nim plan). Zapisany plik `.json` otworzysz przyciskiem „Otwórz plik” w tym samym oknie albo, na komputerze, upuszczając go na stronę. Jeśli planwalk zgłosi problemy (panel „Problemy”), kliknij „Kopiuj prośbę o poprawkę”, wklej to do tej samej rozmowy i wczytaj poprawioną odpowiedź. Powtarzaj, aż się otworzy. Plan z kilkoma błędami też się otworzy: nieznana właściwość jest pomijana, a element, którego nie da się odczytać (na przykład drzwi lub okno o szerokości 0), jest pomijany, o czym informuje komunikat z listą pominiętych elementów. Dopiero gdy nie zostaje nic użytecznego, nowy model się nie zbuduje, a poprzedni zostaje na ekranie.
 
-Chcesz tylko się rozejrzeć? Wybierz przykład z listy „Przykłady” (na telefonie jest w „Menu”): jest mieszkanie z jedną sypialnią i dom z dwoma poziomami i schodami.
+Chcesz tylko się rozejrzeć? Wybierz przykład z listy „Przykłady” (na telefonie jest w „Menu”): jest mieszkanie z jedną sypialnią i dom z dwoma piętrami i schodami.
 
 ## Co dostajesz
 
@@ -35,7 +35,7 @@ Chcesz tylko się rozejrzeć? Wybierz przykład z listy „Przykłady” (na tel
 
 ## Prywatność
 
-Sam planwalk niczego nie wysyła: strona nie ma kont, kluczy API, statystyk ani ciasteczek i niczego nie zapisuje w przeglądarce. Twój plan zostaje na urządzeniu. Jedyny wyjątek to opcjonalny parametr adresu `?plan=<adres>`, który pobiera plan z podanego adresu (Twoje dane nie są przy tym nigdzie wysyłane). Zdjęcie rzutu trafia tylko do czatu z AI, który sam wybierasz, więc dla bezpieczeństwa zasłoń na nim dane osobowe.
+Sam planwalk niczego nie wysyła: strona nie ma kont, kluczy API, statystyk ani ciasteczek i niczego nie zapisuje w przeglądarce. Twój plan zostaje na urządzeniu. Jedyny wyjątek to opcjonalny parametr adresu `?plan=<adres>`, który pobiera plan z podanego adresu (Twoje dane nie są przy tym nigdzie wysyłane). Zdjęcie rzutu trafia tylko do czatu z AI, który wybierzesz, więc dla bezpieczeństwa zasłoń na nim dane osobowe.
 
 ## Granice
 
@@ -46,7 +46,7 @@ Sam planwalk niczego nie wysyła: strona nie ma kont, kluczy API, statystyk ani 
 
 ## Dla agentów i programistów
 
-Dla agentów, które wczytują foldery z umiejętnościami, jest folder [`skill/planwalk`](skill/planwalk) (czyta rysunek, waliduje plik i buduje stronę). Narzędzia wiersza poleceń, format pliku i instrukcje dla współtwórców opisuje [README po angielsku](README.md).
+Dla agentów AI, które wczytują foldery z umiejętnościami (skills), jest folder [`skill/planwalk`](skill/planwalk) (czyta rysunek, waliduje plik i buduje stronę). Narzędzia wiersza poleceń, format pliku i instrukcje dla współtwórców opisuje [README po angielsku](README.md).
 
 ## Autor
 
