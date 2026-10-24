@@ -55,6 +55,9 @@ for (const [lang, name] of [['en', 'PROMPT.md'], ['pl', 'PROMPT.pl.md']]) {
   if (!existsSync(file)) continue;
   prompts[lang] = promptText(readFileSync(file, 'utf8'));
   if (!prompts[lang]) throw new Error(`docs/${name} is empty`);
+  // neutralise() writes "</script" as "<\/script" and "<!--" as "<\!--", and viewer/src/prompt.js reverses exactly that. A prompt that
+  // already holds the written forms would lose its backslash on the page, so the escape would not be one to one: refuse such a text.
+  if (/<\\(?:\/script|!--)/i.test(prompts[lang])) throw new Error(`docs/${name} holds "<\\/script" or "<\\!--", which the page would show as "</script" or "<!--"; write that part of the prompt another way`);
 }
 if (!prompts.en) throw new Error('docs/PROMPT.md is missing');
 const promptBlocks = Object.entries(prompts).map(([lang, text]) => `<script type="text/plain" id="planwalk-prompt-${lang}">${neutralise(text)}</script>\n`).join('');
