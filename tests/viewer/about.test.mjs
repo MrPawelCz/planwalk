@@ -35,7 +35,7 @@ test('a two level plan in Polish: decimal comma and Polish labels', () => {
   assert.equal(row(rows, 'area').value, '102,6 m²');
   assert.equal(row(rows, 'area').label, 'Łączna powierzchnia pomieszczeń');
   assert.equal(row(rows, 'scale').value, 'Brak informacji w pliku');
-  assert.equal(row(rows, 'source').value, 'Przykład syntetyczny');
+  assert.equal(row(rows, 'source').value, 'Przykład wymyślony, nie z prawdziwego rzutu');
   setLang('en');
 });
 

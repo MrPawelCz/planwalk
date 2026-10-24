@@ -25,11 +25,11 @@ export const STRINGS = {
     scaleBadge: 'Skala szacowana', scaleBadgeTip: 'Z notatki o skali wynika, że skala jest przybliżona. Otwórz „O modelu”.',
     name: 'Plan', untitled: '(bez nazwy)', levels: 'Piętra', rooms: 'Pomieszczenia', area: 'Łączna powierzchnia pomieszczeń',
     areaHint: 'Znak ~ oznacza, że część pomieszczeń nie ma na rysunku podanej powierzchni, więc oszacowano ją bez grubości ścian.',
-    areaSkipped: 'Bardzo duży plan: przy części pomieszczeń powierzchnia liczona jest po osiach ścian, więc jest większa niż widoczna podłoga.',
+    areaSkipped: 'Bardzo duży plan: dla części pomieszczeń powierzchnia liczona jest po osiach ścian, więc jest większa niż widoczna podłoga.',
     scale: 'Skala', noScale: 'Brak informacji w pliku', scaleGuess: 'Notatka mówi, że skala jest przybliżona. Sprawdź wymiary na swoim rysunku.',
     notes: 'Uwagi z odczytu rysunku', source: 'Źródło', warnings: 'Ostrzeżenia z kontroli planu', version: 'Wersja planwalk',
-    src_image: 'Obraz', src_pdf: 'PDF', src_sketch: 'Szkic', src_synthetic: 'Przykład syntetyczny', src_manual: 'Wpisany ręcznie',
-    disclaimer: 'Wizualizacja przekazanego rysunku, nie pomiar. Sprawdź wymiary, zanim zaczniesz na nich polegać.',
+    src_image: 'Obraz', src_pdf: 'PDF', src_sketch: 'Szkic', src_synthetic: 'Przykład wymyślony, nie z prawdziwego rzutu', src_manual: 'Wpisany ręcznie',
+    disclaimer: 'To wizualizacja Twojego rysunku, a nie pomiar. Sprawdź wymiary, zanim zaczniesz na nich polegać.',
   },
 };
 const t = makeT(STRINGS);
