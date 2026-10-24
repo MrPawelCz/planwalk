@@ -35,7 +35,7 @@ Pick an example from the menu: a one-bedroom flat and a two-level house with a s
 - **Dollhouse** with cutaway walls and room names with areas (the area your drawing declares, otherwise an estimate net of the walls, marked with ~), **exploded levels**, top view, free orbit
 - **First-person walk** with collisions, doors you can pass through, stairs between levels, a minimap
 - **Two looks**: procedural textures (wood boards, tile, carpet, stone, plaster, fabric, linen, knit, rugs, leaves; generated in code, no image files, in real-world scale, details in [`docs/TEXTURES.md`](docs/TEXTURES.md)) on furniture with soft, rounded shapes, or plain clay colours, one click or `?materials=clay`
-- **GLB export** (named nodes for walls, rooms, openings, with the textures embedded), PNG snapshot, a **link that holds the plan** (Copy link: the plan is stored inside the link, so whoever gets the link, and the app you send it through, can read it; it opens in a phone browser; the short link needs Safari 16.4, Chrome 103 or Firefox 113, older browsers use Copy long link), Share image for a picture of the current view, and a **standalone HTML file** with your plan embedded, to open on a computer
+- **GLB export** (named nodes for walls, rooms, openings, with the textures embedded), PNG snapshot, a **link that holds the plan** (Copy link: the plan is stored inside the link, so whoever gets the link, and the app you send it through, can read it; it opens in a phone browser, and a link copied from a downloaded file points to the live page, so opening it needs a connection; the short link needs Safari 16.4, Chrome 103 or Firefox 113, older browsers use Copy long link), Share image for a picture of the current view, and a **standalone HTML file** with your plan embedded, to open on a computer
 - A **validator** that explains each structural mistake it finds in words an AI can act on (the repair loop; it cannot tell whether the plan matches your drawing)
 
 ## How it works
@@ -90,7 +90,7 @@ First run: Claude Sonnet 5.5 read 12 clean synthetic plans with a mean composite
 
 Real drawings have not been benchmarked yet: expect worse on sketches without a scale, scans and cluttered drawings. Plans that break the reading are the most useful contribution.
 
-## Limits (v0.1)
+## Limits (v0.2)
 
 - Reading quality depends on the model and the drawing. Clean CAD drawings with printed dimensions work best; sketches without any scale are a guess. The About sheet shows the scale note the reader wrote, and a "Scale estimated" badge appears when that note says the scale itself is uncertain (it looks for phrases such as "scale estimated", "the scale is a guess", "standard door" or "no printed scale", and their Polish equivalents, unless the note also names a printed basis such as "scale from the printed dimension"; words about something else, such as "wall thickness estimated", do not count). The viewer does not measure anything itself: the validator only checks that the size is plausible and that declared room areas fit the polygons.
 - Straight stairs only; on a drawing of one floor a stair leaves the plan (drawn as steps, not walkable). No roofs, terrain or exterior. Textures follow the room `floor` kind and a few fixed rules, not your drawing. Furniture is decorative.

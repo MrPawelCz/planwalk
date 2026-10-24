@@ -6,7 +6,7 @@ All notable changes to planwalk are listed here. The format follows [Keep a Chan
 
 ### Added
 
-- Copy link makes a short link that holds the plan (`#z=`, compressed, about 70 to 76 percent shorter than the `#plan=` form for the two examples); Copy long link makes the older `#plan=` form for browsers without compression. Older `#plan=` links keep opening. Share image hands the current view to the share sheet where the browser supports it, otherwise it downloads the PNG.
+- Copy link makes a short link that holds the plan (`#z=`, compressed, about 70 to 76 percent shorter than the `#plan=` form for the two examples); Copy long link makes the older `#plan=` form for browsers without compression. Older `#plan=` links keep opening. Share image hands the current view to the share sheet where the browser supports it, otherwise it downloads the PNG. On a page opened from a file (or from any address that is not http or https) the link starts with the public page address, the Polish page for a Polish interface, so it never carries a local path.
 - A damaged or oversized `#z=` link gives the plain banner and leaves the model on screen; a link typed into the address bar of an open tab is now read too.
 - Top view on a touch screen: one finger pans and two fingers pinch to zoom around the point between them (the mouse wheel zoomed already). The language switch (PL or EN) sits in the title row of the phone Menu.
 - Polish interface for the whole page: toolbar, dialogs, issues panel, room labels (decimal comma) and the Copy fix request text follow the language. The browser language decides, `?lang=pl` or `?lang=en` overrides it, and a PL | EN switch in Help changes it at once and keeps the model, the camera and your choices. The validator's own messages stay in English.
@@ -15,13 +15,15 @@ All notable changes to planwalk are listed here. The format follows [Keep a Chan
 - Walk on a touch screen in the phone layout shows two shaded halves and a one line hint ("Drag the left half to walk, the right half to look") for 4 seconds after you enter it.
 - A status line, "Loaded: name, 4 rooms" ("Wczytano: nazwa, 4 pomieszczenia" in Polish), shows for about 5 seconds under the toolbar after a paste, a dropped or opened file or a `?plan=` download. It takes no taps and screen readers announce it politely; links (`#plan=`, `#z=`) and the embedded plan stay quiet.
 - Tolerant reading in the validator: an unknown property is warning W116 and is ignored instead of error E002 (`$schema` and `x-` keys pass without a word), and `{ strict: true }` keeps E002. The result lists the elements that were left out (`skipped`: kind, id, path, reason) and sets `partial` when a model can be built from the rest.
-- A plan in which only some elements have errors opens without them: a banner says how many were skipped, lists the first ten and offers Copy fix request. With no wall left nothing opens and the model on screen stays. `window.planwalk.load` returns `partial` and `skipped`.
+- A plan in which only some elements have errors opens without them: a banner says how many were skipped, lists the first ten and offers Copy fix request. With no wall left nothing opens and the model on screen stays. `window.planwalk.load` returns `partial` and `skipped`. A stair that leads to a skipped level is skipped and counted too, and `partial` is set only when at least one element was skipped. Properties the viewer ignores do not count toward the limit of 1000 schema violations (they have their own limit), so a plan with many extras still opens. A `units` value that is not understood (such as "feet") is still refused with a fix request, not shown at the wrong scale.
 - Command line (`tools/validate.mjs` and the skill's copy): an unknown property is a warning that does not fail the check and `--strict` fails on it; a last line says how many elements the viewer would skip, when there are any; `--json` adds `partial` and `skipped`.
 - A Polish landing page at `/pl/` with its own link preview image (`docs/social-preview-pl.jpg`). `tools/localize-page.mjs` derives it from the built demo page (Polish title, description and preview tags, `lang="pl"`, Polish as the default interface language, `?lang=en` still wins); the Pages workflow publishes both pages and both images, and the English page links to the Polish one with canonical and hreflang tags.
 - `tools/make-social-preview.mjs` renders the link preview images (1200 by 630 JPEG, each under 150 KB, `--lang en,pl`) from the viewer; it needs Node 22 and Chrome.
 - `README.pl.md` and `docs/FAQ.pl.md` rewritten against the Polish interface: buttons and windows are named as the page spells them, jargon is explained at first use, the FAQ says how to send a model to a phone, and a test checks every quoted name against the interface strings.
 - `docs/BENCHMARK.md` has a second table, "Loads in the viewer", next to the strict "Loads" column: clean, warnings only, errors listed, partial and skipped elements for every stored run. `node eval/loads.mjs` prints it (`--json` for each plan); a test checks that the table equals the output and that every stored score file is still reproduced, because the scorer stays strict.
 - A row in "Runs by model" for the small model read with the current prompt (v4): mean composite 50.3 against 34.4 with the first prompt, and 9 of 12 plans load against 4 (the run is stored in `eval/results/`). README and both FAQs quote the two rows.
+- The two bundled examples have Polish names (plan, levels, rooms, notes) on the Polish page and in a Polish browser; the PL | EN switch reloads an untouched example in the other language, and a plan you loaded yourself is never renamed.
+- When a plan opens whole but carries properties the viewer ignores (a `furniture` list inside a room is the usual one), a one line banner says which, with the Copy fix request button (the validator result lists them in `ignored`).
 
 ### Changed
 
@@ -34,6 +36,7 @@ All notable changes to planwalk are listed here. The format follows [Keep a Chan
 
 ### Fixed
 
+- On a touch screen, pulling down on a bar or a sheet no longer reloads the page and a quick second tap on a button no longer zooms it.
 - Help, About, the paste dialog and the share dialog open and close in Safari before 15.4, which has no `showModal`: one helper (`viewer/src/dialogs.js`) opens every dialog and Escape closes it.
 
 ## [0.1.1] - 2026-10-24
