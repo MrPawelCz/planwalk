@@ -38,7 +38,9 @@ const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const r3 = (v) => Math.round(v * 1000) / 1000;
 
 const CSS = `
-html,body{margin:0;height:100%;overflow:hidden;background:#dfe6ee;font:13px/1.35 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#37332d}
+html,body{margin:0;height:100%;overflow:hidden;background:#dfe6ee;font:13px/1.35 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#37332d;overscroll-behavior:none}
+button,select,summary{touch-action:manipulation}
+.pw-sheet,.pw-menu,.pw-issues,.pw-dlg{overscroll-behavior:contain}
 #pw-app{position:fixed;inset:0}
 #pw-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;outline:none;touch-action:none}
 .pw-bar{position:absolute;top:10px;left:10px;right:10px;display:flex;flex-wrap:wrap;gap:5px 6px;align-items:center;padding:5px 8px;font-size:12px;background:rgba(255,255,255,.86);backdrop-filter:blur(8px);border:1px solid rgba(80,72,62,.15);border-radius:10px;box-shadow:0 2px 10px rgba(60,50,40,.08)}
