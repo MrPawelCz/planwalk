@@ -1,7 +1,8 @@
 // Plain language for everything that can go wrong while a plan gets into the viewer, and the small pieces of UI that say so:
 // a dismissible banner, a card for a crash, and helpers that download or read a plan with a size cap and a timeout.
 // Strings stay in this module (see i18n.js); plan text only ever reaches the page as text nodes.
-import { makeT, getLang } from './i18n.js';
+import { makeT } from './i18n.js';
+import { pluralIndex } from './strings.js';
 import { MAX_PLAN_CHARS } from '../../src/core/limits.js';
 
 export const strings = {
@@ -9,6 +10,7 @@ export const strings = {
     skipped: '{n} element skipped. The rest of the plan is shown.|{n} elements skipped. The rest of the plan is shown.',
     skippedHelp: 'Press "Copy fix request" and paste it into the AI chat to get the plan corrected.',
     skippedWall: 'its wall was skipped',
+    skippedLevel: 'the level it leads to was skipped',
     skippedMore: 'and {n} more',
     kindWall: 'wall',
     kindOpening: 'opening',
@@ -45,6 +47,7 @@ export const strings = {
     skipped: 'Pominięto {n} element, reszta planu jest widoczna.|Pominięto {n} elementy, reszta planu jest widoczna.|Pominięto {n} elementów, reszta planu jest widoczna.',
     skippedHelp: 'Kliknij „Kopiuj prośbę o poprawkę” i wklej ją do czatu z AI, żeby poprawił plan.',
     skippedWall: 'jego ściana została pominięta',
+    skippedLevel: 'piętro, do którego prowadzą, zostało pominięte',
     skippedMore: 'i jeszcze {n}',
     kindWall: 'ściana',
     kindOpening: 'otwór',
@@ -119,25 +122,19 @@ export function issueLines(errors, max = 2, cut = 160) {
 }
 
 // The elements the validator left out of a model (result.skipped) as a banner: how many, and the first `max` as lines. The kind and the
-// sentence about a skipped wall follow the language; the id, the path and the validator's own reason stay as written (the fix request
-// goes to an AI).
+// sentence about a skipped wall or level follow the language; the id, the path and the validator's own reason stay as written (the fix
+// request goes to an AI).
 const KIND_KEY = { wall: 'kindWall', opening: 'kindOpening', room: 'kindRoom', stair: 'kindStair', furniture: 'kindFurniture', level: 'kindLevel' };
-
-// English: one | other. Polish: one | few (2 to 4 except 12 to 14) | many.
-function formIndex(n) {
-  if (n === 1) return 0;
-  if (getLang() !== 'pl') return 1;
-  return n % 10 >= 2 && n % 10 <= 4 && !(n % 100 >= 12 && n % 100 <= 14) ? 1 : 2;
-}
+const REASON_KEY = { 'wall-skipped': 'skippedWall', 'level-skipped': 'skippedLevel' };
 
 export function skippedMessage(skipped) {
   const forms = t('skipped').split('|');
   const n = skipped.length;
-  return `${forms[Math.min(formIndex(n), forms.length - 1)].replace(/\{n\}/g, String(n))} ${t('skippedHelp')}`;
+  return `${forms[Math.min(pluralIndex(n), forms.length - 1)].replace(/\{n\}/g, String(n))} ${t('skippedHelp')}`;
 }
 
 function skippedLine(s) {
-  const why = s.reason === 'wall-skipped' ? t('skippedWall') : String(s.why || '');
+  const why = REASON_KEY[s.reason] ? t(REASON_KEY[s.reason]) : String(s.why || '');
   const reason = why.startsWith(s.path) ? why.slice(s.path.length).replace(/^[.\s]+/, '') : why; // the path is shown first, once
   return `${t(KIND_KEY[s.kind] || 'kindWall')}${s.id ? ` "${s.id}"` : ''} (${s.path}): ${reason}`;
 }

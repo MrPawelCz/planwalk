@@ -327,13 +327,19 @@ export function modelOf(res) {
   return res.normalized || (res.partial ? res.salvaged : null);
 }
 
-function scanNonFinite(v, segs, out, seen) {
+// `ignored`: Map of object -> Set of its keys that are not scanned (properties the model leaves out).
+function scanNonFinite(v, segs, out, seen, ignored) {
   if (typeof v === 'number') { if (!Number.isFinite(v)) out.push({ segs: segs.slice(), value: v }); return; }
   if (v === null || typeof v !== 'object' || seen.has(v) || segs.length > 12) return;
   seen.add(v);
-  if (Array.isArray(v)) v.forEach((x, i) => scanNonFinite(x, [...segs, i], out, seen));
-  else for (const k of Object.keys(v)) scanNonFinite(v[k], [...segs, k], out, seen);
+  if (Array.isArray(v)) v.forEach((x, i) => scanNonFinite(x, [...segs, i], out, seen, ignored));
+  else {
+    const skip = ignored.get(v);
+    for (const k of Object.keys(v)) if (!skip || !skip.has(k)) scanNonFinite(v[k], [...segs, k], out, seen, ignored);
+  }
 }
+
+const nodeAt = (plan, segs) => segs.reduce((node, seg) => (node === null || typeof node !== 'object' ? undefined : node[seg]), plan);
 
 function entityIdAt(plan, segs) {
   let node = plan, id;
@@ -638,8 +644,8 @@ function analyze(input, strict) {
     (code[0] === 'E' ? errors : warnings).push(issue);
   };
   let repairs = []; // what extractJson had to change to read a text input, as short English phrases
-  // skipped: the elements left out of `salvaged` ({ kind, id, path, why, reason }); partial: no whole plan, but a model can be built from the rest
-  const result = (normalized, salvaged = null, dropped = 0, skipped = []) => ({ ok: errors.length === 0, errors, warnings, normalized, salvaged, dropped, repairs, skipped, partial: normalized === null && hasWalls(salvaged) });
+  // skipped: the elements left out of `salvaged` ({ kind, id, path, why, reason }); partial: elements were left out, but a model can be built from the rest
+  const result = (normalized, salvaged = null, dropped = 0, skipped = []) => ({ ok: errors.length === 0, errors, warnings, normalized, salvaged, dropped, repairs, skipped, partial: normalized === null && skipped.length > 0 && hasWalls(salvaged) });
 
   let plan = input;
   if (typeof input === 'string') {
@@ -668,8 +674,6 @@ function analyze(input, strict) {
   }
 
   // E010 and E002: structure
-  const nonFinite = [];
-  scanNonFinite(plan, [], nonFinite, new Set());
   const viol = checkSchema(plan, PLAN_SCHEMA);
   const MAX_E002 = 40;
   const truncated = viol.length >= CAPS.violations;
@@ -677,13 +681,20 @@ function analyze(input, strict) {
   // are allowed silently. A key that every object has ("__proto__", "constructor", "toString") stays an error. A plan with so many
   // violations that the check gave up is not read leniently.
   const hard = [], unknown = [];
+  const ignored = new Map(); // object -> the keys of it that the model ignores: a number that is not finite inside one is no error
+  const ignore = (v) => {
+    const owner = nodeAt(plan, v.segs);
+    if (owner !== null && typeof owner === 'object') ignored.set(owner, (ignored.get(owner) || new Set()).add(v.key));
+  };
   for (const v of viol) {
     if (v.rule === 'additionalProperties' && !truncated) {
-      if (isExtensionKey(v.key)) continue;
-      if (!strict && !(v.key in Object.prototype)) { unknown.push(v); continue; }
+      if (isExtensionKey(v.key)) { ignore(v); continue; }
+      if (!strict && !(v.key in Object.prototype)) { ignore(v); unknown.push(v); continue; }
     }
     hard.push(v);
   }
+  const nonFinite = [];
+  scanNonFinite(plan, [], nonFinite, new Set(), ignored);
   hard.slice(0, MAX_E002).forEach((v) => {
     add('E002', formatPath(v.segs), entityIdAt(plan, v.segs), `schema violation: ${v.detail} (JSON pointer ${jsonPointer(v.segs)}, rule "${v.rule}")`, v.fix);
   });
@@ -712,18 +723,23 @@ function analyze(input, strict) {
     bad.levels.add(li);
     reason(`L${li}`);
   };
-  for (const v of viol) if (FATAL_RULES.has(v.rule)) markBad(v.segs, v.rule, v.detail);
+  for (const v of viol) if (FATAL_RULES.has(v.rule) || v.segs[0] === 'units') markBad(v.segs, v.rule, v.detail);
   for (const n of nonFinite) markBad(n.segs, 'type', `${formatPath(n.segs)} is ${String(n.value)}, which is not a finite number`);
+  // No list of levels, or a "units" that is not understood (every length would be read in the wrong unit): nothing is salvaged and the
+  // plan is refused as a whole, so the fix request names it. A model at the wrong scale with no banner would be worse than none.
+  const unusable = bad.noLevels || bad.units;
 
   // Pruned plan that normalizePlan can digest, with index maps back to the original arrays. What is left out is listed in `skipped`:
-  // an element with a fatal schema error, and an opening whose wall was left out.
+  // an element with a fatal schema error, an opening whose wall was left out, and a stair that leads to a level that was left out.
   let model = null;
   const skipped = [];
   const skip = (kind, e, path, why, reason = 'invalid') => skipped.push({ kind, id: isObj(e) && typeof e.id === 'string' ? clip(e.id) : undefined, path, why: clip(why, CAPS.message), reason });
-  if (!bad.noLevels && Array.isArray(plan.levels)) {
-    const pruned = { version: 1, name: typeof plan.name === 'string' ? plan.name : '', units: !bad.units && hasOwn(UNIT_TO_M, plan.units ?? 'm') ? (plan.units ?? 'm') : 'm', meta: isObj(plan.meta) ? plan.meta : {}, levels: [] };
+  if (!unusable && Array.isArray(plan.levels)) {
+    const pruned = { version: 1, name: typeof plan.name === 'string' ? plan.name : '', units: plan.units ?? 'm', meta: isObj(plan.meta) ? plan.meta : {}, levels: [] };
     const map = [];
     const drop = { wallIds: new Map(), incomplete: new Set(), levelsDropped: false };
+    const keptIds = new Set(), lostIds = new Set(); // ids of the levels that stay and of those that are left out
+    plan.levels.forEach((lv, li) => { if (isObj(lv) && typeof lv.id === 'string') (bad.levels.has(li) ? lostIds : keptIds).add(lv.id); });
     plan.levels.forEach((lv, li) => {
       if (!isObj(lv) || bad.levels.has(li)) { drop.levelsDropped = true; skip('level', lv, `levels[${li}]`, bad.why.get(`L${li}`) || 'it is not an object'); return; }
       const copy = { id: lv.id, name: lv.name, elevation: lv.elevation, height: lv.height, slab: lv.slab };
@@ -744,6 +760,10 @@ function analyze(input, strict) {
             drop.incomplete.add(li);
             return;
           }
+          if (key === 'stairs' && lostIds.has(e.to_level) && !keptIds.has(e.to_level)) {
+            skip('stair', e, path, 'the level it leads to was skipped', 'level-skipped');
+            return;
+          }
           copy[key].push(e); idx[key].push(j);
         });
       }
@@ -755,11 +775,11 @@ function analyze(input, strict) {
       add('E001', '', undefined, `the plan could not be interpreted: ${String(e && e.message ? e.message : e)}`, 'Check that the plan follows docs/SPEC.md section 2.');
     }
   }
-  const dropped = Array.isArray(plan.levels) ? plan.levels.length - (model ? model.map.length : 0) + (model ? model.norm.levels.reduce((s, _L, k) => s + ENTITY_ARRAYS.reduce((t, key) => t + ((Array.isArray(plan.levels[model.map[k].li][key]) ? plan.levels[model.map[k].li][key].length : 0) - model.map[k].idx[key].length), 0), 0) : 0) : 0;
+  const dropped = model ? plan.levels.length - model.map.length + model.norm.levels.reduce((s, _L, k) => s + ENTITY_ARRAYS.reduce((t, key) => t + ((Array.isArray(plan.levels[model.map[k].li][key]) ? plan.levels[model.map[k].li][key].length : 0) - model.map[k].idx[key].length), 0), 0) : 0;
   const structural = errors.some((e) => e.code === 'E001' || e.code === 'E010');
   const finish = () => {
     let normalized = null;
-    if (!structural && dropped === 0 && !bad.noLevels && Array.isArray(plan.levels)) {
+    if (!structural && dropped === 0 && !unusable && Array.isArray(plan.levels)) {
       try { normalized = normalizePlan(plan); } catch { normalized = null; }
     }
     return result(normalized, model ? model.norm : null, dropped, skipped);

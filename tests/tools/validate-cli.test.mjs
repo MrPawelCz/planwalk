@@ -120,6 +120,38 @@ test('a plan in which some elements have errors exits 1 and says how many the vi
   assert.equal(JSON.parse(run(put('none.json', none), '--json').stdout).partial, false);
 });
 
+test('an unknown "units" exits 1, is not partial and names units in the fix; a missing one is metres', () => {
+  const p = flat();
+  p.units = 'feet';
+  const f = put('feet.json', p);
+  const r = run(f);
+  assert.equal(r.status, 1);
+  assert.match(r.stdout, /^E002 units: .*"feet".* Fix: .*"ft"/m);
+  assert.match(r.stdout, /1 errors, 0 warnings/, 'no other check runs on a plan whose scale is not known');
+  assert.doesNotMatch(r.stdout, /would be skipped|nothing usable/);
+  const j = JSON.parse(run(f, '--json').stdout);
+  assert.equal(j.ok, false);
+  assert.equal(j.partial, false);
+  assert.deepEqual(j.skipped, []);
+  delete p.units;
+  assert.equal(run(put('nounits.json', p)).status, 0);
+});
+
+test('a non-finite number in meta exits 1 and is not partial; one inside an ignored property is a warning at most', () => {
+  const infinite = (obj) => JSON.stringify(obj).replace('"INF"', '1e999'); // JSON.stringify writes Infinity as null
+  const r = run(put('meta-inf.json', infinite({ ...flat(), meta: { x: 'INF' } })), '--json');
+  assert.equal(r.status, 1);
+  const j = JSON.parse(r.stdout);
+  assert.equal(j.partial, false);
+  assert.deepEqual(j.skipped, []);
+  assert.deepEqual(j.errors.map((e) => e.code), ['E010']);
+  const q = flat();
+  q.levels[0].walls[0].conf = 'INF';
+  const s = run(put('conf-inf.json', infinite(q)));
+  assert.equal(s.status, 0, s.stdout);
+  assert.match(s.stdout, /0 errors, 1 warnings/);
+});
+
 test('two plans in one answer: the CLI says which one it read', () => {
   const second = { ...flat(), name: 'Corrected' };
   const r = run(put('two.txt', `First:\n${JSON.stringify(flat())}\nCorrected:\n${JSON.stringify(second)}`), '--json');

@@ -236,3 +236,121 @@ test('a number that is not finite drops its element and the model is built from 
   assert.equal(r.skipped.length, 1);
   assert.equal(modelOf(r).levels[0].furniture.length, 8);
 });
+
+test('a "units" value that is not understood makes the whole plan unusable: nothing is salvaged and the fix names "units"', () => {
+  for (const units of ['feet', 'inches', 'meters', 'centimeters', 'M', '', 5, null, true, ['m'], {}]) {
+    const label = JSON.stringify(units);
+    const p = flat();
+    p.units = units;
+    const r = analyzePlan(p);
+    assert.equal(r.ok, false, label);
+    assert.equal(r.normalized, null, label);
+    assert.equal(r.salvaged, null, label);
+    assert.equal(r.partial, false, label);
+    assert.equal(modelOf(r), null, label);
+    assert.deepEqual(r.skipped, [], label);
+    assert.equal(r.dropped, 0, label);
+    assert.deepEqual(codes(r.errors), ['E002'], `${label}: no other check runs on a plan whose scale is not known`);
+    assert.equal(r.errors[0].path, 'units', label);
+    assert.match(r.errors[0].fix, /Use one of "m", "cm", "mm", "ft", "in".* at units\./, label);
+    assert.equal(validatePlan(p).normalized, null, label);
+  }
+  const feet = flat();
+  feet.units = 'feet';
+  assert.match(analyzePlan(feet).errors[0].fix, /closest: "ft"/);
+  const many = duplex();
+  many.units = 'centimeters';
+  many.levels[0].walls[0].from = 'x'; // an element error next to it changes nothing: the plan is refused whole
+  const r = analyzePlan(many);
+  assert.equal(r.partial, false);
+  assert.equal(modelOf(r), null);
+  assert.deepEqual(r.skipped, []);
+});
+
+test('a missing "units" is metres, as before, and every unit the schema lists still gives a model', () => {
+  const p = flat();
+  delete p.units;
+  let r = analyzePlan(p);
+  assert.equal(r.ok, true, JSON.stringify(r.errors));
+  assert.equal(r.normalized.sourceUnits, 'm');
+  for (const units of ['m', 'cm', 'mm', 'ft', 'in']) {
+    p.units = units;
+    r = analyzePlan(p);
+    assert.ok(modelOf(r), units);
+    assert.equal(r.normalized.sourceUnits, units);
+    assert.ok(!r.errors.some((e) => e.path === 'units'), units);
+  }
+});
+
+test('a number that is not finite outside every element refuses the whole plan, as before, and is not partial', () => {
+  const p = flat();
+  p.meta = { scale: 1e999 };
+  let r = analyzePlan(p);
+  assert.equal(r.ok, false);
+  assert.deepEqual(codes(r.errors), ['E010']);
+  assert.equal(r.normalized, null);
+  assert.deepEqual(r.skipped, []);
+  assert.equal(r.partial, false, 'nothing was skipped, so there is no banner to show: the plan is refused');
+  assert.equal(modelOf(r), null);
+  p.levels[0].furniture[0].center = 'x'; // with a skipped element the rest is shown, and the error in meta stays listed
+  r = analyzePlan(p);
+  assert.equal(r.partial, true);
+  assert.equal(r.skipped.length, 1);
+  assert.ok(codes(r.errors).includes('E010'));
+  assert.equal(modelOf(r).levels[0].furniture.length, 8);
+});
+
+test('a number that is not finite inside an ignored property (W116, "$schema", "x-...") is no error and drops nothing', () => {
+  const p = flat();
+  p.levels[0].walls[0].conf = 1e999;
+  p.levels[0].rooms[0].guess = { areas: [12, -1e999] };
+  p['x-source'] = { score: 1e999 };
+  p.levels[0]['x-conf'] = [1e999];
+  const r = analyzePlan(p);
+  assert.equal(r.ok, true, JSON.stringify(r.errors));
+  assert.deepEqual(codes(r.warnings).filter((c) => c === 'W116'), ['W116', 'W116']);
+  assert.deepEqual(r.skipped, []);
+  assert.equal(r.partial, false);
+  assert.equal(r.normalized.levels[0].walls.length, flat().levels[0].walls.length);
+  const q = flat(); // a known property of the same wall still counts
+  q.levels[0].walls[0].conf = 1e999;
+  q.levels[0].walls[0].thickness = Infinity;
+  const s = analyzePlan(q);
+  assert.deepEqual(s.errors.map((e) => [e.code, e.path]), [['E010', 'levels[0].walls[0].thickness']]);
+  assert.equal(s.partial, true);
+  assert.equal(s.skipped.filter((k) => k.kind === 'wall').length, 1);
+});
+
+test('a stair that leads to a skipped level is skipped too, with its own reason', () => {
+  const p = duplex();
+  p.levels[1].height = -3; // the upper level cannot be read
+  const r = analyzePlan(p);
+  assert.equal(r.partial, true);
+  assert.deepEqual(r.skipped.map((s) => [s.kind, s.id, s.path, s.reason]), [
+    ['stair', 'stair-1', 'levels[0].stairs[0]', 'level-skipped'],
+    ['level', 'L1', 'levels[1]', 'invalid'],
+  ]);
+  assert.equal(r.skipped[0].why, 'the level it leads to was skipped');
+  assert.equal(r.dropped, r.skipped.length, 'the dropped count includes the stair');
+  assert.ok(!codes(r.errors).includes('E009'), 'the stair is not reported as one that leads to a missing level');
+  const m = modelOf(r);
+  assert.equal(m.levels.length, 1);
+  assert.equal(m.levels[0].stairs.length, 0);
+});
+
+test('a stair stays when the skipped level shares its id with a level that is kept, and a stair without to_level is never skipped for a level', () => {
+  const p = duplex();
+  const loose = { ...p.levels[0].stairs[0], id: 'out' };
+  delete loose.to_level;
+  p.levels[0].stairs.push(loose);
+  p.levels[1].height = -3;
+  let r = analyzePlan(p);
+  assert.deepEqual(r.skipped.map((s) => s.kind + ':' + s.id), ['stair:stair-1', 'level:L1']);
+  assert.deepEqual(modelOf(r).levels[0].stairs.map((s) => s.id), ['out']);
+  const twin = JSON.parse(JSON.stringify(p.levels[1]));
+  twin.height = 2.6;
+  p.levels.push(twin); // a second level called L1 that can be read
+  r = analyzePlan(p);
+  assert.deepEqual(r.skipped.map((s) => s.kind + ':' + s.id), ['level:L1']);
+  assert.deepEqual(modelOf(r).levels[0].stairs.map((s) => s.id), ['stair-1', 'out']);
+});
