@@ -29,7 +29,7 @@ export const STRINGS = {
     copiedNext: 'Skopiowano. Teraz otwórz czat z AI, dodaj zdjęcie rzutu i wklej polecenie.',
     paste: 'Wklej odpowiedź', open: 'Otwórz plik', hide: 'Ukryj',
     promptLang: 'Język polecenia',
-    privacy: 'planwalk niczego nie wysyła ani nie zapisuje. Zdjęcie rzutu trafia tylko do czatu z AI, który sam wybierasz: wytnij z niego imiona i adresy.',
+    privacy: 'planwalk niczego nie wysyła ani nie zapisuje. Zdjęcie rzutu trafia tylko do czatu z AI, który wybierzesz: wytnij z niego imiona i adresy.',
     collapsed: 'To jest przykład · Jak dodać swój rzut?',
   },
 };

@@ -38,7 +38,7 @@ export const STRINGS = {
     controlsTop: 'Z góry: przeciągnij, żeby przesuwać; przybliżasz tak samo.',
     controlsWalk: 'Spacer na telefonie: przeciągnij palcem po lewej połowie ekranu, żeby iść, a po prawej, żeby się rozglądać. Na komputerze: strzałki lub WASD, rozglądanie myszką (najpierw kliknij).',
     privacyTitle: 'Prywatność',
-    privacy: 'planwalk działa w całości na tej stronie: Twój plan nie opuszcza urządzenia i nic nie jest zapisywane. Zdjęcie rzutu trafia tylko do czatu z AI, który sam wybierasz.',
+    privacy: 'planwalk działa w całości na tej stronie: Twój plan nie opuszcza urządzenia i nic nie jest zapisywane. Zdjęcie rzutu trafia tylko do czatu z AI, który wybierzesz.',
     tip: 'Wskazówka: zanim wyślesz zdjęcie do AI, wytnij z niego imiona, nazwiska i adresy.',
     copy: 'Kopiuj polecenie', copied: 'Skopiowano', copyFailed: 'Nie udało się skopiować',
     copiedNext: 'Skopiowano. Teraz otwórz czat z AI, dodaj zdjęcie rzutu i wklej polecenie.',
