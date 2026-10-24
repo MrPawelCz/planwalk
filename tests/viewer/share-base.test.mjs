@@ -1,5 +1,5 @@
 // Where a shared link starts (viewer/src/site.js): the page's own address on http and https, the public page everywhere else, so a
-// page opened from a downloaded file never puts file:///Users/... on the clipboard. No browser needed. The page head that
+// page opened from a downloaded file never puts a file:// address with its local path on the clipboard. No browser needed. The page head that
 // tools/build.mjs writes must name the same public address, or the two constants have drifted apart.
 import test, { after, before } from 'node:test';
 import assert from 'node:assert/strict';
@@ -32,7 +32,7 @@ test('on http and https the page keeps its own address, without query and fragme
     ['https://example.org/a-fork/planwalk.html?lang=en#plan=abc', 'https://example.org/a-fork/planwalk.html'],
     ['http://localhost:8080/x/y.html', 'http://localhost:8080/x/y.html'],
     ['http://127.0.0.1:8080/planwalk.html?lang=pl', 'http://127.0.0.1:8080/planwalk.html'],
-    ['http://192.168.1.20:8000/planwalk.html#plan=abc', 'http://192.168.1.20:8000/planwalk.html'],
+    ['http://192.0.2.20:8000/planwalk.html#plan=abc', 'http://192.0.2.20:8000/planwalk.html'],
     ['http://[::1]:8080/', 'http://[::1]:8080/'],
   ];
   for (const [url, want] of web) {
@@ -42,10 +42,10 @@ test('on http and https the page keeps its own address, without query and fragme
 
 test('a page that does not come from the web gets the public page: English by default, Polish for a Polish interface', () => {
   const offTheWeb = [
-    'file:///Users/anna/Downloads/planwalk.html',
-    'file:///Users/anna/Downloads/planwalk.html?lang=pl#plan=abc',
-    'file:///C:/Users/Anna%20Kowalska/Pobrane/planwalk%20(1).html',
-    'file://nas/share/Anna/planwalk.html',
+    'file:///srv/someone/Downloads/planwalk.html',
+    'file:///srv/someone/Downloads/planwalk.html?lang=pl#plan=abc',
+    'file:///C:/Docs/Someone%20Else/Pobrane/planwalk%20(1).html',
+    'file://nas/share/Someone/planwalk.html',
     'file:///Volumes/USB%20STICK/plans/flat%232.html',
     'about:blank',
     'about:srcdoc',
@@ -58,12 +58,12 @@ test('a page that does not come from the web gets the public page: English by de
     assert.equal(linkBase(at(url), 'en'), SITE, url);
     assert.equal(linkBase(at(url), 'pl'), SITE_PL, url);
     for (const lang of [undefined, '', 'de']) assert.equal(linkBase(at(url), lang), SITE, `${url} (${lang})`);
-    for (const lang of ['en', 'pl']) assert.doesNotMatch(linkBase(at(url), lang), /file:|Users|Downloads|Pobrane|Kowalska|anna|Volumes|USB|nas|blank|hello|example|abcdefgh/i, `${url}: no local path or address in the link`);
+    for (const lang of ['en', 'pl']) assert.doesNotMatch(linkBase(at(url), lang), /file:|srv|Downloads|Pobrane|someone|else|Docs|Volumes|USB|nas|blank|hello|example|abcdefgh/i, `${url}: no local path or address in the link`);
   }
 });
 
 test('anything that is not a full http or https location is treated as off the web', () => {
-  const odd = [undefined, null, {}, { protocol: '' }, { protocol: 'http:', host: '', pathname: '/Users/anna/x.html' }, { protocol: 'file:', host: '', pathname: '/Users/anna/x.html' }];
+  const odd = [undefined, null, {}, { protocol: '' }, { protocol: 'http:', host: '', pathname: '/srv/someone/x.html' }, { protocol: 'file:', host: '', pathname: '/srv/someone/x.html' }];
   for (const loc of odd) {
     assert.equal(linkBase(loc, 'en'), SITE, JSON.stringify(loc));
     assert.equal(linkBase(loc, 'pl'), SITE_PL, JSON.stringify(loc));
