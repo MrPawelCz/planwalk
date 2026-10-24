@@ -205,3 +205,26 @@ test('a stream that never delivers is cut off by the time limit', async () => {
   }
   await sleep(0);
 });
+
+test('a stream that keeps delivering is stopped by the cap while it is read, not after all of it was inflated', async () => {
+  // 1 MB of text per read, 64 MB at most (a stream that really never ended would eat the memory of a run without the cap).
+  // The answer alone cannot tell the two apart, since the check after the loop gives the same one: count what was read.
+  const { DecompressionStream: real } = globalThis;
+  const megabyte = new Uint8Array(1 << 20).fill(0x61);
+  let pulled = 0;
+  globalThis.DecompressionStream = class {
+    constructor() {
+      this.writable = new WritableStream({ write() {} });
+      this.readable = new ReadableStream({ pull(controller) { if (++pulled <= 64) controller.enqueue(megabyte); else controller.close(); } });
+    }
+  };
+  try {
+    const t0 = Date.now();
+    const got = await decodeShort('AAAA');
+    assert.deepEqual(got, { ok: false, reason: 'too-long' });
+    assert.ok(Date.now() - t0 < 1000, `took ${Date.now() - t0} ms`);
+    assert.ok(pulled * (1 << 20) <= MAX_PLAN_CHARS + 3 * (1 << 20), `${pulled} MB were read before the cap stopped it`);
+  } finally {
+    globalThis.DecompressionStream = real;
+  }
+});
