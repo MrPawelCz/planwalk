@@ -95,6 +95,19 @@ for (const lang of ['en', 'pl']) {
       await paste(p);
       const m = await sitsUnderBar(p, `${lang} phone, portrait`);
       assert.ok(m.bar.bottom <= 64, `a one row top bar (bottom ${m.bar.bottom})`);
+      // the banner holds its controls: they stay inside it and on the screen, their text fits, and none covers another
+      const inside = await p.evaluate(`(() => {
+        const b = document.querySelector('.pw-banner'), br = b.getBoundingClientRect();
+        const kids = [...b.querySelectorAll('button')].filter((k) => !k.hidden).map((k) => ({ k, r: k.getBoundingClientRect() }));
+        const name = ({ k }) => k.textContent;
+        return { n: kids.length, out: kids.filter(({ r }) => r.left < br.left - 0.5 || r.right > br.right + 0.5 || r.top < br.top - 0.5 || r.bottom > br.bottom + 0.5).map(name), clipped: kids.filter(({ k }) => k.scrollWidth > k.clientWidth + 1).map(name),
+          overlap: kids.some(({ r: a }, i) => kids.some(({ r: c }, j) => i < j && a.left < c.right && a.right > c.left && a.top < c.bottom && a.bottom > c.top)), onScreen: br.left >= 0 && br.right <= window.innerWidth };
+      })()`);
+      assert.equal(inside.n, 2, `${lang}: the banner has its two buttons`);
+      assert.deepEqual(inside.out, [], `${lang}: no banner button sticks out of the banner`);
+      assert.deepEqual(inside.clipped, [], `${lang}: no banner button text runs past its button`);
+      assert.equal(inside.overlap, false, `${lang}: the banner buttons do not cover each other`);
+      assert.equal(inside.onScreen, true, `${lang}: the banner fits the screen`);
       if (shots && lang === 'pl') await p.shot(join(shots, 'phone-390-pl.jpg'));
       await p.resize(750, 340);
       await sitsUnderBar(p, `${lang} phone, on its side`);

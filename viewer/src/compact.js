@@ -97,6 +97,10 @@ const CSS = `
 .pw-compact .pw-visit-note button{min-height:44px;min-width:44px;font-size:14px}
 .pw-compact .pw-visit-note{font-size:14px}
 .pw-compact .pw-banner-x{font-size:24px}
+.pw-compact .pw-banner{flex-wrap:wrap}
+.pw-compact .pw-banner > span:first-child{flex:1 1 calc(100% - 56px);min-width:0}
+.pw-compact .pw-banner .pw-banner-x{order:1}
+.pw-compact .pw-banner > button:not(.pw-banner-x){order:2;flex:1 1 100%}
 .pw-compact .pw-dlg select,.pw-compact .pw-dlg input,.pw-compact .pw-dlg textarea,.pw-compact select,.pw-compact textarea{font-size:16px}
 .pw-compact .pw-help a{display:inline-block;padding:10px 0}
 .pw-compact .pw-walkzones{display:flex;position:absolute;z-index:1;inset:0;pointer-events:none}
