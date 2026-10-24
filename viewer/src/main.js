@@ -24,6 +24,7 @@ import { T, issuesHeading, fixRequestText } from './strings.js'; // every captio
 import { createShare, linkProblem } from './share.js';
 import { createLoadedNote } from './loaded-note.js';
 import { decodeShort, parseHash } from './share-link.js';
+import { exampleId, exampleTitle, localizeExample } from './examples-pl.js';
 
 const MODES = ['dollhouse', 'orbit', 'top', 'walk'];
 const MODE_DEFAULTS = {
@@ -141,7 +142,7 @@ function start() {
   const cutBox = h('input', { type: 'checkbox', onchange: (e) => api.setCutaway(e.target.checked) });
   const labBox = h('input', { type: 'checkbox', onchange: (e) => api.setLabels(e.target.checked) });
   const texBox = h('input', { type: 'checkbox', onchange: (e) => api.setMaterials(e.target.checked ? 'textured' : 'clay') });
-  const sampleSel = h('select', { title: T.examples, onchange: (e) => { if (e.target.value) api.load(samples[e.target.value]); e.target.value = ''; } });
+  const sampleSel = h('select', { title: T.examples, onchange: (e) => { if (e.target.value) api.load(sample(e.target.value)); e.target.value = ''; } });
   const nameEl = h('span', { class: 'pw-name' });
   const about = createAbout(h, () => ({ plan, model, warnings: issues.warnings.length, version: PW_VERSION }));
   const visit = createFirstVisit({ h, onPaste: () => openDialog(pasteDlg) });
@@ -203,6 +204,14 @@ function start() {
   let explodeT = 0, explodeV = 0;
   let issues = { errors: [], warnings: [] };
   let samples = {};
+  // The bundled examples are shown in the page language (names only, see examples-pl.js). sample(name) hands out the plan to load and
+  // remembers which example it is, so a change of language can tell an untouched example from a plan the user loaded.
+  const samplePlans = new WeakMap();
+  function sample(name) {
+    const p = localizeExample(samples[name], exampleId(samples[name]), getLang());
+    if (p && typeof p === 'object') samplePlans.set(p, name);
+    return p;
+  }
   let cardKey = 'empty'; // the caption of the empty card; '' once a model is on screen
   const setCardText = () => { document.getElementById('pw-card-text').textContent = cardKey ? String(T[cardKey]) : ''; };
   let topView = { cx: 0, cz: 0, half: 5 };
@@ -276,7 +285,7 @@ function start() {
     nameEl.textContent = plan?.name || '';
     about.update();
     share.update();
-    visit.setExample(!!plan && Object.values(samples).includes(plan));
+    visit.setExample(!!plan && samplePlans.has(plan));
     compact.sync({ mode, hasModel: !!model, issues: issues.errors.length + issues.warnings.length, errors: issues.errors.length });
   }
 
@@ -474,7 +483,7 @@ function start() {
       if (got.ok) api.load(got.text, 'link'); else reason = got.reason;
     }
     if (!reason && !model) reason = 'inflate'; // the text held no usable plan
-    if (reason && !model && Object.keys(samples).length) { api.load(Object.values(samples)[0]); visit.show(); }
+    if (reason && !model && Object.keys(samples).length) { api.load(sample(Object.keys(samples)[0])); visit.show(); }
     if (reason) notes.show(() => linkProblem(reason));
   }
 
@@ -596,12 +605,27 @@ function start() {
     last = now;
   }
 
+  // A bundled example that is still on screen is loaded again in the new language; a plan the user loaded is never touched. The model is
+  // rebuilt, so the camera goes back to the start view and the toggles to the defaults of the mode; the mode, the level and the card stay.
+  function reloadExample() {
+    const name = plan ? samplePlans.get(plan) : undefined;
+    if (name === undefined) return;
+    const keep = { level: levelId, card: !visit.el.hidden };
+    load(sample(name));
+    if (keep.level) api.setLevel(keep.level);
+    if (keep.card) { visit.show(); refreshFrame(); }
+  }
+
   // ---------- language ----------
   // Switches the page language without a reload: the captions bound in h(), the modules' own texts, the issues panel and the
   // room labels in the 3D scene are redrawn. The model, the camera and the choices made stay as they are. Memory only.
+  // The one exception is a bundled example still on screen: its names are in the page language, so it is loaded again (below).
   function applyLang(lang) {
+    const before = getLang();
     setLang(lang);
     document.documentElement.lang = getLang();
+    if (getLang() !== before) reloadExample();
+    listExamples();
     relabel();
     setCardText();
     renderIssues();
@@ -881,9 +905,13 @@ function start() {
     try { samples = JSON.parse(embeddedSamples.textContent); } catch { samples = {}; }
   }
   const sampleNames = Object.keys(samples);
-  sampleSel.replaceChildren(h('option', { value: '' }, T.examples), ...sampleNames.map((n) => h('option', { value: n }, n)));
+  // The list and the buttons of the empty card name the examples in the page language; an option's value stays the name an example is listed under.
+  function listExamples() {
+    sampleSel.replaceChildren(h('option', { value: '' }, T.examples), ...sampleNames.map((n) => h('option', { value: n }, exampleTitle(samples[n], getLang()))));
+    document.getElementById('pw-card-samples').replaceChildren(...sampleNames.map((n) => h('button', { type: 'button', onclick: () => api.load(sample(n)) }, exampleTitle(samples[n], getLang()))));
+  }
+  listExamples();
   sampleSel.hidden = !sampleNames.length;
-  document.getElementById('pw-card-samples').replaceChildren(...sampleNames.map((n) => h('button', { type: 'button', onclick: () => api.load(samples[n]) }, n)));
   syncUi();
 
   stage.setMaterials(materials);
@@ -895,7 +923,7 @@ function start() {
   if (fixed) api.load(embedded.textContent);
   else if (link) openLink(link);
   else if (/^https?:\/\//i.test(q.get('plan') || '')) fetchPlanText(q.get('plan')).then((r) => (r.ok ? api.load(r.text, 'download') : notes.show(() => downloadMessage(r))));
-  else if (sampleNames.length) { api.load(samples[sampleNames[0]]); visit.show(); refreshFrame(); render(); } // the card is up now, so frame the model above it
+  else if (sampleNames.length) { api.load(sample(sampleNames[0])); visit.show(); refreshFrame(); render(); } // the card is up now, so frame the model above it
   window.addEventListener('hashchange', () => { const next = parseHash(location.hash); if (next && !fixed) openLink(next); }); // a link pasted into this tab's address bar
   requestAnimationFrame(loop);
 }

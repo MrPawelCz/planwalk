@@ -9,12 +9,13 @@
 import test, { after, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { openPage, skipReason } from './first-visit-cdp.mjs';
 import { DASHES, englishLeft } from './pl-deny.mjs';
+import { EXAMPLES_PL } from '../../viewer/src/examples-pl.js';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const out = mkdtempSync(join(tmpdir(), 'planwalk-pl-audit-'));
@@ -161,6 +162,87 @@ test('phone (390 x 664, touch), ?lang=pl: no English left on the collapsed card,
     assert.ok(c.seen.has('Menu') && c.seen.has('Zamknij'), 'Menu and its close control are read');
     c.print('phone');
     assert.deepEqual(c.problems(), []);
+    assert.deepEqual(p.issues, [], 'console stays clean');
+  } finally { await p.close(); }
+});
+
+// The bundled examples are data, so the audit above skips them; this one reads them. The room labels of the 3D scene are canvas pictures:
+// the page records every string it draws (fillText), which is how the label names are read back.
+const RECORD = "window.__drawn = []; const ft = CanvasRenderingContext2D.prototype.fillText; CanvasRenderingContext2D.prototype.fillText = function (s, ...a) { window.__drawn.push(String(s)); return ft.call(this, s, ...a); };";
+const EXAMPLE_TEXT = `(() => {
+  const selects = Object.fromEntries([...document.querySelectorAll('.pw-bar select')].map((s) => [s.title, [...s.options].map((o) => o.textContent)]));
+  return {
+    name: document.querySelector('.pw-name').textContent,
+    labels: [...new Set(window.__drawn.filter((s) => !/m²$/.test(s)))], // a label is drawn again when the language changes
+    levels: selects['Piętro'] || selects['Level'], examples: selects['Przykłady'] || selects['Examples'],
+    buttons: [...document.querySelectorAll('#pw-card-samples button')].map((b) => b.textContent),
+    tag: !document.querySelector('.pw-tag').hidden,
+    card: !document.querySelector('.pw-visit').hidden,
+  };
+})()`;
+const exampleFiles = readdirSync(join(root, 'examples')).filter((n) => n.endsWith('.plan.json')).sort(); // the page lists and loads them in this order
+const exampleOf = (id) => JSON.parse(readFileSync(join(root, `examples/${id}.plan.json`), 'utf8'));
+const roomsOf = (plan) => plan.levels.flatMap((l) => l.rooms.map((r) => r.name));
+
+test('?lang=pl: the bundled example is in Polish (plan name, 3D labels, examples list, level selector, About notes), the language switch follows it, a plan the user loaded keeps its names', { skip, timeout: 240000 }, async () => {
+  const [first, second] = exampleFiles.map((f) => f.replace(/\.plan\.json$/, ''));
+  const en = exampleOf, pl = (id) => EXAMPLES_PL[id], plRooms = (id) => Object.values(pl(id).rooms);
+  const words = (data) => [data.name, ...data.labels, ...data.levels, ...data.examples, ...data.buttons];
+  const p = await openPage(page, { width: 1280, height: 800, search: '?lang=pl', beforeLoad: `${ENGLISH_BROWSER}${STUB}${RECORD}` });
+  const notes = async (label) => { await openDialogOf(p, label, '.pw-about'); const t = await p.evaluate(`${q('.pw-about')}.textContent`); await closeDialogs(p); return t; };
+  try {
+    // 1. the first screen: the first example, in Polish, with no English left in the places the other audit skips
+    let seen = await p.evaluate(EXAMPLE_TEXT);
+    assert.equal(seen.name, pl(first).name);
+    assert.deepEqual([...seen.labels].sort(), plRooms(first).sort(), 'the 3D labels carry the Polish room names');
+    assert.deepEqual(seen.levels, ['Wszystkie piętra', ...Object.values(pl(first).levels)]);
+    assert.deepEqual(seen.examples, ['Przykłady', pl(first).name, pl(second).name], 'the examples list');
+    assert.deepEqual(seen.buttons, [pl(first).name, pl(second).name], 'the buttons of the empty card');
+    assert.equal(seen.tag && seen.card, true, 'the example tag and the first-visit card are up');
+    assert.deepEqual(words(seen).flatMap((w) => englishLeft(w)), [], 'no English example word on the Polish start screen');
+    const aboutPl = await notes('O modelu');
+    assert.match(aboutPl, /Przykład napisany ręcznie/);
+    assert.deepEqual(englishLeft(aboutPl), [], 'no English in the About sheet');
+
+    // 2. the language switch brings English back and keeps the mode and the level; the first-visit card stays up
+    await p.evaluate("window.planwalk.setMode('top'); window.planwalk.setLevel('L1'); window.__drawn = []; window.planwalk.setLang('en'); window.planwalk.advanceTime(100)");
+    seen = await p.evaluate(EXAMPLE_TEXT);
+    assert.equal(seen.name, en(first).name);
+    assert.deepEqual([...seen.labels].sort(), roomsOf(en(first)).sort(), 'English room names again');
+    assert.deepEqual(seen.levels, ['All levels', ...en(first).levels.map((l) => l.name)]);
+    assert.deepEqual(seen.examples, ['Examples', en(first).name, en(second).name]);
+    assert.deepEqual(seen.buttons, [en(first).name, en(second).name]);
+    assert.equal(seen.tag && seen.card, true);
+    assert.deepEqual(await p.evaluate('[window.planwalk.state().mode, window.planwalk.state().level]'), ['top', 'L1'], 'mode and level stay');
+    assert.match(await notes('About'), /Hand-written reference example/);
+    await p.evaluate("window.__drawn = []; window.planwalk.setLang('pl'); window.planwalk.advanceTime(100)");
+    seen = await p.evaluate(EXAMPLE_TEXT);
+    assert.equal(seen.name, pl(first).name);
+    assert.deepEqual([...seen.labels].sort(), plRooms(first).sort());
+    assert.deepEqual(await p.evaluate('[window.planwalk.state().mode, window.planwalk.state().level]'), ['top', 'L1']);
+
+    // 3. the examples list keeps working in Polish: the second example comes up in Polish
+    await p.evaluate(`window.__drawn = []; const s = document.querySelector('.pw-bar select[title="Przykłady"]'); s.value = s.options[2].value; s.dispatchEvent(new Event('change')); window.planwalk.advanceTime(100)`);
+    seen = await p.evaluate(EXAMPLE_TEXT);
+    assert.equal(seen.name, pl(second).name);
+    assert.deepEqual([...seen.labels].sort(), plRooms(second).sort());
+    assert.deepEqual(seen.levels, ['Wszystkie piętra', ...Object.values(pl(second).levels)]);
+
+    // 4. the person's own plan (here: the English example text pasted back) is never renamed, nor touched by a change of language
+    await p.evaluate(`window.__drawn = []; window.planwalk.load(${JSON.stringify(JSON.stringify(en(first)))}, 'paste'); window.planwalk.advanceTime(100)`);
+    seen = await p.evaluate(EXAMPLE_TEXT);
+    assert.equal(seen.name, en(first).name, 'a pasted plan keeps its name under ?lang=pl');
+    assert.deepEqual([...seen.labels].sort(), roomsOf(en(first)).sort(), 'and its room names');
+    assert.equal(seen.tag, false, 'it is not announced as an example');
+    const cam = await p.evaluate('JSON.stringify(window.planwalk.state().camera)');
+    for (const lang of ['en', 'pl']) {
+      await p.evaluate(`window.__drawn = []; window.planwalk.setLang(${JSON.stringify(lang)}); window.planwalk.advanceTime(100)`);
+      const after = await p.evaluate(EXAMPLE_TEXT);
+      assert.equal(after.name, en(first).name, `${lang}: the name is the person's`);
+      assert.deepEqual([...after.labels].sort(), roomsOf(en(first)).sort(), `${lang}: the room names are the person's`);
+      assert.deepEqual(after.levels.slice(1), en(first).levels.map((l) => l.name), `${lang}: the level names are the person's`);
+      assert.equal(await p.evaluate('JSON.stringify(window.planwalk.state().camera)'), cam, `${lang}: the model was not rebuilt`);
+    }
     assert.deepEqual(p.issues, [], 'console stays clean');
   } finally { await p.close(); }
 });

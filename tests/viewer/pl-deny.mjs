@@ -18,6 +18,8 @@ export const ENGLISH_WORDS = [
   'scale', 'room', 'rooms', 'answer', 'links', 'language', 'standalone', 'image', 'picture', 'drawing', 'request', 'details', 'page',
   'browser', 'chat', 'floor', 'wall', 'walls', 'door', 'doors', 'window', 'furniture', 'stairs', 'area', 'total', 'name', 'untitled',
   'version', 'text', 'plans',
+  // the words of the bundled examples (examples/*.plan.json), which have Polish names on a Polish page
+  'living', 'bedroom', 'kitchen', 'bathroom', 'hall', 'study', 'landing',
 ];
 
 const keepRe = new RegExp(`(?<![\\p{L}\\d])(${KEEP.join('|')})(?![\\p{L}\\d])`, 'gu');
