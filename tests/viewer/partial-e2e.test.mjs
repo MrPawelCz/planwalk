@@ -113,14 +113,14 @@ test('a reading with unknown properties opens with warnings; a reading with one 
     await page.evaluate('window.planwalk.setLang("en")');
 
     // A unit that is not understood would show the flat at the wrong scale with nothing to say so: refused like a plan without walls.
-    const shown = await counts(page);
+    const onScreen = await counts(page);
     const feet = JSON.parse(zero);
     feet.units = 'feet';
     const g = await loadWith(page, JSON.stringify(feet));
     assert.equal(g.ok, false);
     assert.equal(g.partial, false);
     assert.deepEqual(g.skipped, []);
-    assert.deepEqual(await counts(page), shown, 'the previous model is kept');
+    assert.deepEqual(await counts(page), onScreen, 'the previous model is kept');
     assert.match(await banner(page), /cannot build a model/);
     assert.match((await lines(page))[0], /^E002 units: .*"feet"/, 'the banner names units');
 
