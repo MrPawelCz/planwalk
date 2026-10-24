@@ -109,6 +109,23 @@ for (const lang of ['en', 'pl']) {
       assert.equal(inside.overlap, false, `${lang}: the banner buttons do not cover each other`);
       assert.equal(inside.onScreen, true, `${lang}: the banner fits the screen`);
       if (shots && lang === 'pl') await p.shot(join(shots, 'phone-390-pl.jpg'));
+      // Walk mode brings the minimap under the top bar: it must not sit under the banner or the "Loaded" line
+      await p.evaluate('window.planwalk.setMode("walk")');
+      await p.settle();
+      const walk = await p.evaluate(`(() => {
+        const rect = (sel) => { const e = document.querySelector(sel); if (!e || e.hidden) return null; const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0 ? { top: r.top, bottom: r.bottom, left: r.left, right: r.right } : null; };
+        const line = document.querySelector('.pw-loaded');
+        return { mini: rect('.pw-mini'), banner: rect('.pw-banner'), loaded: line.classList.contains('on') && line.textContent ? rect('.pw-loaded') : null, bar: rect('.pw-bar'), modebar: rect('.pw-modebar') };
+      })()`);
+      const hit = (a, b) => a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+      assert.ok(walk.mini && walk.banner && walk.loaded, `${lang}: walk mode shows the minimap, the banner and the "Loaded" line`);
+      assert.equal(hit(walk.mini, walk.banner), false, `${lang}: the minimap (${JSON.stringify(walk.mini)}) is not under the banner (${JSON.stringify(walk.banner)})`);
+      assert.equal(hit(walk.mini, walk.loaded), false, `${lang}: the minimap is not under the "Loaded" line (${JSON.stringify(walk.loaded)})`);
+      assert.equal(hit(walk.mini, walk.bar), false, `${lang}: the minimap does not touch the top bar`);
+      assert.ok(walk.mini.bottom <= walk.modebar.top, `${lang}: the minimap stays above the bottom mode bar`);
+      if (shots && lang === 'pl') await p.shot(join(shots, 'phone-390-pl-walk.jpg'));
+      await p.evaluate('window.planwalk.setMode("dollhouse")');
+      await p.settle();
       await p.resize(750, 340);
       await sitsUnderBar(p, `${lang} phone, on its side`);
       await p.resize(390, 664);
