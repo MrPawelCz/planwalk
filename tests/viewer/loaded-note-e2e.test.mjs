@@ -64,8 +64,8 @@ test('paste, the Wczytaj button and a dropped file show "Wczytano: nazwa, N pomi
     assert.ok(n > 1);
     let now = await line(p);
     assert.equal(now.text, `Wczytano: Mieszkanie Testowe, ${roomsPl(n)}`);
-    assert.equal(now.opacity, '1', 'visible');
-    const rect = await p.evaluate(`(() => { const r = ${q('.pw-loaded')}.getBoundingClientRect(), b = ${q('.pw-bar')}.getBoundingClientRect(); return { top: r.top, barBottom: b.bottom, left: r.left, right: r.right }; })()`);
+    assert.equal(await waitUntil(p, `getComputedStyle(${q('.pw-loaded')}).opacity === '1'`, 3000), true, 'visible (it fades in over 0.2 s, a slow machine may still be part way)');
+    const rect =await p.evaluate(`(() => { const r = ${q('.pw-loaded')}.getBoundingClientRect(), b = ${q('.pw-bar')}.getBoundingClientRect(); return { top: r.top, barBottom: b.bottom, left: r.left, right: r.right }; })()`);
     assert.ok(rect.top >= rect.barBottom, `under the toolbar (${rect.top} vs ${rect.barBottom})`);
     // it goes away by itself after about five seconds, not at once (the margins are wide: a loaded machine delays every step)
     await new Promise((r) => setTimeout(r, 2000));
