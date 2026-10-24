@@ -25,7 +25,7 @@ test('share: the sentence about what a link holds, the Standalone HTML tip and t
   assert.equal(STRINGS.en.note, 'The plan is stored inside the link. Whoever gets the link, and the app you send it through, can read the plan.');
   assert.equal(STRINGS.en.standaloneTip, 'A single HTML file with this plan inside, to open on a computer');
   assert.equal(STRINGS.pl.standaloneTip, 'Jeden plik HTML z tym planem w środku, do otwarcia na komputerze');
-  assert.equal(STRINGS.en.needsNewer, 'This link needs a newer browser (Safari 16.4 or newer). Ask the sender for the long link.');
+  assert.equal(STRINGS.en.needsNewer, 'This link needs a newer browser (Safari 16.4, Chrome 103, Firefox 113 or newer). Ask the sender for the long link.');
   assert.equal(STRINGS.en.copyLong, 'Copy long link (older browsers)');
   assert.equal(STRINGS.pl.shareImage, 'Udostępnij obraz');
   assert.ok(STRINGS.en.helpNote.includes(STRINGS.en.note) && STRINGS.pl.helpNote.includes(STRINGS.pl.note), 'the Help line carries the same sentence');

@@ -30,7 +30,7 @@ export const STRINGS = {
   },
   pl: {
     title: 'Jak działa planwalk',
-    step1: 'Skopiuj polecenie (prompt) i wklej je do czatu z AI, który czyta obrazy, razem ze zdjęciem rzutu mieszkania (przy polu do pisania jest zwykle przycisk ze spinaczem albo plusem, którym dodasz zdjęcie).',
+    step1: 'Skopiuj polecenie (prompt) i wklej je do czatu z AI, który czyta obrazy. Dodaj do rozmowy zdjęcie rzutu mieszkania (zwykle przyciskiem ze spinaczem albo plusem przy polu do pisania).',
     step2: 'Wróć na tę stronę i wklej odpowiedź AI (przycisk „Wklej odpowiedź”) albo otwórz zapisany plik .json („Otwórz plik” w oknie wklejania).',
     step3: 'Jeśli planwalk zgłosi problemy, kliknij „Kopiuj prośbę o poprawkę”, wklej ją do tego samego czatu i wczytaj poprawioną odpowiedź.',
     controlsTitle: 'Sterowanie',

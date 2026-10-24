@@ -11,7 +11,7 @@ All notable changes to planwalk are listed here. The format follows [Keep a Chan
 - Copy link makes a short link that holds the plan (`#z=`, compressed, about 70 to 76 percent shorter than the `#plan=` form for the two examples); Copy long link makes the older `#plan=` form for browsers without compression. Older `#plan=` links keep opening. Share image hands the current view to the share sheet where the browser supports it, otherwise it downloads the PNG. On a page opened from a file (or from any address that is not http or https) the link starts with the public page address, the Polish page for a Polish interface, so it never carries a local path.
 - A damaged or oversized `#z=` link gives the plain banner and leaves the model on screen; a link typed into the address bar of an open tab is now read too.
 - Top view on a touch screen: one finger pans and two fingers pinch to zoom around the point between them (the mouse wheel zoomed already). The language switch (PL or EN) sits in the title row of the phone Menu.
-- Polish interface for the whole page: toolbar, dialogs, issues panel, room labels (decimal comma) and the Copy fix request text follow the language. The browser language decides, `?lang=pl` or `?lang=en` overrides it, and a PL | EN switch in Help changes it at once and keeps the model, the camera and your choices. The validator's own messages stay in English.
+- Polish interface for the whole page: toolbar, dialogs, issues panel, room labels (decimal comma) and the Copy fix request text follow the language. The browser language decides, `?lang=pl` or `?lang=en` overrides it, and a PL | EN switch in Help changes it at once and keeps the plan you loaded, the camera and your choices (the bundled example is loaded again in the other language, so its camera and view options start over). The validator's own messages stay in English.
 - Phone layout for a window 700 px wide or less, or 450 px high or less (a phone on its side): a bar of one row with a Menu that holds the other controls, a bottom bar with the four modes (on its side they stay in the top bar), issues behind a badge that opens a sheet (on a desktop the issues panel gets a close cross and a badge to bring it back), the first visit card folded to one line until tapped, 44 px touch targets and a close cross in the dialogs.
 - The first view, Orbit, Top and the PNG export frame the whole model inside the area that no bar or card covers, with a small margin; turning the phone frames it again until you move the camera.
 - Walk on a touch screen in the phone layout shows two shaded halves and a one line hint ("Drag the left half to walk, the right half to look") for 4 seconds after you enter it.
@@ -31,14 +31,14 @@ All notable changes to planwalk are listed here. The format follows [Keep a Chan
 
 - Walk starts looking along the longest free view from the starting point (a ray test in 5 degree steps against walls and furniture) instead of straight at the wall opposite the door.
 - Copy link and Copy long link keep the phone Menu open, so the "Copied" confirmation on the button can be seen.
-- Export file names (GLB, PNG, standalone HTML) turn Polish letters into plain letters instead of dropping them: "Żółta kuchnia 2" is saved as `zolta-kuchnia-2` (it was `ta-kuchnia-2`).
+- Export file names (GLB, PNG, standalone HTML) turn Polish letters into plain letters instead of dropping them: "Żółta kuchnia 2" is saved as `zolta-kuchnia-2` (it was `ta-kuchnia-2`), and a name longer than 48 characters is cut between words, not inside one.
 - The "Scale estimated" badge appears only when the scale note says the scale itself is a guess, in English or Polish. A printed basis such as "scale from the printed dimension" cancels a note that only says the scale is missing, and words about other things ("wall thickness estimated") no longer raise it.
 - The first visit card opens with one sentence on what planwalk does, says what to do next after Copy prompt (open a chat, add the picture, paste the prompt), and its privacy line says that the picture of the plan goes only to the chat you choose, so names and addresses should be cropped out first. Copy prompt copies the Polish prompt on a Polish page, and also when the browser lists Polish anywhere and the language was not picked by hand.
-- README and FAQ describe Copy link (the plan is stored inside the link) and say that a plan with a few mistakes still opens.
+- README and FAQ describe Copy link (the plan is stored inside the link) and say that a plan with a few mistakes still opens (a `units` value the viewer does not understand is the exception: such a plan is refused and the fix request names it).
 
 ### Fixed
 
-- On a touch screen, pulling down on a bar or a sheet no longer reloads the page and a quick second tap on a button no longer zooms it.
+- In browsers that support `overscroll-behavior` (Chrome, Firefox, Safari 16 or newer) pulling down on a bar or a sheet no longer reloads the page, and a quick second tap on a button no longer zooms it (`touch-action: manipulation`). Set in the page's CSS; not yet tried on a real phone.
 - Help, About, the paste dialog and the share dialog open and close in Safari before 15.4, which has no `showModal`: one helper (`viewer/src/dialogs.js`) opens every dialog and Escape closes it.
 
 ## [0.1.1] - 2026-10-24

@@ -160,7 +160,7 @@ test('a browser without DecompressionStream is told to ask for the long link, an
     const plan = JSON.parse(raw('duplex-1'));
     await openLink(page, EMPTY, await encodeShort(plan));
     assert.ok(await page.waitFor(hasBanner, 8000));
-    assert.equal((await banner(page)).replace(/\u00d7$/, ''), 'This link needs a newer browser (Safari 16.4 or newer). Ask the sender for the long link.'); // the banner text ends with its close button
+    assert.equal((await banner(page)).replace(/\u00d7$/, ''), 'This link needs a newer browser (Safari 16.4, Chrome 103, Firefox 113 or newer). Ask the sender for the long link.'); // the banner text ends with its close button
     assert.equal((await counts(page)).walls, 0, 'nothing was invented');
     await openLink(page, EMPTY, '#z=');
     assert.ok(await page.waitFor(hasBanner, 8000));

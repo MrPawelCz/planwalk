@@ -2,7 +2,7 @@
 
 Najczęstsze pytania po polsku. Dłuższa lista jest po angielsku w [`FAQ.md`](FAQ.md), a opis projektu w [`README.pl.md`](../README.pl.md).
 
-**Czy mój plan gdzieś trafia?** planwalk niczego nie wysyła, a sama strona po załadowaniu nie łączy się z internetem; jedyny wyjątek to opcjonalny parametr adresu `?plan=<adres>`, który pobiera plan z podanego adresu. Zdjęcie rzutu trafia tylko do czatu AI, który wybierzesz, więc najpierw zasłoń na rysunku imiona, adresy i numery telefonów (wystarczy przyciąć obraz).
+**Czy mój plan gdzieś trafia?** planwalk niczego nie wysyła, a sama strona po załadowaniu nie łączy się z internetem; jedyny wyjątek to opcjonalny parametr adresu `?plan=<adres>`, który pobiera plan z podanego adresu. Zdjęcie rzutu trafia tylko do czatu z AI, który wybierzesz, więc najpierw zasłoń na rysunku imiona, adresy i numery telefonów (wystarczy przyciąć obraz).
 
 **Jakiej AI potrzebuję?** Takiej, która czyta obrazy i potrafi odpowiedzieć tekstem w formacie JSON (to zapis planu: ściany, drzwi, pokoje i wymiary). Polecenie po angielsku zmierzono na modelach z tabeli „Runs by model” w [`BENCHMARK.md`](BENCHMARK.md) (po angielsku, razem z zastrzeżeniami do każdego przebiegu). Polskiego polecenia i polskich rysunków jeszcze nie mierzono. Inne czaty, które czytają obrazy, powinny działać, ale to oczekiwanie, a nie wynik. Polecenie (prompt) dla polskich rysunków jest w [`PROMPT.pl.md`](PROMPT.pl.md); najprościej skopiować je przyciskiem „Kopiuj polecenie” na stronie planwalk.
 

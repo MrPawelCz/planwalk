@@ -4,6 +4,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { analyzePlan, modelOf, validatePlan } from '../../src/core/validate.js';
+import { CAPS } from '../../src/core/caps.js';
 
 const load = (p) => JSON.parse(readFileSync(new URL(`../../${p}`, import.meta.url), 'utf8'));
 const flat = () => load('examples/flat-1.plan.json');
@@ -398,4 +399,14 @@ test('ignored lists the unknown properties that were left out, with their path a
   assert.deepEqual(analyzePlan(flat()).ignored, []);
   assert.deepEqual(analyzePlan(p, { strict: true }).ignored, [], 'with strict they are errors, not ignored');
   assert.deepEqual(analyzePlan('not a plan').ignored, []);
+});
+
+test('unknown properties beyond their own limit are not collected: the plan still opens whole and ignored stops at the limit', () => {
+  const p = flat();
+  for (let i = 0; i < CAPS.unknownProperties + 50; i++) p[`extra${i}`] = i;
+  const r = analyzePlan(p);
+  assert.equal(r.ok, true, JSON.stringify(r.errors));
+  assert.equal(r.ignored.length, CAPS.unknownProperties);
+  assert.equal(r.partial, false);
+  assert.ok(modelOf(r), 'the plan opens');
 });

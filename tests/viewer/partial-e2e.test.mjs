@@ -36,7 +36,7 @@ test('a reading with unknown properties opens with warnings; a reading with one 
     assert.equal(a.partial, false);
     assert.equal(a.warnings.filter((w) => w.code === 'W116').length, 4);
     assert.deepEqual(await counts(page), expectedCounts(stray));
-    assert.match(await banner(page), /^4 properties ignored: furniture\. planwalk does not use them\. Press "Copy fix request"/, 'a whole plan, but the banner says what was ignored');
+    assert.match(await banner(page), /^4 properties ignored: furniture\. planwalk does not use them\. The whole plan is shown\. To tidy it up, press "Copy fix request"/, 'a whole plan, but the banner says what was ignored');
     assert.deepEqual(await lines(page), [], 'one line, no list');
     assert.ok(await page.evaluate('[...document.querySelectorAll(".pw-banner button")].some((b) => b.textContent === "Copy fix request")'), 'a fix request can be copied');
     await page.evaluate('window.planwalk.setLang("pl")');

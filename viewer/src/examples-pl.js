@@ -8,14 +8,14 @@ export const EXAMPLES_PL = {
   'flat-1': {
     en: 'One-bedroom flat with study (48 m2 gross)', // the English name tells which example a plan is
     name: 'Mieszkanie z jedną sypialnią i gabinetem (48 m², brutto)',
-    notes: 'Przykład napisany ręcznie. CC0.',
+    notes: 'Przykład napisany ręcznie, do dowolnego użycia (licencja CC0).',
     levels: { L0: 'Mieszkanie' },
     rooms: { living: 'Salon', bedroom: 'Sypialnia', hall: 'Przedpokój', bath: 'Łazienka', study: 'Gabinet' },
   },
   'duplex-1': {
     en: 'Two-level house with stair (115 m2 gross)',
     name: 'Dom dwupoziomowy ze schodami (115 m², brutto)',
-    notes: 'Przykład napisany ręcznie. Dwa poziomy połączone jednymi prostymi schodami. CC0.',
+    notes: 'Przykład napisany ręcznie. Dwa poziomy połączone jednymi prostymi schodami. Do dowolnego użycia (licencja CC0).',
     levels: { L0: 'Parter', L1: 'Piętro' },
     rooms: { hall: 'Przedpokój', kitchen: 'Kuchnia', wc: 'WC', living: 'Salon', bath: 'Łazienka', landing: 'Podest', bed1: 'Sypialnia 1', bed2: 'Sypialnia 2' },
   },

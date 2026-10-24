@@ -194,8 +194,8 @@ test('a stair whose level was skipped is counted in the banner and has its own s
 test('ignoredMessage: how many properties were ignored and which, with the plural forms of each language', () => {
   const some = (n, key = 'furniture') => Array.from({ length: n }, (_, i) => ({ path: `levels[0].rooms[${i}]`, key }));
   setLang('en');
-  assert.match(ignoredMessage(some(1)), /^1 property ignored: furniture\. planwalk does not use it\. Press "Copy fix request"/);
-  assert.match(ignoredMessage(some(4)), /^4 properties ignored: furniture\. planwalk does not use them\. Press "Copy fix request"/);
+  assert.match(ignoredMessage(some(1)), /^1 property ignored: furniture\. planwalk does not use it\. The whole plan is shown\. To tidy it up, press "Copy fix request"/);
+  assert.match(ignoredMessage(some(4)), /^4 properties ignored: furniture\. planwalk does not use them\. The whole plan is shown\. To tidy it up, press "Copy fix request"/);
   const mixed = [...some(2), { path: '', key: 'notes' }, { path: '', key: 'conf' }, { path: '', key: 'label' }];
   assert.match(ignoredMessage(mixed), /^5 properties ignored: furniture, notes, conf and 1 more\./, 'the first three names, then how many more');
   assert.match(ignoredMessage(some(1, '$& $1 {n}')), /^1 property ignored: \$& \$1 \{n\}\./, 'a name is shown as written');
@@ -208,7 +208,7 @@ test('ignoredMessage: how many properties were ignored and which, with the plura
   assert.equal(pl(12), 'Zignorowano 12 nieznanych właściwości');
   assert.equal(pl(22), 'Zignorowano 22 nieznane właściwości');
   assert.equal(pl(25), 'Zignorowano 25 nieznanych właściwości');
-  assert.match(ignoredMessage(some(1)), /^Zignorowano 1 nieznaną właściwość: furniture\. planwalk jej nie używa\. Kliknij „Kopiuj prośbę o poprawkę”/);
+  assert.match(ignoredMessage(some(1)), /^Zignorowano 1 nieznaną właściwość: furniture\. planwalk jej nie używa\. Plan jest widoczny w całości\. Jeśli chcesz go uporządkować, kliknij „Kopiuj prośbę o poprawkę”/);
   assert.match(ignoredMessage(some(3)), /planwalk ich nie używa\./);
   assert.match(ignoredMessage(mixed), /^Zignorowano 5 nieznanych właściwości: furniture, notes, conf i jeszcze 1\./);
   setLang('en');

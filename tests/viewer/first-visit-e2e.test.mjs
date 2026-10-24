@@ -84,11 +84,14 @@ test('Open file: the card offers the chooser of the paste dialog (window.planwal
 
 test('the standalone export keeps the prompt but not the demo link preview tags, and opens without the card', { skip, timeout: 90000 }, withPage({ }, async (p) => {
   // keep the file in the page instead of downloading it
-  await p.evaluate(`URL.createObjectURL = (b) => { window.__blob = b; return 'blob:none'; }; HTMLAnchorElement.prototype.click = function () { window.__download = this.download; };
+  // the Polish page carries a default language; the file must not take it along, so the browser of whoever opens it decides
+  await p.evaluate(`document.head.append(Object.assign(document.createElement('meta'), { name: 'planwalk-default-lang', content: 'pl' }));
+    URL.createObjectURL = (b) => { window.__blob = b; return 'blob:none'; }; HTMLAnchorElement.prototype.click = function () { window.__download = this.download; };
     [...document.querySelectorAll('.pw-bar button')].find((b) => b.textContent === 'Standalone HTML').click(); ${settle}`);
   assert.match(await p.evaluate('window.__download'), /\.html$/);
   const html = await p.evaluate('window.__blob.text()');
   assert.ok(!/og:|twitter:|mrpawelcz\.github\.io/.test(html.slice(0, html.indexOf('</head>'))), 'no demo address or preview tags in the head');
+  assert.ok(!/<meta[^>]*planwalk-default-lang/.test(html), 'the default language of the Polish page is not carried into the file'); // the name also appears in the page script, which reads the tag
   assert.match(html, /<link rel="icon" type="image\/svg\+xml"/);
   assert.match(html, /id="planwalk-prompt-en"/);
   assert.match(html, /id="planwalk-plan"/);

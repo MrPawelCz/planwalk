@@ -10,6 +10,7 @@ export const strings = {
   en: {
     skipped: '{n} element skipped. The rest of the plan is shown.|{n} elements skipped. The rest of the plan is shown.',
     skippedHelp: 'Press "Copy fix request" and paste it into the AI chat to get the plan corrected.',
+    ignoredHelp: 'The whole plan is shown. To tidy it up, press "Copy fix request" and paste it into the AI chat.',
     skippedWall: 'its wall was skipped',
     skippedLevel: 'the level it leads to was skipped',
     ignored: '{n} property ignored: {names}. planwalk does not use it.|{n} properties ignored: {names}. planwalk does not use them.',
@@ -48,6 +49,7 @@ export const strings = {
   pl: {
     skipped: 'Pominięto {n} element, reszta planu jest widoczna.|Pominięto {n} elementy, reszta planu jest widoczna.|Pominięto {n} elementów, reszta planu jest widoczna.',
     skippedHelp: 'Kliknij „Kopiuj prośbę o poprawkę” i wklej ją do czatu z AI, żeby poprawił plan.',
+    ignoredHelp: 'Plan jest widoczny w całości. Jeśli chcesz go uporządkować, kliknij „Kopiuj prośbę o poprawkę” i wklej ją do czatu z AI.',
     skippedWall: 'jego ściana została pominięta',
     skippedLevel: 'piętro, do którego prowadzą, zostało pominięte',
     ignored: 'Zignorowano {n} nieznaną właściwość: {names}. planwalk jej nie używa.|Zignorowano {n} nieznane właściwości: {names}. planwalk ich nie używa.|Zignorowano {n} nieznanych właściwości: {names}. planwalk ich nie używa.',
@@ -155,7 +157,7 @@ export function ignoredMessage(ignored) {
   const shown = names.slice(0, 3).join(', ') + (names.length > 3 ? ` ${t('skippedMore', { n: names.length - 3 })}` : '');
   const forms = t('ignored').split('|');
   const n = ignored.length;
-  return `${forms[Math.min(pluralIndex(n), forms.length - 1)].replace(/\{n\}/g, String(n)).replace('{names}', () => shown)} ${t('skippedHelp')}`;
+  return `${forms[Math.min(pluralIndex(n), forms.length - 1)].replace(/\{n\}/g, String(n)).replace('{names}', () => shown)} ${t('ignoredHelp')}`;
 }
 
 // extractJson says in its repairs when an answer held several plans and it took the last one; the person is told too.

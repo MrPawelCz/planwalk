@@ -23,7 +23,7 @@ export const STRINGS = {
     title: 'To jest przykład',
     lead: 'planwalk zamienia rzut mieszkania w model 3D, po którym możesz się przejść. Tak zrobisz własny model:',
     step1: 'Skopiuj polecenie dla AI (prompt)',
-    step2: 'Otwórz czat z AI, który przyjmuje zdjęcia (przy polu do pisania jest zwykle przycisk ze spinaczem albo plusem), dodaj zdjęcie rzutu i wklej polecenie',
+    step2: 'Otwórz czat z AI, który przyjmuje zdjęcia, dodaj zdjęcie rzutu (zwykle przyciskiem ze spinaczem albo plusem) i wklej polecenie',
     step3: 'Wróć tutaj i wklej odpowiedź AI (wystarczy cały tekst)',
     copy: 'Kopiuj polecenie', copied: 'Skopiowano', copyFailed: 'Nie udało się skopiować',
     copiedNext: 'Skopiowano. Teraz otwórz czat z AI, dodaj zdjęcie rzutu i wklej polecenie.',
