@@ -12,7 +12,7 @@ import { STRINGS as ABOUT } from '../../viewer/src/about.js';
 import { STRINGS as COMPACT } from '../../viewer/src/compact.js';
 import { STRINGS as SHARE } from '../../viewer/src/share.js';
 import { STRINGS as LOADED } from '../../viewer/src/loaded-note.js';
-import { DASHES, KEEP, englishLeft } from './pl-deny.mjs';
+import { DASHES, HOMONYMS, KEEP, TABLE_WORDS, englishLeft } from './pl-deny.mjs';
 
 const TABLES = { 'strings.js': MAIN, 'help.js': HELP, 'first-visit.js': VISIT, 'load-errors.js': ERRORS, 'lang-switch.js': LANG, 'about.js': ABOUT, 'compact.js': COMPACT, 'share.js': SHARE, 'loaded-note.js': LOADED };
 const slots = (s) => [...new Set(s.match(/\{\w+\}/g) || [])].sort(); // a plural list repeats {n} in every form
@@ -60,4 +60,15 @@ test('the deny list works: it finds English in a half translated line and leaves
   assert.deepEqual(englishLeft('Paste JSON'), ['paste']);
   assert.deepEqual(englishLeft('Menu'), []);
   assert.deepEqual(englishLeft('Piętro, Rozsuń piętra, Niskie ściany'), []);
+});
+
+// The hand kept list of an earlier version let these through: the list is now derived from the English tables.
+test('the deny list is derived from the English tables: it finds the leftovers the hand kept list missed, with plural forms', () => {
+  for (const text of ['Look around', 'Kopiuj long link', 'Kopiuj linki for older browsers', 'Sheet dialog']) assert.notDeepEqual(englishLeft(text), [], text);
+  assert.deepEqual(englishLeft('Kopiuj long link'), ['long']);
+  assert.ok(englishLeft('Pokaż rooms i walls').includes('rooms') && englishLeft('Pokaż rooms i walls').includes('walls'));
+  const skip = new Set([...KEEP, ...HOMONYMS].map((w) => w.toLowerCase()));
+  const missed = TABLE_WORDS.filter((w) => !skip.has(w) && englishLeft(`Zobacz ${w} tutaj`).length === 0);
+  assert.deepEqual(missed, [], 'every word of an English table is denied unless it is a tool name or a word Polish shares');
+  for (const word of HOMONYMS) assert.deepEqual(englishLeft(`To jest ${word}`), [], `${word} is a word Polish shares`);
 });
