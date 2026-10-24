@@ -243,6 +243,10 @@ export function createNotices(root, getBar) {
   });
   return {
     hide,
+    // True while a banner is on screen; restore() brings the last banner back after something else hid it (a bundled example that is
+    // loaded again in the other language must not take a banner about a failed paste with it).
+    get up() { return !el.hidden; },
+    restore() { if (shown) { draw(); place(); el.hidden = false; } },
     // text: the message, or a function that makes it (so the banner can follow a change of language); act: { label, run } or nothing;
     // lines: extra detail lines (validator messages, English: they are written for the AI), or a function that makes them.
     show(text, act, lines) {

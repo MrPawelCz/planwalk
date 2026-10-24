@@ -610,10 +610,11 @@ function start() {
   function reloadExample() {
     const name = plan ? samplePlans.get(plan) : undefined;
     if (name === undefined) return;
-    const keep = { level: levelId, card: !visit.el.hidden };
+    const keep = { level: levelId, card: !visit.el.hidden, banner: notes.up };
     load(sample(name));
     if (keep.level) api.setLevel(keep.level);
     if (keep.card) { visit.show(); refreshFrame(); }
+    if (keep.banner) notes.restore();
   }
 
   // ---------- language ----------
