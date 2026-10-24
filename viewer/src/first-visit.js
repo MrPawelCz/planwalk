@@ -21,15 +21,15 @@ export const STRINGS = {
   pl: {
     example: 'To jest przykład',
     title: 'To jest przykład',
-    lead: 'planwalk zamienia rzut mieszkania w model 3D, po którym możesz się przejść. Tak zrobisz swój:',
+    lead: 'planwalk zamienia rzut mieszkania w model 3D, po którym możesz się przejść. Tak zrobisz własny model:',
     step1: 'Skopiuj polecenie dla AI (prompt)',
-    step2: 'Otwórz czat z AI, który przyjmuje zdjęcia, dodaj zdjęcie rzutu i wklej polecenie',
+    step2: 'Otwórz czat z AI, który przyjmuje zdjęcia (przy polu do pisania jest zwykle przycisk ze spinaczem albo plusem), dodaj zdjęcie rzutu i wklej polecenie',
     step3: 'Wróć tutaj i wklej odpowiedź AI (wystarczy cały tekst)',
     copy: 'Kopiuj polecenie', copied: 'Skopiowano', copyFailed: 'Nie udało się skopiować',
     copiedNext: 'Skopiowano. Teraz otwórz czat z AI, dodaj zdjęcie rzutu i wklej polecenie.',
     paste: 'Wklej odpowiedź', open: 'Otwórz plik', hide: 'Ukryj',
     promptLang: 'Język polecenia',
-    privacy: 'planwalk niczego nie wysyła ani nie zapisuje. Zdjęcie rzutu trafia tylko do czatu z AI, który wybierzesz: wytnij z niego imiona i adresy.',
+    privacy: 'planwalk niczego nie wysyła ani nie zapisuje. Zdjęcie rzutu trafia tylko do czatu z AI, który wybierzesz: zasłoń na nim imiona i adresy.',
     collapsed: 'To jest przykład · Jak dodać swój rzut?',
   },
 };

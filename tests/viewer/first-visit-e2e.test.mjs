@@ -122,7 +122,7 @@ test('loading another plan hides the card and the caption; so does entering Walk
 
 test('a Polish browser gets the Polish card, the Polish page language and the Polish prompt when the file exists', { skip, timeout: 90000 }, withPage({ search: '?lang=pl' }, async (p) => {
   const info = await p.evaluate(`(() => ({ title: ${q('.pw-visit h2')}.textContent, copy: ${q('.pw-visit .pw-primary')}.textContent, tag: ${q('.pw-tag')}.textContent, lang: document.documentElement.lang, note: ${q('.pw-visit-note:last-child')}.textContent }))()`);
-  assert.deepEqual(info, { title: 'To jest przykład', copy: 'Kopiuj polecenie', tag: 'To jest przykład', lang: 'pl', note: 'planwalk niczego nie wysyła ani nie zapisuje. Zdjęcie rzutu trafia tylko do czatu z AI, który wybierzesz: wytnij z niego imiona i adresy.' });
+  assert.deepEqual(info, { title: 'To jest przykład', copy: 'Kopiuj polecenie', tag: 'To jest przykład', lang: 'pl', note: 'planwalk niczego nie wysyła ani nie zapisuje. Zdjęcie rzutu trafia tylko do czatu z AI, który wybierzesz: zasłoń na nim imiona i adresy.' });
   await p.evaluate(`${q('.pw-visit .pw-primary')}.click(); ${settle}`);
   assert.equal(await p.evaluate('window.__copied'), prompt('PROMPT.pl.md') ?? prompt('PROMPT.md'));
   assert.equal(await p.evaluate(`${q('.pw-visit-note button')} !== null`), prompt('PROMPT.pl.md') !== null, 'the prompt language switch appears only when both prompts are embedded');
