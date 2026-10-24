@@ -4,6 +4,7 @@
 // reaches the page as a text node.
 import { getLang, makeT } from './i18n.js';
 import { pluralIndex } from './strings.js';
+import { followBar } from './under-bar.js';
 
 export const STRINGS = {
   en: { loaded: 'Loaded: {name}, {rooms}', rooms: '{n} room|{n} rooms', untitled: 'untitled plan' },
@@ -43,14 +44,13 @@ export function createLoadedNote({ h, root, getBar }) {
   root.append(el);
   let info = null, timer = 0;
   const draw = () => { el.textContent = info ? loadedText(info) : ''; };
+  const place = followBar(el, getBar, () => root.querySelector('.pw-banner')); // under the banner while one is shown, and under the toolbar as it wraps
   const note = {
     el,
     show(next, ms = SHOW_MS) {
       info = next;
       draw();
-      const bar = getBar && getBar(), banner = root.querySelector('.pw-banner:not([hidden])');
-      const below = Math.max(bar ? bar.getBoundingClientRect().bottom : 0, banner ? banner.getBoundingClientRect().bottom : 0);
-      el.style.top = `${Math.round(below) + 8}px`;
+      place();
       el.classList.add('on');
       clearTimeout(timer);
       timer = setTimeout(note.hide, ms);
