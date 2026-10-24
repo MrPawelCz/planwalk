@@ -1,0 +1,32 @@
+{
+  "code": "p7035",
+  "model": "claude-haiku-4-5",
+  "status": "ok",
+  "finishedAt": "2026-10-24 00:28:19",
+  "ms": 195309,
+  "answerChars": 4086,
+  "bare": false,
+  "fenceBlocks": 1,
+  "charsBeforeBlock": 0,
+  "charsAfterBlock": 563,
+  "extractOk": true,
+  "repairs": [
+    "took the code block"
+  ],
+  "planFile": "readings/p7035.plan.json",
+  "call": {
+    "turns": 2,
+    "costUsdList": 0.14689000000000002,
+    "inputTokens": 3385,
+    "outputTokens": 26775,
+    "subtype": "success"
+  },
+  "attempts": [
+    {
+      "n": 1,
+      "at": "2026-10-24 00:28:19",
+      "ms": 195309,
+      "ok": true
+    }
+  ]
+}

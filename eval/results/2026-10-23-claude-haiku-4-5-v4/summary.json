@@ -1,0 +1,102 @@
+{
+  "run": "2026-10-23-claude-haiku-4-5-v4",
+  "model": "claude-haiku-4-5",
+  "label": "Claude Haiku 4.5",
+  "prompt": "v4",
+  "promptFileCommit": "3027ceb",
+  "promptBranchTip": "d02c1d3307ee",
+  "route": "claude -p (Read tool only, no session, no project files)",
+  "plans": 12,
+  "plansRead": 12,
+  "plansExtracted": 12,
+  "plansLoadingWithoutErrors": 9,
+  "meanComposite": 50.3,
+  "lowest": 10,
+  "lowestCode": "p6ea2",
+  "highest": 82.2,
+  "bareJson": 0,
+  "cleanPaste": 12,
+  "extractionRepairs": {
+    "took the code block": 12
+  },
+  "fenceBlocksTotal": 12,
+  "answersWithTextBeforeBlock": 0,
+  "meanSeconds": 160,
+  "listCostUsd": 1.5,
+  "validatorWarningsTotal": 29,
+  "validatorErrorsTotal": 4,
+  "perCode": [
+    {
+      "code": "p69e9",
+      "style": "cad",
+      "composite": 63.9,
+      "present": true
+    },
+    {
+      "code": "p6530",
+      "style": "hatched",
+      "composite": 82.2,
+      "present": true
+    },
+    {
+      "code": "p66c3",
+      "style": "sketch",
+      "composite": 39,
+      "present": true
+    },
+    {
+      "code": "p6ea2",
+      "style": "scan",
+      "composite": 10,
+      "present": true
+    },
+    {
+      "code": "p7035",
+      "style": "cad",
+      "composite": 57,
+      "present": true
+    },
+    {
+      "code": "p6b7c",
+      "style": "hatched",
+      "composite": 52.2,
+      "present": true
+    },
+    {
+      "code": "p6d0f",
+      "style": "sketch",
+      "composite": 70.1,
+      "present": true
+    },
+    {
+      "code": "p74ee",
+      "style": "scan",
+      "composite": 57.3,
+      "present": true
+    },
+    {
+      "code": "pccee",
+      "style": "sketch",
+      "composite": 76,
+      "present": true
+    },
+    {
+      "code": "pcb5b",
+      "style": "sketch",
+      "composite": 49.9,
+      "present": true
+    },
+    {
+      "code": "pc9c8",
+      "style": "sketch",
+      "composite": 12.8,
+      "present": true
+    },
+    {
+      "code": "pd4cd",
+      "style": "sketch",
+      "composite": 33.6,
+      "present": true
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+```json
+{
+  "version": 1,
+  "name": "3-bedroom apartment with corridor, kitchen and living room",
+  "units": "m",
+  "meta": {
+    "source": "image",
+    "scale_note": "No printed dimensions or areas found. Estimated from typical residential proportions: bedrooms inferred as ~3-3.6m wide based on visible door width (~0.9m), living room and kitchen proportional to visible layout. Confidence: medium.",
+    "notes": "Corridor is a labeled transitional space. Door positions estimated from visible arc symbols; passage widths estimated as typical corridor openings. No furniture symbols visible. Window symbols on exterior walls noted but not detailed due to image resolution."
+  },
+  "levels": [
+    {
+      "id": "L0",
+      "walls": [
+        { "id": "w1", "from": [0, 0], "to": [15, 0], "kind": "exterior" },
+        { "id": "w2", "from": [15, 0], "to": [15, 10.5], "kind": "exterior" },
+        { "id": "w3", "from": [15, 10.5], "to": [0, 10.5], "kind": "exterior" },
+        { "id": "w4", "from": [0, 10.5], "to": [0, 0], "kind": "exterior" },
+        { "id": "w5", "from": [3.65, 0], "to": [3.65, 4.06], "kind": "interior" },
+        { "id": "w6", "from": [7.29, 0], "to": [7.29, 4.06], "kind": "interior" },
+        { "id": "w7", "from": [10.42, 0], "to": [10.42, 4.06], "kind": "interior" },
+        { "id": "w8", "from": [0, 4.06], "to": [15, 4.06], "kind": "interior" },
+        { "id": "w9", "from": [0, 5.74], "to": [15, 5.74], "kind": "interior" },
+        { "id": "w10", "from": [3.02, 5.74], "to": [3.02, 10.5], "kind": "interior" },
+        { "id": "w11", "from": [8.44, 5.74], "to": [8.44, 10.5], "kind": "interior" }
+      ],
+      "openings": [
+        { "id": "d1", "wall": "w8", "type": "door", "offset": 2.8, "width": 0.9 },
+        { "id": "d2", "wall": "w8", "type": "door", "offset": 5.5, "width": 0.9 },
+        { "id": "d3", "wall": "w8", "type": "door", "offset": 9.0, "width": 0.9 },
+        { "id": "d4", "wall": "w8", "type": "door", "offset": 12.0, "width": 0.9 },
+        { "id": "d5", "wall": "w9", "type": "passage", "offset": 2.0, "width": 1.0 },
+        { "id": "d6", "wall": "w9", "type": "passage", "offset": 7.5, "width": 1.0 }
+      ],
+      "rooms": [
+        { "id": "r1", "name": "Bedroom 1", "polygon": [[0, 0], [3.65, 0], [3.65, 4.06], [0, 4.06]] },
+        { "id": "r2", "name": "Bedroom 2", "polygon": [[3.65, 0], [7.29, 0], [7.29, 4.06], [3.65, 4.06]] },
+        { "id": "r3", "name": "Bedroom 3", "polygon": [[7.29, 0], [10.42, 0], [10.42, 4.06], [7.29, 4.06]] },
+        { "id": "r4", "name": "Bathroom", "polygon": [[10.42, 0], [15, 0], [15, 4.06], [10.42, 4.06]] },
+        { "id": "r5", "name": "Corridor", "polygon": [[0, 4.06], [15, 4.06], [15, 5.74], [0, 5.74]] },
+        { "id": "r6", "name": "Hall", "polygon": [[0, 5.74], [3.02, 5.74], [3.02, 10.5], [0, 10.5]] },
+        { "id": "r7", "name": "Kitchen", "polygon": [[3.02, 5.74], [8.44, 5.74], [8.44, 10.5], [3.02, 10.5]] },
+        { "id": "r8", "name": "Living room", "polygon": [[8.44, 5.74], [15, 5.74], [15, 10.5], [8.44, 10.5]] }
+      ]
+    }
+  ]
+}
+```
+
+**Scale:** Estimated from typical residential room proportions (bedrooms ~3.6m wide inferred from visible door widths of ~0.9m). No printed dimensions found.
+
+**Notes:** Corridor is a transitional passageway labeled in the image. Door arc symbols show connections between bedrooms and corridor. Passage openings from corridor to lower level estimated at typical widths.
+
+**Uncertainty:** Without printed scale or dimensions, the absolute sizes are estimates; proportions and room arrangement are accurate from the image.

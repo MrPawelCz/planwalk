@@ -1,0 +1,88 @@
+```json
+{
+  "version": 1,
+  "name": "5-room apartment with upper entry space",
+  "units": "m",
+  "meta": {
+    "source": "image",
+    "scale_note": "Scale from marked bottom dimension of 9.35 m. Height estimated from pixel proportions (~5.4 m). Confidence: moderate.",
+    "notes": "Unlabeled room at top-left included as separate space. Room area values from labels do not perfectly match calculated polygon areas due to wall thickness, irregular geometry, and interior wall complexity. Door and window positions estimated from visual inspection of drawing."
+  },
+  "levels": [
+    {
+      "id": "L0",
+      "walls": [
+        {"id": "w1", "from": [0, 0], "to": [9.35, 0], "kind": "exterior"},
+        {"id": "w2", "from": [9.35, 0], "to": [9.35, 5.4], "kind": "exterior"},
+        {"id": "w3", "from": [0, 5.4], "to": [9.35, 5.4], "kind": "exterior"},
+        {"id": "w4", "from": [0, 0], "to": [0, 5.4], "kind": "exterior"},
+        {"id": "w5", "from": [0, 1.2], "to": [2.9, 1.2], "kind": "interior"},
+        {"id": "w6", "from": [2.9, 0], "to": [2.9, 1.2], "kind": "interior"},
+        {"id": "w7", "from": [6.2, 1.2], "to": [6.2, 3.7], "kind": "interior"},
+        {"id": "w8", "from": [0, 3.7], "to": [9.35, 3.7], "kind": "interior"},
+        {"id": "w9", "from": [2.3, 3.7], "to": [2.3, 5.4], "kind": "interior"},
+        {"id": "w10", "from": [4.6, 3.7], "to": [4.6, 5.4], "kind": "interior"}
+      ],
+      "openings": [
+        {"id": "win-b1", "wall": "w3", "type": "window", "offset": 0.9, "width": 0.6},
+        {"id": "win-b2", "wall": "w3", "type": "window", "offset": 2.5, "width": 0.6},
+        {"id": "win-b3", "wall": "w3", "type": "window", "offset": 5.0, "width": 0.6},
+        {"id": "win-b4", "wall": "w3", "type": "window", "offset": 7.0, "width": 0.6},
+        {"id": "win-l1", "wall": "w4", "type": "window", "offset": 1.5, "width": 0.6},
+        {"id": "win-l2", "wall": "w4", "type": "window", "offset": 3.5, "width": 0.6},
+        {"id": "win-r1", "wall": "w2", "type": "window", "offset": 0.5, "width": 0.6},
+        {"id": "win-r2", "wall": "w2", "type": "window", "offset": 2.5, "width": 0.6},
+        {"id": "win-r3", "wall": "w2", "type": "window", "offset": 4.0, "width": 0.6},
+        {"id": "door-ur", "wall": "w1", "type": "door", "offset": 1.0, "width": 0.9},
+        {"id": "door-lk", "wall": "w8", "type": "door", "offset": 4.7, "width": 0.85},
+        {"id": "door-bk", "wall": "w7", "type": "door", "offset": 1.0, "width": 0.85}
+      ],
+      "rooms": [
+        {
+          "id": "r-upper",
+          "name": "Upper room",
+          "polygon": [[0, 0], [2.9, 0], [2.9, 1.2], [0, 1.2]]
+        },
+        {
+          "id": "r-living",
+          "name": "Living room",
+          "polygon": [[0, 1.2], [6.2, 1.2], [6.2, 3.7], [0, 3.7]],
+          "area": 19.4
+        },
+        {
+          "id": "r-bedroom",
+          "name": "Bedroom",
+          "polygon": [[6.2, 1.2], [9.35, 1.2], [9.35, 3.7], [6.2, 3.7]],
+          "area": 9.2
+        },
+        {
+          "id": "r-hall",
+          "name": "Hall",
+          "polygon": [[0, 3.7], [2.3, 3.7], [2.3, 5.4], [0, 5.4]],
+          "area": 6.0
+        },
+        {
+          "id": "r-bathroom",
+          "name": "Bathroom",
+          "polygon": [[2.3, 3.7], [4.6, 3.7], [4.6, 5.4], [2.3, 5.4]],
+          "area": 6.0
+        },
+        {
+          "id": "r-kitchen",
+          "name": "Kitchen",
+          "polygon": [[4.6, 3.7], [9.35, 3.7], [9.35, 5.4], [4.6, 5.4]],
+          "area": 16.0
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Notes:**
+
+1. Scale derived from the marked 9.35 m width at the bottom of the plan; height estimated from pixel proportions to be approximately 5.4 m.
+
+2. The unlabeled room at the top left is included as a separate space. Some room areas calculated from polygon boundaries do not exactly match the printed values due to wall thickness and complex geometry, but printed values are retained in the JSON.
+
+3. Door and window positions are estimated from the visual representation in the drawing; exact dimensions of openings could not be determined with certainty.

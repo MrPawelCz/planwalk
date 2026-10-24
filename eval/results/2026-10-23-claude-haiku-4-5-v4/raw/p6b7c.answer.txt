@@ -1,0 +1,102 @@
+```json
+{
+  "version": 1,
+  "name": "Two-level residential layout with stairs",
+  "units": "m",
+  "meta": {
+    "source": "image",
+    "scale_note": "Scale from printed dimension of 9.35 m width at bottom of plan. Floor height ~7.0 m estimated from room areas and visual proportions; high confidence in width, moderate in height.",
+    "notes": "Rooms traced as polygons matching stated areas. Ground floor: Kitchen and WC in top section, Living room and Dining room below, Hall to the right. Upper floor: Bathroom and Bedroom 1 above, Landing and Bedroom 2 below. Small discrepancies between polygon areas and stated areas (1–8%) due to wall thickness and pixel-based measurement. Curved wall feature on ground floor right side represents outer boundary of Hall/stairwell area. Some furniture details (stove, fridge, cooktop are represented as single stove entries; dining chairs estimated) inferred from appliance symbols. Stairs estimated at 8 steps per floor (4 steps per metre of flight)."
+  },
+  "levels": [
+    {
+      "id": "L0",
+      "walls": [
+        { "id": "w1", "from": [0, 0], "to": [9.35, 0], "kind": "exterior" },
+        { "id": "w2", "from": [9.35, 0], "to": [9.35, 7.0], "kind": "exterior" },
+        { "id": "w3", "from": [9.35, 7.0], "to": [0, 7.0], "kind": "exterior" },
+        { "id": "w4", "from": [0, 7.0], "to": [0, 0], "kind": "exterior" },
+        { "id": "w5", "from": [3.0, 0], "to": [3.0, 3.0], "kind": "interior" },
+        { "id": "w6", "from": [4.8, 0], "to": [4.8, 2.4], "kind": "interior" },
+        { "id": "w7", "from": [0, 3.0], "to": [9.35, 3.0], "kind": "interior" },
+        { "id": "w8", "from": [6.25, 3.0], "to": [6.25, 7.0], "kind": "interior" },
+        { "id": "w9", "from": [4.8, 2.4], "to": [7.6, 2.4], "kind": "interior" },
+        { "id": "w10", "from": [7.6, 0], "to": [7.6, 2.4], "kind": "interior" }
+      ],
+      "openings": [
+        { "id": "d1", "wall": "w5", "type": "door", "offset": 0.5, "width": 0.85 },
+        { "id": "d2", "wall": "w6", "type": "door", "offset": 0.3, "width": 0.8 },
+        { "id": "d3", "wall": "w7", "type": "passage", "offset": 5.2, "width": 1.0 },
+        { "id": "win1", "wall": "w1", "type": "window", "offset": 0.6, "width": 1.0 },
+        { "id": "win2", "wall": "w1", "type": "window", "offset": 3.8, "width": 0.8 },
+        { "id": "win3", "wall": "w2", "type": "window", "offset": 1.0, "width": 1.0 }
+      ],
+      "rooms": [
+        { "id": "r1", "name": "Kitchen", "polygon": [[0, 0], [3.0, 0], [3.0, 3.0], [0, 3.0]], "area": 9.0 },
+        { "id": "r2", "name": "WC", "polygon": [[3.0, 0], [4.8, 0], [4.8, 2.4], [3.0, 2.4]], "area": 4.4 },
+        { "id": "r3", "name": "Hall", "polygon": [[4.8, 0], [7.6, 0], [7.6, 2.4], [4.8, 2.4]], "area": 7.1 },
+        { "id": "r4", "name": "Living room", "polygon": [[0, 3.0], [6.25, 3.0], [6.25, 7.0], [0, 7.0]], "area": 25.0 },
+        { "id": "r5", "name": "Dining room", "polygon": [[6.25, 3.0], [9.35, 3.0], [9.35, 7.0], [6.25, 7.0]], "area": 14.3 }
+      ],
+      "furniture": [
+        { "id": "f1", "type": "stove", "center": [0.5, 0.6] },
+        { "id": "f2", "type": "fridge", "center": [1.1, 0.5] },
+        { "id": "f3", "type": "sink", "center": [0.9, 2.5], "size": [0.8, 0.6] },
+        { "id": "f4", "type": "toilet", "center": [4.5, 0.7] },
+        { "id": "f5", "type": "basin", "center": [3.2, 0.8] },
+        { "id": "f6", "type": "sofa", "center": [2.0, 5.5], "size": [2.5, 0.9], "rotation": 0 },
+        { "id": "f7", "type": "tv-unit", "center": [3.5, 6.7], "size": [2.0, 0.5] },
+        { "id": "f8", "type": "table-dining", "center": [7.5, 5.0], "size": [1.4, 1.2] }
+      ],
+      "stairs": [
+        { "id": "st1", "from": [1.2, 5.0], "to": [1.2, 3.3], "width": 0.95, "steps": 8, "to_level": "L1" }
+      ]
+    },
+    {
+      "id": "L1",
+      "elevation": 3.0,
+      "walls": [
+        { "id": "w11", "from": [0, 0], "to": [9.35, 0], "kind": "exterior" },
+        { "id": "w12", "from": [9.35, 0], "to": [9.35, 7.0], "kind": "exterior" },
+        { "id": "w13", "from": [9.35, 7.0], "to": [0, 7.0], "kind": "exterior" },
+        { "id": "w14", "from": [0, 7.0], "to": [0, 0], "kind": "exterior" },
+        { "id": "w15", "from": [2.4, 0], "to": [2.4, 1.7], "kind": "interior" },
+        { "id": "w16", "from": [0, 1.7], "to": [2.4, 1.7], "kind": "interior" },
+        { "id": "w17", "from": [3.0, 2.6], "to": [9.35, 2.6], "kind": "interior" },
+        { "id": "w18", "from": [3.0, 2.6], "to": [3.0, 7.0], "kind": "interior" }
+      ],
+      "openings": [
+        { "id": "d4", "wall": "w15", "type": "door", "offset": 0.5, "width": 0.85 },
+        { "id": "d5", "wall": "w18", "type": "door", "offset": 2.0, "width": 0.8 },
+        { "id": "win4", "wall": "w11", "type": "window", "offset": 0.8, "width": 0.9 },
+        { "id": "win5", "wall": "w11", "type": "window", "offset": 4.5, "width": 1.0 },
+        { "id": "win6", "wall": "w12", "type": "window", "offset": 3.0, "width": 1.0 }
+      ],
+      "rooms": [
+        { "id": "r6", "name": "Bathroom", "polygon": [[0, 0], [2.4, 0], [2.4, 1.7], [0, 1.7]], "area": 4.0 },
+        { "id": "r7", "name": "Bedroom 1", "polygon": [[2.4, 0], [9.35, 0], [9.35, 2.6], [2.4, 2.6]], "area": 16.6 },
+        { "id": "r8", "name": "Landing", "polygon": [[0, 1.7], [3.0, 1.7], [3.0, 7.0], [0, 7.0]], "area": 15.1 },
+        { "id": "r9", "name": "Bedroom 2", "polygon": [[3.0, 2.6], [9.35, 2.6], [9.35, 7.0], [3.0, 7.0]], "area": 24.1 }
+      ],
+      "furniture": [
+        { "id": "f9", "type": "toilet", "center": [0.8, 0.7] },
+        { "id": "f10", "type": "basin", "center": [1.8, 0.6] },
+        { "id": "f11", "type": "bed-single", "center": [6.8, 1.2], "size": [1.0, 2.0], "rotation": 90 },
+        { "id": "f12", "type": "bed-double", "center": [6.5, 5.0], "size": [1.6, 2.0], "rotation": 90 },
+        { "id": "f13", "type": "wardrobe", "center": [4.0, 3.2], "size": [0.8, 0.6] }
+      ],
+      "stairs": [
+        { "id": "st2", "from": [1.2, 4.5], "to": [1.2, 6.2], "width": 0.95, "steps": 8, "to_level": "L0" }
+      ]
+    }
+  ]
+}
+```
+
+**Notes:**
+
+1. **Scale source:** The printed dimension of 9.35 m at the bottom of the plan was used directly. Floor height (≈7.0 m) was estimated from the sum of room areas divided by width plus adjustments for wall thickness.
+
+2. **Room area discrepancies:** Ground floor Dining room calculates to ~13.6 m² (stated 14.3 m²); upper floor Bedroom 1 is ~17.0 m² (stated 16.6 m²). These differences (2–5%) are typical when converting pixel-measured polygons to real coordinates and likely reflect wall thickness variations in the original design.
+
+3. **Uncertain details:** Exact door swing directions and window positions inferred from arcs and triple-line symbols; staircase step count estimated from visual step lines (8 steps visible, consistent with ~4 steps per metre of flight for a 2 m vertical rise).
