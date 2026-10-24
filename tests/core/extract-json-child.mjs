@@ -22,6 +22,9 @@ const CASES = {
   closedPlans: () => '{"levels": []}'.repeat(100000),
   closedObjects: () => '{"a": 1}'.repeat(200000),
   snippetsThenPlan: () => `${'{x} '.repeat(300000)}${bare}`,
+  // the other inputs of that kind in the test file
+  braces50k: () => '{'.repeat(50000),
+  largeChat: () => { const filler = 'Some chat text with { stray braces } and more. '.repeat(20000); return `${filler}\n\`\`\`json\n${bare}\n\`\`\`\n${filler}`; },
 };
 
 if (!CASES[name] || (name.startsWith('marks') && !mark)) { console.error(`unknown case ${name}`); process.exit(2); }

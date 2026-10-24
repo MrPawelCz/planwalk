@@ -92,7 +92,7 @@ test('failures say what is wrong and never throw', () => {
     assert.equal(typeof r.ok, 'boolean', String(odd));
     if (!r.ok) assert.ok(r.kind && r.error && Array.isArray(r.repairs), String(odd));
   }
-  assert.equal(extractJson('{'.repeat(50000)).ok, false);
+  assert.equal(child('braces50k').ok, false);
 });
 
 test('text over the size limit is refused before any work', () => {
@@ -119,12 +119,10 @@ test('a last line that is one long run of fence marks is read in linear time', (
 });
 
 test('a large text of the allowed size is read in reasonable time', () => {
-  const filler = 'Some chat text with { stray braces } and more. '.repeat(20000);
-  const t0 = Date.now();
-  const r = extractJson(`${filler}\n\`\`\`json\n${bare}\n\`\`\`\n${filler}`);
-  assert.equal(r.ok, true);
-  assert.deepEqual(r.value, plan);
-  assert.ok(Date.now() - t0 < 3000, `took ${Date.now() - t0} ms`);
+  const out = child('largeChat');
+  assert.equal(out.ok, true);
+  assert.deepEqual(out.value, plan);
+  assert.ok(out.ms < 3000, `took ${out.ms} ms`);
 });
 
 test('the validator reads chat answers through extractJson and reports the repairs', () => {
