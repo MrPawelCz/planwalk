@@ -9,6 +9,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { openPhone, skipReason } from './phone-cdp.mjs';
+import { SITE } from '../../viewer/src/site.js';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const out = mkdtempSync(join(tmpdir(), 'planwalk-phone-x-'));
@@ -105,7 +106,8 @@ test('Copy link in the phone Menu keeps the Menu open and confirms on the button
     await p.tap('.pw-menu-btn');
     await p.tap(await p.evaluate(menuButton('Copy link')));
     await p.settle(600);
-    assert.match(await p.evaluate('window.__copied'), /^file:.*planwalk\.html#(z|plan)=/, 'the link reached the clipboard');
+    const copied = await p.evaluate('window.__copied');
+    assert.ok(copied.startsWith(`${SITE}#z=`) || copied.startsWith(`${SITE}#plan=`), `the link to the public page (this one is a file) reached the clipboard: ${copied.slice(0, 60)}`);
     const st = await p.evaluate(`({ open: document.querySelector('.pw-menu').getBoundingClientRect().height > 0, labels: [...document.querySelectorAll('.pw-menu-body button')].map((b) => b.textContent) })`);
     assert.equal(st.open, true, 'the Menu stays open, so the confirmation can be seen');
     assert.ok(st.labels.includes('Copied'), `the button says Copied: ${st.labels.join(' | ')}`);
@@ -116,9 +118,9 @@ test('Copy link in the phone Menu keeps the Menu open and confirms on the button
     await p.tap(await p.evaluate(menuButton('Copy link')));
     await p.settle(700);
     const d = await p.evaluate(`(() => { const dl = document.querySelector('dialog.pw-share-dlg'), r = dl.getBoundingClientRect(), x = dl.querySelector('.pw-dlg-x').getBoundingClientRect(), ta = dl.querySelector('textarea');
-      return { open: dl.open, top: r.top, bottom: r.bottom, left: r.left, right: r.right, vh: innerHeight, vw: innerWidth, cross: [x.width, x.height], link: ta.value.slice(0, 5), font: parseFloat(getComputedStyle(ta).fontSize) }; })()`);
+      return { open: dl.open, top: r.top, bottom: r.bottom, left: r.left, right: r.right, vh: innerHeight, vw: innerWidth, cross: [x.width, x.height], link: ta.value.slice(0, ${SITE.length}), font: parseFloat(getComputedStyle(ta).fontSize) }; })()`);
     assert.equal(d.open, true, 'a refused copy opens the dialog with the link');
-    assert.equal(d.link, 'file:');
+    assert.equal(d.link, SITE, 'the dialog shows the link to the public page');
     assert.ok(d.top >= 0 && d.bottom <= d.vh && d.left >= 0 && d.right <= d.vw, `the dialog fits: ${JSON.stringify(d)}`);
     assert.ok(d.cross[0] >= 44 && d.cross[1] >= 44 && d.font >= 16);
     await shot(p, 'share-fallback.jpg');

@@ -1,6 +1,7 @@
 // End to end: a shared link of either form opens the same model, a damaged or hostile #z= link gives the plain banner without wiping
 // the page, a browser without DecompressionStream is told so, Copy link puts a working link on the clipboard (and shows it when copying
-// is refused), Share image hands a PNG to the share sheet or downloads it, and the honest sentence is in the tooltip and in Help.
+// is refused; a page opened from a file links to the public page, a page served over http to its own address), Share image hands a
+// PNG to the share sheet or downloads it, and the honest sentence is in the tooltip and in Help.
 // Chrome runs through tools/chrome-lock.sh when other browsers may be running. Skips with a message when Chrome or dist is missing.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -8,8 +9,10 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { deflateRawSync } from 'node:zlib';
+import { createServer } from 'node:http';
 import { openPage, skip, root } from './chrome-page.mjs';
 import { decodeShort, encodeLong, encodeShort, parseHash, planText } from '../../viewer/src/share-link.js';
+import { SITE, SITE_PL } from '../../viewer/src/site.js';
 
 const EMPTY = pathToFileURL(join(root, 'dist/planwalk-empty.html')).href;
 const FULL = pathToFileURL(join(root, 'dist/planwalk.html')).href;
@@ -126,8 +129,8 @@ test('a browser without DecompressionStream is told to ask for the long link, an
     await page.evaluate(`${button('Copy link')}.click()`);
     assert.ok(await page.waitFor('window.__copied !== null'));
     const link = await page.evaluate('window.__copied');
-    assert.ok(link.startsWith(`${EMPTY}#plan=`), link.slice(0, 80));
-    assert.equal(link, `${EMPTY}${encodeLong(plan)}`);
+    assert.ok(link.startsWith(`${SITE}#plan=`), link.slice(0, 80)); // this page is a file, so the link starts with the public page
+    assert.equal(link, `${SITE}${encodeLong(plan)}`);
     assert.deepEqual(page.pageErrors, []);
   } finally {
     page.close();
@@ -157,7 +160,7 @@ test('Copy link and Copy long link put working links on the clipboard, with a sh
     assert.ok(await page.waitFor('window.__copied !== null'));
     const link = await page.evaluate('window.__copied');
     const at = link.indexOf('#');
-    assert.equal(link.slice(0, at), FULL, 'origin and path, no query');
+    assert.equal(link.slice(0, at), SITE, 'the public page (this one is opened from a file), no query');
     assert.ok(!link.includes('?') && !link.includes('lang') && !link.includes('materials'));
     const parsed = parseHash(link.slice(at));
     assert.equal(parsed.form, 'z');
@@ -165,8 +168,8 @@ test('Copy link and Copy long link put working links on the clipboard, with a sh
     assert.ok(link.length - at < encodeLong(plan).length * 0.6, 'and it is the short form');
     assert.equal(await page.evaluate(`!!${button('Copied')}`), true, 'the button confirms');
     assert.ok(await page.waitFor(`!!${button('Copy link')}`, 4000), 'and goes back by itself');
-    // Round trip: the copied link, opened fresh, shows the same plan.
-    await page.navigate(link);
+    // Round trip: the fragment of the copied link, opened fresh on this page (a test does not fetch the public address), shows the same plan.
+    await page.navigate(`${FULL}${link.slice(at)}`);
     assert.ok(await page.waitFor(hasModel));
     assert.equal(await snapshot(page), mine, 'the short link opens the same model');
 
@@ -176,8 +179,8 @@ test('Copy link and Copy long link put working links on the clipboard, with a sh
     await click('Copy long link (older browsers)');
     assert.ok(await page.waitFor('window.__copied !== null'));
     const long = await page.evaluate('window.__copied');
-    assert.equal(long, `${FULL}${encodeLong(plan)}`);
-    await page.navigate(long);
+    assert.equal(long, `${SITE}${encodeLong(plan)}`);
+    await page.navigate(`${FULL}${long.slice(long.indexOf('#'))}`);
     assert.ok(await page.waitFor(hasModel));
     assert.equal(await snapshot(page), mine, 'the long link opens the same model');
 
@@ -204,6 +207,58 @@ test('Copy link and Copy long link put working links on the clipboard, with a sh
     assert.deepEqual(page.consoleErrors, []);
   } finally {
     page.close();
+  }
+});
+
+test('Copy link on a page opened from a file links to the public page (the Polish one for a Polish interface) and holds no local path; over http the page keeps its own address', { skip, timeout: 240000 }, async () => {
+  const html = readFileSync(join(root, 'dist/planwalk.html'));
+  const server = createServer((req, res) => {
+    const found = req.url.split(/[?#]/)[0] === '/x/y.html';
+    res.writeHead(found ? 200 : 404, { 'content-type': 'text/html; charset=utf-8' });
+    res.end(found ? html : '');
+  });
+  await new Promise((r) => server.listen(0, '127.0.0.1', r));
+  const stub = 'window.__copied = null; Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: (t) => { window.__copied = t; return Promise.resolve(); } } });';
+  const page = await openPage({ query: '?lang=en', beforeLoad: stub });
+  try {
+    const copyFrom = async (url, caption) => {
+      await page.navigate(url);
+      assert.ok(await page.waitFor(hasModel), url);
+      await page.evaluate(`${button(caption)}.click()`);
+      assert.ok(await page.waitFor('window.__copied !== null'), `${url}: nothing was copied`);
+      return page.evaluate('window.__copied');
+    };
+    const split = (link) => [link.slice(0, link.indexOf('#')), link.slice(link.indexOf('#'))];
+
+    // From a file: the public page, in the language of the interface. No query, no file address, no local path.
+    await page.navigate(`${FULL}?lang=en`);
+    assert.ok(await page.waitFor(hasModel));
+    const mine = await snapshot(page);
+    const english = split(await copyFrom(`${FULL}?lang=en`, 'Copy link'));
+    const polish = split(await copyFrom(`${FULL}?lang=pl`, 'Kopiuj link'));
+    assert.equal(english[0], SITE);
+    assert.equal(polish[0], SITE_PL, 'a Polish interface links to the Polish page, so the person who opens it lands in Polish');
+    assert.equal(english[1], polish[1], 'the same plan in both');
+    for (const base of [english[0], polish[0]]) {
+      assert.ok(!base.includes(root) && !base.includes('file:') && !base.includes('dist/') && !base.includes('?'), base);
+    }
+    // The fragment is what carries the plan: opened on this page it gives the plan that was on screen.
+    await openLink(page, FULL, polish[1]);
+    assert.ok(await page.waitFor(hasModel));
+    assert.equal(await snapshot(page), mine, 'the fragment of the copied link opens the same model');
+
+    // Over http (a local server, a fork): the real address of the page, without its query.
+    const served = `http://127.0.0.1:${server.address().port}/x/y.html`;
+    for (const [query, caption] of [['?lang=en&materials=clay', 'Copy link'], ['?lang=pl', 'Kopiuj link']]) {
+      const [base, fragment] = split(await copyFrom(`${served}${query}`, caption));
+      assert.equal(base, served, `${query}: the page keeps its own address`);
+      assert.equal(fragment, english[1], `${query}: the same plan`);
+    }
+    assert.deepEqual(page.pageErrors, []);
+    assert.deepEqual(page.consoleErrors, []);
+  } finally {
+    page.close();
+    server.close();
   }
 });
 
