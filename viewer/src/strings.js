@@ -40,7 +40,7 @@ export const STRINGS = {
     warningsCount: '{n} ostrzeżenie|{n} ostrzeżenia|{n} ostrzeżeń',
     noteErrors: 'Błędy: coś w planie się nie zgadza. Opisy niżej są po angielsku, bo są pisane dla AI: skopiuj prośbę o poprawkę, wklej ją do czatu z AI i wczytaj poprawioną odpowiedź.',
     noteWarnings: 'Ostrzeżenia: model się wczytał, ale jakaś wartość wygląda dziwnie (wymiar, skala). Sprawdź ją na rysunku albo poproś AI o poprawkę (opisy niżej są po angielsku).',
-    fixIntro: 'Poniższy JSON planu mieszkania nie przeszedł kontroli w planwalk. Popraw każdy błąd (a jeśli się da, także ostrzeżenia), poprawiając sposób odczytu rysunku. Odpowiedz tylko poprawionym kodem JSON.',
+    fixIntro: 'Poniższy JSON planu mieszkania nie przeszedł kontroli w planwalk. Popraw każdy błąd (a jeśli się da, także ostrzeżenia), odczytując rysunek jeszcze raz. Odpowiedz tylko poprawionym JSON-em.',
     fixIssues: 'Problemy', fixPlan: 'JSON planu',
   },
 };

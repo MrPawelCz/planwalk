@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 export const TEXT = {
   title: 'planwalk: z rzutu mieszkania do spaceru w 3D',
   description: 'Zamień rzut mieszkania w model 3D i przejdź się po nim. Za darmo, w przeglądarce, bez konta. Plan nie opuszcza tej strony.',
-  card: 'Rzut mieszkania w 3D w kilka minut. Bez wysyłania planu i bez konta.',
+  card: 'Rzut mieszkania w 3D, po którym możesz spacerować. Bez wysyłania planu i bez konta.',
   alt: 'Umeblowany salon w 3D i napis planwalk: rzut mieszkania w 3D, po którym możesz spacerować',
 };
 

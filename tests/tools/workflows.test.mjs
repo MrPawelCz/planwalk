@@ -15,7 +15,7 @@ const dependabot = read('.github/dependabot.yml');
 test('no workflow or Dependabot file contains a tab or a dash used as punctuation', () => {
   for (const [name, text] of Object.entries({ ci, release, dependabot, pages: read('.github/workflows/pages.yml') })) {
     assert.doesNotMatch(text, /\t/, `${name}: YAML does not allow tabs`);
-    assert.doesNotMatch(text, /[–—]/, `${name}: project style has no em or en dashes`);
+    assert.doesNotMatch(text, /[\u2013\u2014]/, `${name}: project style has no em or en dashes`);
   }
 });
 

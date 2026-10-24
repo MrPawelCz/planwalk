@@ -78,7 +78,7 @@ test('every table: same keys in English and Polish, no empty text, same placehol
         for (const [k, v] of Object.entries(table[lang])) {
           assert.equal(typeof v, 'string', `${label} ${lang}.${k}`);
           assert.ok(v.trim().length > 0, `${label} ${lang}.${k} is empty`);
-          assert.ok(!/[–—]/.test(v), `${label} ${lang}.${k} has a long dash`);
+          assert.ok(!/[\u2013\u2014]/.test(v), `${label} ${lang}.${k} has a long dash`);
           assert.deepEqual(slots(v), slots(table.en[k]), `${label} ${lang}.${k}: placeholders differ from English`);
         }
       }

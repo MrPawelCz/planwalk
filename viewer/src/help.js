@@ -30,7 +30,7 @@ export const STRINGS = {
   },
   pl: {
     title: 'Jak działa planwalk',
-    step1: 'Skopiuj polecenie (prompt) i wklej je do czatu z AI, który czyta obrazy, razem ze zdjęciem rzutu mieszkania.',
+    step1: 'Skopiuj polecenie (prompt) i wklej je do czatu z AI, który czyta obrazy, razem ze zdjęciem rzutu mieszkania (przy polu do pisania jest zwykle przycisk ze spinaczem albo plusem, którym dodasz zdjęcie).',
     step2: 'Wróć na tę stronę i wklej odpowiedź AI (przycisk „Wklej odpowiedź”) albo otwórz zapisany plik .json („Otwórz plik” w oknie wklejania).',
     step3: 'Jeśli planwalk zgłosi problemy, kliknij „Kopiuj prośbę o poprawkę”, wklej ją do tego samego czatu i wczytaj poprawioną odpowiedź.',
     controlsTitle: 'Sterowanie',
@@ -39,7 +39,7 @@ export const STRINGS = {
     controlsWalk: 'Spacer na telefonie: przeciągnij palcem po lewej połowie ekranu, żeby iść, a po prawej, żeby się rozglądać. Na komputerze: strzałki lub WASD, rozglądanie myszką (najpierw kliknij).',
     privacyTitle: 'Prywatność',
     privacy: 'planwalk działa w całości na tej stronie: Twój plan nie opuszcza urządzenia i nic nie jest zapisywane. Zdjęcie rzutu trafia tylko do czatu z AI, który wybierzesz.',
-    tip: 'Wskazówka: zanim wyślesz zdjęcie do AI, wytnij z niego imiona, nazwiska i adresy.',
+    tip: 'Wskazówka: zanim wyślesz zdjęcie do AI, zasłoń na nim imiona, nazwiska i adresy (albo przytnij zdjęcie).',
     copy: 'Kopiuj polecenie', copied: 'Skopiowano', copyFailed: 'Nie udało się skopiować',
     copiedNext: 'Skopiowano. Teraz otwórz czat z AI, dodaj zdjęcie rzutu i wklej polecenie.',
     language: 'Język',

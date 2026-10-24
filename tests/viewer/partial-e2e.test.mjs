@@ -65,7 +65,7 @@ test('a reading with unknown properties opens with warnings; a reading with one 
     // The banner follows the language.
     await page.evaluate('window.planwalk.setLang("pl")');
     assert.match(await banner(page), /^Pominięto 1 element, reszta planu jest widoczna\./);
-    assert.deepEqual(await lines(page), ['otwór "p9" (levels[1].openings[8]): width is 0 but must be greater than 0']);
+    assert.deepEqual(await lines(page), ['otwór (drzwi lub okno) "p9" (levels[1].openings[8]): width is 0 but must be greater than 0']);
     assert.ok(await page.evaluate('document.querySelector(".pw-banner").getBoundingClientRect().top >= document.querySelector(".pw-bar").getBoundingClientRect().bottom - 1'), 'the banner stays below the toolbar when the toolbar wraps differently');
     if (evidence) await page.screenshot(join(evidence, 'partial-p6b7c-pl.jpg'));
     await page.evaluate('window.planwalk.setLang("en")');

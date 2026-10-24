@@ -98,7 +98,7 @@ test('About sheet in Polish: toolbar button, badge and rows follow ?lang=pl', { 
     assert.deepEqual(await s.evaluate(state('O modelu')), { exists: true, disabled: false, badge: true, badgeText: 'Skala szacowana' });
     await s.evaluate(click('O modelu'));
     const sh = await s.evaluate(sheet);
-    for (const want of ['O tym modelu', 'Łączna powierzchnia pomieszczeń', 'Szkic', 'Notatka mówi, że skala jest przybliżona', 'Wizualizacja przekazanego rysunku, nie pomiar']) assert.ok(sh.text.includes(want), `the sheet says "${want}"`);
+    for (const want of ['O tym modelu', 'Łączna powierzchnia pomieszczeń', 'Szkic', 'Notatka mówi, że skala jest przybliżona', 'To wizualizacja Twojego rysunku, a nie pomiar']) assert.ok(sh.text.includes(want), `the sheet says "${want}"`);
     assert.match(sh.text, /\d+,\d m²|\d+ m²/, 'areas in square metres');
     assert.deepEqual(s.issues, [], 'console stays clean');
   } finally { s.close(); }

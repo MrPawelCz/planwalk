@@ -35,7 +35,7 @@ test('a two level plan in Polish: decimal comma and Polish labels', () => {
   assert.equal(row(rows, 'area').value, '102,6 m²');
   assert.equal(row(rows, 'area').label, 'Łączna powierzchnia pomieszczeń');
   assert.equal(row(rows, 'scale').value, 'Brak informacji w pliku');
-  assert.equal(row(rows, 'source').value, 'Przykład syntetyczny');
+  assert.equal(row(rows, 'source').value, 'Przykład wymyślony, nie z prawdziwego rzutu');
   setLang('en');
 });
 
@@ -206,5 +206,5 @@ test('every English string has a Polish one and the other way round, with the sa
   assert.deepEqual(Object.keys(STRINGS.pl).sort(), Object.keys(STRINGS.en).sort());
   const slots = (s) => (s.match(/\{\w+\}/g) || []).sort().join();
   for (const k of Object.keys(STRINGS.en)) assert.equal(slots(STRINGS.pl[k]), slots(STRINGS.en[k]), k);
-  for (const lang of ['en', 'pl']) for (const v of Object.values(STRINGS[lang])) assert.ok(!/[–—]/.test(v), `no dashes: ${v}`);
+  for (const lang of ['en', 'pl']) for (const v of Object.values(STRINGS[lang])) assert.ok(!/[\u2013\u2014]/.test(v), `no dashes: ${v}`);
 });

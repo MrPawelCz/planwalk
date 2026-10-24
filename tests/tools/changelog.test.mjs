@@ -37,5 +37,5 @@ test('the command line prints the section, accepts a leading v and fails for an 
 });
 
 test('CHANGELOG.md keeps the project style: no dashes used as punctuation', () => {
-  assert.doesNotMatch(changelog, /[–—]/);
+  assert.doesNotMatch(changelog, /[\u2013\u2014]/);
 });

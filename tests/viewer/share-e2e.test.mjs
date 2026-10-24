@@ -351,7 +351,7 @@ test('Help carries the honest sentence and the Standalone HTML control says it i
     await page.navigate(`${FULL}?lang=pl`);
     assert.ok(await page.waitFor(hasModel));
     assert.equal(await page.evaluate(`${htmlButton}.title`), 'Jeden plik HTML z tym planem w środku, do otwarcia na komputerze');
-    assert.equal(await page.evaluate(`${button('Kopiuj link')}.title`), 'Plan jest zapisany wewnątrz linku. Odczyta go każdy, kto dostanie link, i aplikacja, przez którą go wyślesz.');
+    assert.equal(await page.evaluate(`${button('Kopiuj link')}.title`), 'Plan jest zapisany wewnątrz linku. Odczyta go każdy, kto dostanie link, także aplikacja, przez którą go wyślesz.');
     await page.evaluate(`${helpButton}.click()`);
     assert.match(await page.evaluate('document.querySelector("dialog.pw-help").textContent'), /Plan jest zapisany wewnątrz linku/);
     assert.deepEqual(page.pageErrors, []);
@@ -367,7 +367,7 @@ test('Polish: the share controls speak Polish, confirm with Skopiowano, and look
       await page.navigate(`${FULL}?lang=pl`);
       assert.ok(await page.waitFor(hasModel));
       await page.evaluate('window.__copied = null; Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: (t) => { window.__copied = t; return Promise.resolve(); } } })');
-      for (const caption of ['Kopiuj link', 'Kopiuj długi link (dla starszych przeglądarek)', 'Udostępnij obraz']) assert.equal(await page.evaluate(`!!${button(caption)}`), true, caption);
+      for (const caption of ['Kopiuj link', 'Kopiuj długi link', 'Udostępnij obraz']) assert.equal(await page.evaluate(`!!${button(caption)}`), true, caption);
       await page.evaluate(`${button('Kopiuj link')}.click()`);
       assert.ok(await page.waitFor(`!!${button('Skopiowano')}`));
       assert.ok(await page.waitFor(`!!${button('Kopiuj link')}`, 4000));

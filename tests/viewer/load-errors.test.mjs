@@ -135,8 +135,8 @@ test('skippedLines: what, which, where and why for the first ten, then how many 
   ]);
   setLang('pl');
   const pl = skippedLines(items);
-  assert.equal(pl[0], 'otwór "p9" (levels[1].openings[8]): width is 0 but must be greater than 0', 'the validator reason stays as written');
-  assert.equal(pl[1], 'otwór "front" (levels[0].openings[2]): jego ściana została pominięta');
+  assert.equal(pl[0], 'otwór (drzwi lub okno) "p9" (levels[1].openings[8]): width is 0 but must be greater than 0', 'the validator reason stays as written');
+  assert.equal(pl[1], 'otwór (drzwi lub okno) "front" (levels[0].openings[2]): jego ściana została pominięta');
   assert.match(pl[2], /^ściana "w3"/);
   assert.match(pl[3], /^piętro "L2"/);
   assert.match(pl[4], /^mebel \(/);
