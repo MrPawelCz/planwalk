@@ -12,7 +12,7 @@ for (const [name, strings] of [['first-visit', VISIT], ['help', HELP]]) {
       for (const [k, v] of Object.entries(strings[lang])) {
         assert.equal(typeof v, 'string', `${lang}.${k}`);
         assert.ok(v.trim().length > 0, `${lang}.${k} is empty`);
-        assert.ok(!/[–—]/.test(v), `${lang}.${k} has a long dash`);
+        assert.ok(!/[\u2013\u2014]/.test(v), `${lang}.${k} has a long dash`);
         assert.deepEqual((v.match(/\{\w+\}/g) || []).sort(), (strings.en[k].match(/\{\w+\}/g) || []).sort(), `${lang}.${k} placeholders`);
       }
     }

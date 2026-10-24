@@ -50,6 +50,7 @@ test('the Polish page has a Polish title, description and link preview with abso
   assert.equal(m['og:image:width'], '1200');
   assert.equal(m['og:image:height'], '630');
   assert.ok(m['og:title'].length <= 60 && m['og:description'].length <= 110, 'short enough for a chat card');
+  assert.doesNotMatch(m['og:description'] + m.description, /minut|sekund|godzin/i, 'the previews promise no time (the five minutes are a goal, not a measurement)');
   assert.equal(m['twitter:card'], 'summary_large_image');
   assert.equal(m['twitter:title'], m['og:title']);
   assert.equal(m['twitter:description'], m['og:description']);
@@ -59,7 +60,7 @@ test('the Polish page has a Polish title, description and link preview with abso
   assert.deepEqual(links(head).filter((l) => l.rel === 'canonical'), [{ rel: 'canonical', href: `${SITE}pl/` }]);
   assert.equal(m['planwalk-default-lang'], 'pl');
   assert.doesNotMatch(head, /floor plan|walkable|Turn a|never leaves/, 'no English text is left in the Polish head');
-  assert.doesNotMatch(head, /[–—]/, 'project style has no em or en dashes');
+  assert.doesNotMatch(head, /[\u2013\u2014]/, 'project style has no em or en dashes');
   assert.match(m.description + m['og:description'] + m['og:title'] + m['og:image:alt'], /[ąćęłńóśźż]/, 'real Polish, with its letters');
 });
 

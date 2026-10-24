@@ -11,7 +11,7 @@ test('share: English and Polish have the same keys, none empty, no em or en dash
     for (const [k, v] of Object.entries(STRINGS[lang])) {
       assert.equal(typeof v, 'string', `${lang}.${k}`);
       assert.ok(v.trim().length > 0, `${lang}.${k} is empty`);
-      assert.ok(!/[–—]/.test(v), `${lang}.${k} has a long dash`);
+      assert.ok(!/[\u2013\u2014]/.test(v), `${lang}.${k} has a long dash`);
       assert.deepEqual((v.match(/\{\w+\}/g) || []).sort(), (STRINGS.en[k].match(/\{\w+\}/g) || []).sort(), `${lang}.${k} placeholders`);
     }
   }
