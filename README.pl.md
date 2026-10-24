@@ -35,7 +35,7 @@ Chcesz tylko się rozejrzeć? Wybierz przykład z listy „Przykłady” (na tel
 
 ## Prywatność
 
-Sam planwalk niczego nie wysyła: strona nie ma kont, kluczy API, statystyk ani ciasteczek i niczego nie zapisuje w przeglądarce. Twój plan zostaje na urządzeniu. Jedyny wyjątek to opcjonalny parametr adresu `?plan=<adres>`, który pobiera plan z podanego adresu (Twoje dane nie są przy tym nigdzie wysyłane). Zdjęcie rzutu trafia tylko do czatu z AI, który wybierzesz, więc dla bezpieczeństwa zasłoń na nim dane osobowe.
+Sam planwalk niczego nie wysyła: strona nie ma kont, kluczy API, statystyk ani ciasteczek i niczego nie zapisuje w przeglądarce. Twój plan zostaje na urządzeniu. Jedyny wyjątek to opcjonalny parametr adresu `?plan=<adres>`, który pobiera plan z podanego adresu (Twoje dane nie są przy tym nigdzie wysyłane). Zdjęcie rzutu trafia tylko do czatu z AI, który wybierzesz, więc dla bezpieczeństwa zasłoń na nim dane osobowe. Przycisk „Zgłoś zły odczyt” (jest przy planie, który sam wczytasz) otwiera w nowej karcie gotowe zgłoszenie na GitHubie: w jego adresie są tylko wersja, języki i kody walidatora z liczbami, a plan trafia do schowka, żebyś wkleił go po zasłonięciu imion i adresów. Zgłoszenie na GitHubie jest publiczne.
 
 ## Granice
 

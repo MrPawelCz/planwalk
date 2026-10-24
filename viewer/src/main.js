@@ -22,6 +22,7 @@ import { openDialog, closeDialog } from './dialogs.js';
 import { fileSlug } from './slug.js';
 import { T, issuesHeading, fixRequestText } from './strings.js'; // every caption of this window, English and Polish
 import { createShare, linkProblem } from './share.js';
+import { createReport } from './report.js';
 import { createLoadedNote } from './loaded-note.js';
 import { decodeShort, parseHash } from './share-link.js';
 import { exampleId, exampleTitle, localizeExample } from './examples-pl.js';
@@ -149,6 +150,9 @@ function start() {
   const help = createHelp({ h, onLang: (l) => applyLang(l) });
   const loaded = createLoadedNote({ h, root, getBar: () => bar }); // "Loaded: name, N rooms" for a few seconds after a paste, file or ?plan= load
   const share = createShare({ h, getPlan: () => plan, getName: () => plan?.name || '', getSlug: () => slug(), getImage: () => api.screenshot(), download });
+  // "Report a bad reading" is for a plan the person loaded (pasted, opened or from a link), not for the bundled example. The text for the
+  // clipboard is the plan the way "Copy fix request" ends with it.
+  const report = createReport({ h, isUserPlan: () => !!plan && !samplePlans.has(plan), getJson: () => (plan ? JSON.stringify(plan, null, 2) : rawText), getIssues: () => issues, version: PW_VERSION });
   const bar = h('div', { class: 'pw-bar' },
     h('span', { class: 'pw-brand' }, 'planwalk'), nameEl, about.badge, visit.tag,
     h('div', { class: 'pw-seg' }, MODES.map((m) => modeBtns[m])),
@@ -164,6 +168,7 @@ function start() {
     h('button', { type: 'button', onclick: () => fetch(api.screenshot({ fit: true })).then((r) => r.blob()).then((b) => download(b, `${slug()}.png`)) }, T.exportPng),
     h('button', { type: 'button', title: T.standaloneTip, onclick: () => download(new Blob([standaloneHtml()], { type: 'text/html' }), `${slug()}.html`) }, T.standalone),
     share.controls,
+    report.toolbarButton,
     about.button,
     h('button', { type: 'button', onclick: () => help.open() }, T.help));
   const card = h('div', { class: 'pw-card' }, h('p', { id: 'pw-card-text' }, T.empty), h('div', { id: 'pw-card-samples' }));
@@ -177,7 +182,7 @@ function start() {
         notes.openFileButton(openPicked),
         h('button', { type: 'submit', value: 'cancel' }, T.cancel),
         h('button', { type: 'button', onclick: () => { api.load(pasteArea.value, 'paste'); closeDialog(pasteDlg); } }, T.load))));
-  root.append(bar, card, visit.el, issuesEl, hint, mini, pasteDlg, help.el, about.dialog, share.dialog);
+  root.append(bar, card, visit.el, issuesEl, hint, mini, pasteDlg, help.el, about.dialog, share.dialog, report.dialog);
   card.append(notes.openFileButton(openPicked));
   const chooseFile = notes.openFileButton(openPicked); // kept out of the page: window.planwalk.openFile() and the phone Menu press it
   // Phone layout: moves the toolbar controls into a Menu sheet (compact.js). onLayout runs when the window changes kind.
@@ -285,6 +290,7 @@ function start() {
     nameEl.textContent = plan?.name || '';
     about.update();
     share.update();
+    report.update();
     visit.setExample(!!plan && samplePlans.has(plan));
     compact.sync({ mode, hasModel: !!model, issues: issues.errors.length + issues.warnings.length, errors: issues.errors.length });
   }
@@ -296,7 +302,8 @@ function start() {
     const all =[...issues.errors.map((i) => ['e', i]), ...issues.warnings.map((i) => ['w', i])];
     if (!all.length) return;
     issuesEl.append(h('h3', {}, issuesHeading(issues.errors.length, issues.warnings.length),
-      h('button', { type: 'button', onclick: (e) => { copyText(fixRequest()); e.target.textContent = T.copied; setTimeout(() => { e.target.textContent = T.copyFix; }, 1500); } }, T.copyFix)),
+      h('button', { type: 'button', onclick: (e) => { copyText(fixRequest()); e.target.textContent = T.copied; setTimeout(() => { e.target.textContent = T.copyFix; }, 1500); } }, T.copyFix),
+      report.panelButton()),
     ...(issues.errors.length ? [h('p', { class: 'pw-issue-note' }, T.noteErrors)] : []), // append(null) would write the word "null"
     ...(issues.warnings.length ? [h('p', { class: 'pw-issue-note' }, T.noteWarnings)] : []),
     h('ul', {}, all.map(([k, i]) => h('li', {}, h('span', { class: k }, i.code), ` ${i.path || ''} ${i.message} `, h('em', {}, `${T.fix}: ${i.fix}`)))));

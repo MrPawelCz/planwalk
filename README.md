@@ -109,7 +109,7 @@ npm run build:skill   # writes dist/ and regenerates skill/planwalk/ (commit bot
 npm test              # node --test, fails when a generated skill file is stale (CI also checks dist/)
 ```
 
-Layout: `schema/` the format, `src/core/` units, geometry and validator, `viewer/` the viewer source, `tools/` command line tools, `eval/` the benchmark harness (generator, drawing styles, scorer, results), `skill/` the agent skill (its `scripts/validate.mjs`, `scripts/embed.mjs`, `scripts/capture.mjs` and `assets/planwalk.html` are generated), `examples/` plans (synthetic, CC0), `docs/` specification and prompt. Contributions that help most: plans that break things, see [`CONTRIBUTING.md`](CONTRIBUTING.md).
+Layout: `schema/` the format, `src/core/` units, geometry and validator, `viewer/` the viewer source, `tools/` command line tools, `eval/` the benchmark harness (generator, drawing styles, scorer, results), `skill/` the agent skill (its `scripts/validate.mjs`, `scripts/embed.mjs`, `scripts/capture.mjs` and `assets/planwalk.html` are generated), `examples/` plans (synthetic, CC0), `docs/` specification and prompt. Contributions that help most: plans that break things, see [`CONTRIBUTING.md`](CONTRIBUTING.md). When a reading looks wrong, the viewer's "Report a bad reading" button opens a prefilled GitHub issue in a new tab: the address carries only the version, the languages and the validator codes with their counts, and the plan goes to your clipboard to paste after you cover names and addresses (planwalk itself sends nothing).
 
 ## Author
 

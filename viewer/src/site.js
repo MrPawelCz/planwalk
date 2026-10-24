@@ -4,6 +4,8 @@
 // for the link preview tags, and tests/viewer/share-base.test.mjs keeps the two equal.
 export const SITE = 'https://mrpawelcz.github.io/planwalk/';
 export const SITE_PL = `${SITE}pl/`;
+// The repository, where the "Report a bad reading" button opens a new issue (report.js); package.json holds the same address.
+export const REPO = 'https://github.com/MrPawelCz/planwalk';
 
 // loc is a location (any object with protocol, host and pathname will do), lang the interface language. On http and https the
 // page's own address without query and fragment, so a fork or a local server keeps working. Anywhere else the public page,

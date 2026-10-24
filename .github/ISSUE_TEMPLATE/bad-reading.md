@@ -4,14 +4,15 @@ about: The JSON from your AI does not match the drawing (missing rooms, wrong sc
 labels: reading-quality
 ---
 
-**Which AI and mode did you use?** (chat model name, or the agent skill, and its version)
+**planwalk version:** 
+**Interface language:** 
+**Prompt language offered:** 
+**Validator codes (no messages):** 
 
-**What went wrong?** (missing walls, wrong scale, extra rooms, mirrored plan, doors in the wrong place)
+**AI model and chat:** 
 
-**The drawing** (attach it only if you are allowed to share it; a cropped or redrawn version is fine; otherwise describe its style: CAD PDF, brochure image, hand sketch, photo)
+**What looks wrong:** (missing walls, wrong scale, extra rooms, mirrored plan, doors in the wrong place; describe the style of the drawing: CAD PDF, brochure image, hand sketch, photo; attach the drawing only if you are allowed to share it)
 
-**The JSON** (paste it, or attach plan.json)
+**The JSON:** paste the plan here after covering names and addresses. The "Report a bad reading" button in the viewer fills in the lines above and copies the plan for you.
 
-**Validator output** (`node tools/validate.mjs plan.json` or the viewer's issue panel)
-
-**What you tried** (the "Copy fix request" loop, a different prompt, a different model)
+**This issue is public.** Anyone can read it once you submit it, so keep names, addresses and anything private out of it.

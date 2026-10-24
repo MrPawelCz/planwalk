@@ -23,6 +23,12 @@ export const STRINGS = {
     // the request that goes to the AI chat: the instruction follows the page language, the issue lines stay as the validator wrote them
     fixIntro: 'The floor plan JSON below failed validation in planwalk. Fix every error (and the warnings if you can) by correcting how the drawing was read. Return only the corrected JSON.',
     fixIssues: 'Issues', fixPlan: 'Plan JSON',
+
+    // Report a bad reading (viewer/src/report.js): the button, its tip and the window shown when copying fails
+    reportBad: 'Report a bad reading',
+    reportBadTip: 'Opens a new GitHub issue in a new tab, filled in with the version and the validator codes only, and copies the plan JSON to your clipboard. Nothing is posted until you submit it.',
+    reportCopyFailed: 'Copying did not work here. Select the plan below, copy it, and paste it into the GitHub issue after covering names and addresses.',
+    reportLabel: 'Plan JSON to copy', reportClose: 'Close',
   },
   pl: {
     dollhouse: 'Makieta', orbit: 'Obrót', top: 'Z góry', walk: 'Spacer',
@@ -42,6 +48,11 @@ export const STRINGS = {
     noteWarnings: 'Ostrzeżenia: model się wczytał, ale jakaś wartość wygląda dziwnie (wymiar, skala). Sprawdź ją na rysunku albo poproś AI o poprawkę (opisy niżej są po angielsku).',
     fixIntro: 'Poniższy JSON planu mieszkania nie przeszedł kontroli w planwalk. Popraw każdy błąd (a jeśli się da, także ostrzeżenia), odczytując rysunek jeszcze raz. Odpowiedz tylko poprawionym JSON-em.',
     fixIssues: 'Problemy', fixPlan: 'JSON planu',
+
+    reportBad: 'Zgłoś zły odczyt',
+    reportBadTip: 'Otwiera w nowej karcie nowe zgłoszenie na GitHubie, wypełnione tylko wersją i kodami walidatora, i kopiuje JSON planu do schowka. Nic nie zostanie opublikowane, dopóki go nie wyślesz.',
+    reportCopyFailed: 'Tutaj kopiowanie nie zadziałało. Zaznacz plan poniżej, skopiuj go i wklej do zgłoszenia na GitHubie, po zasłonięciu imion i adresów.',
+    reportLabel: 'JSON planu do skopiowania', reportClose: 'Zamknij',
   },
 };
 export const t = makeT(STRINGS);
