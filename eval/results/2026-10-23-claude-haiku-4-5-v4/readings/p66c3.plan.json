@@ -1,0 +1,504 @@
+{
+  "version": 1,
+  "name": "Three-bedroom apartment with kitchen, living room, hall, and corridor",
+  "units": "m",
+  "meta": {
+    "source": "image",
+    "scale_note": "Scale estimated from standard interior door width of 0.85 m (no printed dimensions or areas visible). Overall plan dimensions estimated at 10 m (width) × 7 m (height) based on typical apartment proportions and visible door positions. Confidence: medium.",
+    "notes": "Single-level apartment. Corridor is a central horizontal passage connecting bedrooms/bathroom area above to kitchen/living/hall area below. Positions of doors and windows are approximate, estimated from visible swing arcs and triple-line segments on exterior walls. Wall thicknesses assumed small and traced at centerline. No furniture or stairs depicted in plan."
+  },
+  "levels": [
+    {
+      "id": "L0",
+      "walls": [
+        {
+          "id": "w1",
+          "from": [
+            0,
+            0
+          ],
+          "to": [
+            10,
+            0
+          ],
+          "kind": "exterior"
+        },
+        {
+          "id": "w2",
+          "from": [
+            10,
+            0
+          ],
+          "to": [
+            10,
+            7
+          ],
+          "kind": "exterior"
+        },
+        {
+          "id": "w3",
+          "from": [
+            10,
+            7
+          ],
+          "to": [
+            0,
+            7
+          ],
+          "kind": "exterior"
+        },
+        {
+          "id": "w4",
+          "from": [
+            0,
+            7
+          ],
+          "to": [
+            0,
+            0
+          ],
+          "kind": "exterior"
+        },
+        {
+          "id": "w5",
+          "from": [
+            2.5,
+            0
+          ],
+          "to": [
+            2.5,
+            3.5
+          ],
+          "kind": "interior"
+        },
+        {
+          "id": "w6",
+          "from": [
+            5,
+            0
+          ],
+          "to": [
+            5,
+            3.5
+          ],
+          "kind": "interior"
+        },
+        {
+          "id": "w7",
+          "from": [
+            7.5,
+            0
+          ],
+          "to": [
+            7.5,
+            3.5
+          ],
+          "kind": "interior"
+        },
+        {
+          "id": "w8",
+          "from": [
+            0,
+            3.5
+          ],
+          "to": [
+            10,
+            3.5
+          ],
+          "kind": "interior"
+        },
+        {
+          "id": "w9",
+          "from": [
+            0,
+            3.8
+          ],
+          "to": [
+            10,
+            3.8
+          ],
+          "kind": "interior"
+        },
+        {
+          "id": "w10",
+          "from": [
+            1.5,
+            3.8
+          ],
+          "to": [
+            1.5,
+            7
+          ],
+          "kind": "interior"
+        },
+        {
+          "id": "w11",
+          "from": [
+            6.5,
+            3.8
+          ],
+          "to": [
+            6.5,
+            7
+          ],
+          "kind": "interior"
+        }
+      ],
+      "openings": [
+        {
+          "id": "d1",
+          "wall": "w8",
+          "type": "door",
+          "offset": 1.2,
+          "width": 0.85
+        },
+        {
+          "id": "d2",
+          "wall": "w8",
+          "type": "door",
+          "offset": 3.75,
+          "width": 0.85
+        },
+        {
+          "id": "d3",
+          "wall": "w8",
+          "type": "door",
+          "offset": 6.25,
+          "width": 0.85
+        },
+        {
+          "id": "d4",
+          "wall": "w8",
+          "type": "door",
+          "offset": 8.75,
+          "width": 0.85
+        },
+        {
+          "id": "d5",
+          "wall": "w9",
+          "type": "door",
+          "offset": 0.75,
+          "width": 0.85
+        },
+        {
+          "id": "d6",
+          "wall": "w9",
+          "type": "door",
+          "offset": 4,
+          "width": 0.85
+        },
+        {
+          "id": "d7",
+          "wall": "w9",
+          "type": "door",
+          "offset": 8.25,
+          "width": 0.85
+        },
+        {
+          "id": "d8",
+          "wall": "w4",
+          "type": "door",
+          "offset": 1.6,
+          "width": 0.9
+        },
+        {
+          "id": "win1",
+          "wall": "w1",
+          "type": "window",
+          "offset": 0.5,
+          "width": 1
+        },
+        {
+          "id": "win2",
+          "wall": "w1",
+          "type": "window",
+          "offset": 2,
+          "width": 0.9
+        },
+        {
+          "id": "win3",
+          "wall": "w1",
+          "type": "window",
+          "offset": 3.8,
+          "width": 1
+        },
+        {
+          "id": "win4",
+          "wall": "w1",
+          "type": "window",
+          "offset": 5.5,
+          "width": 0.9
+        },
+        {
+          "id": "win5",
+          "wall": "w1",
+          "type": "window",
+          "offset": 8,
+          "width": 1
+        },
+        {
+          "id": "win6",
+          "wall": "w4",
+          "type": "window",
+          "offset": 0.5,
+          "width": 0.8
+        },
+        {
+          "id": "win7",
+          "wall": "w4",
+          "type": "window",
+          "offset": 1.2,
+          "width": 0.8
+        },
+        {
+          "id": "win8",
+          "wall": "w4",
+          "type": "window",
+          "offset": 4.5,
+          "width": 0.9
+        },
+        {
+          "id": "win9",
+          "wall": "w4",
+          "type": "window",
+          "offset": 6.2,
+          "width": 0.8
+        },
+        {
+          "id": "win10",
+          "wall": "w2",
+          "type": "window",
+          "offset": 0.5,
+          "width": 0.8
+        },
+        {
+          "id": "win11",
+          "wall": "w2",
+          "type": "window",
+          "offset": 2.5,
+          "width": 0.8
+        },
+        {
+          "id": "win12",
+          "wall": "w2",
+          "type": "window",
+          "offset": 4.5,
+          "width": 0.9
+        },
+        {
+          "id": "win13",
+          "wall": "w2",
+          "type": "window",
+          "offset": 6.2,
+          "width": 0.8
+        },
+        {
+          "id": "win14",
+          "wall": "w3",
+          "type": "window",
+          "offset": 1.5,
+          "width": 1
+        },
+        {
+          "id": "win15",
+          "wall": "w3",
+          "type": "window",
+          "offset": 3.5,
+          "width": 0.9
+        },
+        {
+          "id": "win16",
+          "wall": "w3",
+          "type": "window",
+          "offset": 5.5,
+          "width": 1
+        },
+        {
+          "id": "win17",
+          "wall": "w3",
+          "type": "window",
+          "offset": 7.5,
+          "width": 0.9
+        }
+      ],
+      "rooms": [
+        {
+          "id": "r1",
+          "name": "Bedroom 1",
+          "polygon": [
+            [
+              0,
+              0
+            ],
+            [
+              2.5,
+              0
+            ],
+            [
+              2.5,
+              3.5
+            ],
+            [
+              0,
+              3.5
+            ]
+          ]
+        },
+        {
+          "id": "r2",
+          "name": "Bedroom 2",
+          "polygon": [
+            [
+              2.5,
+              0
+            ],
+            [
+              5,
+              0
+            ],
+            [
+              5,
+              3.5
+            ],
+            [
+              2.5,
+              3.5
+            ]
+          ]
+        },
+        {
+          "id": "r3",
+          "name": "Bedroom 3",
+          "polygon": [
+            [
+              5,
+              0
+            ],
+            [
+              7.5,
+              0
+            ],
+            [
+              7.5,
+              3.5
+            ],
+            [
+              5,
+              3.5
+            ]
+          ]
+        },
+        {
+          "id": "r4",
+          "name": "Bathroom",
+          "polygon": [
+            [
+              7.5,
+              0
+            ],
+            [
+              10,
+              0
+            ],
+            [
+              10,
+              3.5
+            ],
+            [
+              7.5,
+              3.5
+            ]
+          ]
+        },
+        {
+          "id": "r5",
+          "name": "Corridor",
+          "polygon": [
+            [
+              0,
+              3.5
+            ],
+            [
+              10,
+              3.5
+            ],
+            [
+              10,
+              3.8
+            ],
+            [
+              0,
+              3.8
+            ]
+          ]
+        },
+        {
+          "id": "r6",
+          "name": "Hall",
+          "polygon": [
+            [
+              0,
+              3.8
+            ],
+            [
+              1.5,
+              3.8
+            ],
+            [
+              1.5,
+              7
+            ],
+            [
+              0,
+              7
+            ]
+          ]
+        },
+        {
+          "id": "r7",
+          "name": "Kitchen",
+          "polygon": [
+            [
+              1.5,
+              3.8
+            ],
+            [
+              6.5,
+              3.8
+            ],
+            [
+              6.5,
+              7
+            ],
+            [
+              1.5,
+              7
+            ]
+          ]
+        },
+        {
+          "id": "r8",
+          "name": "Living room",
+          "polygon": [
+            [
+              6.5,
+              3.8
+            ],
+            [
+              10,
+              3.8
+            ],
+            [
+              10,
+              7
+            ],
+            [
+              6.5,
+              7
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+```json
+{
+  "version": 1,
+  "name": "5-room apartment layout",
+  "units": "m",
+  "meta": {
+    "source": "image",
+    "scale_note": "Scale determined from printed dimension of 9.2 m width at bottom of floor plan. High confidence.",
+    "notes": "Room areas taken directly from printed values on plan. Wall thickness estimated at 0.15 m. Interior walls form a step, dividing at y=3.8 on left and y=3.2 on right. Windows show as triple lines on exterior walls, doors as arcs with swing direction. Estimated window widths from visual inspection; exact positions approximate."
+  },
+  "levels": [
+    {
+      "id": "L0",
+      "walls": [
+        { "id": "w1", "from": [0, 0.15], "to": [9.2, 0.15], "kind": "exterior", "thickness": 0.15 },
+        { "id": "w2", "from": [9.2, 0.15], "to": [9.2, 7.2], "kind": "exterior", "thickness": 0.15 },
+        { "id": "w3", "from": [9.2, 7.2], "to": [0, 7.2], "kind": "exterior", "thickness": 0.15 },
+        { "id": "w4", "from": [0, 7.2], "to": [0, 0.15], "kind": "exterior", "thickness": 0.15 },
+        { "id": "w5", "from": [4.6, 0.15], "to": [4.6, 7.2], "kind": "interior", "thickness": 0.15 },
+        { "id": "w6", "from": [0, 3.8], "to": [4.6, 3.8], "kind": "interior", "thickness": 0.15 },
+        { "id": "w7", "from": [4.6, 3.2], "to": [9.2, 3.2], "kind": "interior", "thickness": 0.15 },
+        { "id": "w8", "from": [2.3, 3.8], "to": [2.3, 7.2], "kind": "interior", "thickness": 0.15 }
+      ],
+      "openings": [
+        { "id": "win1", "wall": "w1", "type": "window", "offset": 0.8, "width": 0.8 },
+        { "id": "win2", "wall": "w1", "type": "window", "offset": 3.0, "width": 0.8 },
+        { "id": "win3", "wall": "w1", "type": "window", "offset": 6.0, "width": 1.2 },
+        { "id": "win4", "wall": "w2", "type": "window", "offset": 1.05, "width": 0.8 },
+        { "id": "win5", "wall": "w2", "type": "window", "offset": 5.35, "width": 1.0 },
+        { "id": "win6", "wall": "w3", "type": "window", "offset": 8.4, "width": 0.8 },
+        { "id": "win7", "wall": "w3", "type": "window", "offset": 6.2, "width": 0.8 },
+        { "id": "win8", "wall": "w3", "type": "window", "offset": 2.7, "width": 1.0 },
+        { "id": "win9", "wall": "w4", "type": "window", "offset": 6.4, "width": 0.8 },
+        { "id": "win10", "wall": "w4", "type": "window", "offset": 4.7, "width": 1.0 },
+        { "id": "win11", "wall": "w4", "type": "window", "offset": 2.2, "width": 1.0 },
+        { "id": "door1", "wall": "w6", "type": "door", "offset": 1.5, "width": 0.85 },
+        { "id": "door2", "wall": "w7", "type": "door", "offset": 2.0, "width": 0.85 },
+        { "id": "door3", "wall": "w8", "type": "door", "offset": 2.0, "width": 0.85 }
+      ],
+      "rooms": [
+        { "id": "r1", "name": "Living room", "polygon": [[0, 0.15], [4.6, 0.15], [4.6, 3.8], [0, 3.8]], "area": 21.3 },
+        { "id": "r2", "name": "Bedroom", "polygon": [[4.6, 0.15], [9.2, 0.15], [9.2, 3.2], [4.6, 3.2]], "area": 13.1 },
+        { "id": "r3", "name": "Kitchen", "polygon": [[4.6, 3.2], [9.2, 3.2], [9.2, 7.2], [4.6, 7.2]], "area": 17.6 },
+        { "id": "r4", "name": "Hall", "polygon": [[0, 3.8], [2.3, 3.8], [2.3, 7.2], [0, 7.2]], "area": 8.7 },
+        { "id": "r5", "name": "Bathroom", "polygon": [[2.3, 3.8], [4.6, 3.8], [4.6, 7.2], [2.3, 7.2]], "area": 6.7 }
+      ]
+    }
+  ]
+}
+```
+
+Scale from the printed 9.2 m dimension at bottom of plan. Interior walls step from y=3.8 (left) to y=3.2 (right), creating a staggered layout. Window and door positions estimated visually from their drawn symbols.

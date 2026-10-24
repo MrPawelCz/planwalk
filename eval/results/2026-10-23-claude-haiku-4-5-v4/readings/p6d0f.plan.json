@@ -1,0 +1,222 @@
+{
+  "version": 1,
+  "name": "Studio apartment with Hall and Bathroom",
+  "units": "m",
+  "meta": {
+    "source": "image",
+    "scale_note": "Scale estimated from assumed standard door width of 0.85m; no printed dimensions on plan. Low confidence.",
+    "notes": "Exterior opening positions approximate. Interior walls and openings clearly shown. Passage between Studio and Hall indicated by architectural detail (arch). No distinct furniture symbols found."
+  },
+  "levels": [
+    {
+      "id": "L0",
+      "walls": [
+        {
+          "id": "w1",
+          "from": [
+            0,
+            0
+          ],
+          "to": [
+            6.46,
+            0
+          ],
+          "kind": "exterior"
+        },
+        {
+          "id": "w2",
+          "from": [
+            6.46,
+            0
+          ],
+          "to": [
+            6.46,
+            4.12
+          ],
+          "kind": "exterior"
+        },
+        {
+          "id": "w3",
+          "from": [
+            6.46,
+            4.12
+          ],
+          "to": [
+            0,
+            4.12
+          ],
+          "kind": "exterior"
+        },
+        {
+          "id": "w4",
+          "from": [
+            0,
+            4.12
+          ],
+          "to": [
+            0,
+            0
+          ],
+          "kind": "exterior"
+        },
+        {
+          "id": "w5",
+          "from": [
+            0,
+            1.95
+          ],
+          "to": [
+            6.46,
+            1.95
+          ],
+          "kind": "interior"
+        },
+        {
+          "id": "w6",
+          "from": [
+            3.41,
+            1.95
+          ],
+          "to": [
+            3.41,
+            4.12
+          ],
+          "kind": "interior"
+        }
+      ],
+      "openings": [
+        {
+          "id": "d1",
+          "wall": "w5",
+          "type": "door",
+          "offset": 0.9,
+          "width": 0.6
+        },
+        {
+          "id": "pass1",
+          "wall": "w5",
+          "type": "passage",
+          "offset": 1.9,
+          "width": 1
+        },
+        {
+          "id": "d2",
+          "wall": "w6",
+          "type": "door",
+          "offset": 0.8,
+          "width": 0.6
+        },
+        {
+          "id": "win1",
+          "wall": "w1",
+          "type": "window",
+          "offset": 0.7,
+          "width": 0.4
+        },
+        {
+          "id": "win2",
+          "wall": "w1",
+          "type": "window",
+          "offset": 2.1,
+          "width": 0.4
+        },
+        {
+          "id": "win3",
+          "wall": "w1",
+          "type": "window",
+          "offset": 3.5,
+          "width": 0.4
+        },
+        {
+          "id": "win4",
+          "wall": "w1",
+          "type": "window",
+          "offset": 5.2,
+          "width": 0.4
+        },
+        {
+          "id": "d3",
+          "wall": "w4",
+          "type": "door",
+          "offset": 1.2,
+          "width": 0.6
+        },
+        {
+          "id": "d4",
+          "wall": "w2",
+          "type": "door",
+          "offset": 1.2,
+          "width": 0.6
+        }
+      ],
+      "rooms": [
+        {
+          "id": "r1",
+          "name": "Studio",
+          "polygon": [
+            [
+              0,
+              0
+            ],
+            [
+              6.46,
+              0
+            ],
+            [
+              6.46,
+              1.95
+            ],
+            [
+              0,
+              1.95
+            ]
+          ]
+        },
+        {
+          "id": "r2",
+          "name": "Hall",
+          "polygon": [
+            [
+              0,
+              1.95
+            ],
+            [
+              3.41,
+              1.95
+            ],
+            [
+              3.41,
+              4.12
+            ],
+            [
+              0,
+              4.12
+            ]
+          ]
+        },
+        {
+          "id": "r3",
+          "name": "Bathroom",
+          "polygon": [
+            [
+              3.41,
+              1.95
+            ],
+            [
+              6.46,
+              1.95
+            ],
+            [
+              6.46,
+              4.12
+            ],
+            [
+              3.41,
+              4.12
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

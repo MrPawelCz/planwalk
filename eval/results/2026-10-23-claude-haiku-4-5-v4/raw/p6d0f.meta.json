@@ -1,0 +1,32 @@
+{
+  "code": "p6d0f",
+  "model": "claude-haiku-4-5",
+  "status": "ok",
+  "finishedAt": "2026-10-24 00:25:03",
+  "ms": 117217,
+  "answerChars": 2390,
+  "bare": false,
+  "fenceBlocks": 1,
+  "charsBeforeBlock": 0,
+  "charsAfterBlock": 250,
+  "extractOk": true,
+  "repairs": [
+    "took the code block"
+  ],
+  "planFile": "readings/p6d0f.plan.json",
+  "call": {
+    "turns": 2,
+    "costUsdList": 0.088651,
+    "inputTokens": 3385,
+    "outputTokens": 15330,
+    "subtype": "success"
+  },
+  "attempts": [
+    {
+      "n": 1,
+      "at": "2026-10-24 00:25:03",
+      "ms": 117217,
+      "ok": true
+    }
+  ]
+}

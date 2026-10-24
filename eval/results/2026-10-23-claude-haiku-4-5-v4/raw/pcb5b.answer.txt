@@ -1,0 +1,56 @@
+```json
+{
+  "version": 1,
+  "name": "Two-bedroom apartment with hall, living room, kitchen and bathroom",
+  "units": "m",
+  "meta": {
+    "source": "image",
+    "scale_note": "Scale derived from standard 0.85 m door width as reference. Floor plan drawn at approximately 12 m wide × 8 m tall (96 m² total), giving conversion of 1 pixel ≈ 0.02 m. Confidence: medium. No printed dimensions available on plan.",
+    "notes": "Layout traced from wall lines and room labels visible on plan. Door positions marked by arc symbols (quarter-circles indicating swing direction). Window positions marked by triple lines on exterior walls. Wall locations estimated from visual proportions. No furniture symbols are clearly drawn."
+  },
+  "levels": [
+    {
+      "id": "L0",
+      "walls": [
+        { "id": "w1", "from": [0, 0], "to": [12, 0], "kind": "exterior" },
+        { "id": "w2", "from": [12, 0], "to": [12.4, 8], "kind": "exterior" },
+        { "id": "w3", "from": [12.4, 8], "to": [0, 8], "kind": "exterior" },
+        { "id": "w4", "from": [0, 8], "to": [0, 0], "kind": "exterior" },
+        { "id": "w5", "from": [6, 0], "to": [6, 3], "kind": "interior" },
+        { "id": "w6", "from": [0, 3], "to": [6, 3], "kind": "interior" },
+        { "id": "w7", "from": [6, 3], "to": [12, 3], "kind": "interior" },
+        { "id": "w8", "from": [2, 3], "to": [2, 8], "kind": "interior" },
+        { "id": "w9", "from": [7.6, 3], "to": [7.6, 8], "kind": "interior" },
+        { "id": "w10", "from": [10, 3], "to": [10, 8], "kind": "interior" }
+      ],
+      "openings": [
+        { "id": "d1", "wall": "w6", "type": "door", "offset": 1.2, "width": 0.85 },
+        { "id": "d2", "wall": "w7", "type": "door", "offset": 1.5, "width": 0.85 },
+        { "id": "d3", "wall": "w8", "type": "door", "offset": 1.8, "width": 0.85 },
+        { "id": "d4", "wall": "w9", "type": "door", "offset": 1.8, "width": 0.85 },
+        { "id": "d5", "wall": "w10", "type": "door", "offset": 1.8, "width": 0.85 },
+        { "id": "d6", "wall": "w4", "type": "door", "offset": 1.5, "width": 0.85 },
+        { "id": "w1a", "wall": "w1", "type": "window", "offset": 1, "width": 1.2 },
+        { "id": "w1b", "wall": "w1", "type": "window", "offset": 3, "width": 1.2 },
+        { "id": "w1c", "wall": "w1", "type": "window", "offset": 5.5, "width": 1.2 },
+        { "id": "w1d", "wall": "w1", "type": "window", "offset": 8, "width": 1.2 },
+        { "id": "w1e", "wall": "w1", "type": "window", "offset": 10, "width": 1.2 }
+      ],
+      "rooms": [
+        { "id": "r1", "name": "Bedroom 1", "polygon": [[0, 0], [6, 0], [6, 3], [0, 3]], "area": 18 },
+        { "id": "r2", "name": "Bedroom 2", "polygon": [[6, 0], [12, 0], [12, 3], [6, 3]], "area": 18 },
+        { "id": "r3", "name": "Hall", "polygon": [[0, 3], [2, 3], [2, 8], [0, 8]], "area": 10 },
+        { "id": "r4", "name": "Living room", "polygon": [[2, 3], [7.6, 3], [7.6, 8], [2, 8]], "area": 28 },
+        { "id": "r5", "name": "Kitchen", "polygon": [[7.6, 3], [10, 3], [10, 8], [7.6, 8]], "area": 12 },
+        { "id": "r6", "name": "Bathroom", "polygon": [[10, 3], [12.4, 3], [12.4, 8], [10, 8]], "area": 6.2 }
+      ]
+    }
+  ]
+}
+```
+
+Scale: derived from standard door width of 0.85 m; plan drawn at roughly 12 m × 8 m (96 m²), estimated from visual proportions (no printed dimensions).
+
+Doors marked by arc symbols on walls; windows by triple lines on exterior. Right side appears to extend slightly, accommodating the bathroom.
+
+No furniture drawn; only architectural walls and openings traced from floor plan.
