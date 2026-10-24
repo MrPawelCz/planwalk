@@ -1,10 +1,11 @@
 // Sharing a model: copy a link that holds the plan (short form, or the long form for older browsers) and share the current view
 // as a picture. Strings live here as { en, pl }; main.js creates the controls once, puts them in the toolbar and calls update().
-import { makeT } from './i18n.js';
+import { getLang, makeT } from './i18n.js';
 import { openDialog } from './dialogs.js';
 import { loadMessage } from './load-errors.js';
 import { copyText } from './prompt.js';
 import { canCompress, encodeLong, encodeShort } from './share-link.js';
+import { linkBase } from './site.js';
 
 export const STRINGS = {
   en: {
@@ -50,8 +51,9 @@ const CSS = `
 .pw-share-dlg p{margin:0 0 8px}
 `;
 
-// The page address without its query (that only sets the language or the look) and without the fragment.
-const pageUrl = () => `${location.protocol}//${location.host}${location.pathname}`;
+// Where a link starts: the page address without its query (that only sets the language or the look) and without the fragment,
+// or the public page when this one was not opened from the web, for example from a downloaded file (see site.js).
+const pageUrl = () => linkBase(location, getLang());
 
 // The PNG of Export PNG arrives as a data URL; turning it into a Blob right away keeps the share sheet inside the tap.
 function pngBlob(dataUrl) {
