@@ -120,7 +120,7 @@ test('the banner of a bad link follows a language switch, and of two links opene
       const real = new Real(format), gate = window.__gate;
       if (!gate) return real;
       const out = real.writable.getWriter();
-      return { readable: real.readable, writable: new WritableStream({ write: async (c) => { await gate; await out.write(c); }, close: async () => { await gate; await out.close(); } }) };
+      return { readable: real.readable, writable: new WritableStream({ write: async (c) => { await gate; await out.write(c); }, close: async () => { await gate; await out.close(); window.__closed = true; } }) };
     };
   })();`;
   const page = await openPage({ query: '?lang=en', beforeLoad: hold });
@@ -142,7 +142,8 @@ test('the banner of a bad link follows a language switch, and of two links opene
     assert.ok(await page.waitFor(hasModel));
     const shown = await snapshot(page);
     await page.evaluate('window.__open()');
-    await new Promise((r) => setTimeout(r, 800)); // long enough for the held link to finish
+    assert.ok(await page.waitFor('window.__closed === true'), 'the held link was let through');
+    await new Promise((r) => setTimeout(r, 500)); // and has had time to finish
     assert.equal(await snapshot(page), shown, 'the older link did not replace the newer one');
     assert.equal(await banner(page), null);
     assert.deepEqual(page.pageErrors, []);
