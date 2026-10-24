@@ -384,3 +384,18 @@ test('a stair stays when the skipped level shares its id with a level that is ke
   assert.deepEqual(r.skipped.map((s) => s.kind + ':' + s.id), ['level:L1']);
   assert.deepEqual(modelOf(r).levels[0].stairs.map((s) => s.id), ['stair-1', 'out']);
 });
+
+test('ignored lists the unknown properties that were left out, with their path and name', () => {
+  const p = flat();
+  p.levels[0].rooms[0].furniture = [];
+  p.levels[0].rooms[1].furniture = [];
+  p.levels[0].walls[0].conf = 0.9;
+  p.notes = 'drawn from a photo';
+  p['x-tool'] = 1; // allowed silently, so it is not listed
+  const r = analyzePlan(p);
+  assert.deepEqual(r.ignored.map((i) => `${i.path}|${i.key}`).sort(), ['levels[0].rooms[0]|furniture', 'levels[0].rooms[1]|furniture', 'levels[0].walls[0]|conf', '|notes']);
+  assert.equal(r.warnings.filter((i) => i.code === 'W116').length, r.ignored.length);
+  assert.deepEqual(analyzePlan(flat()).ignored, []);
+  assert.deepEqual(analyzePlan(p, { strict: true }).ignored, [], 'with strict they are errors, not ignored');
+  assert.deepEqual(analyzePlan('not a plan').ignored, []);
+});

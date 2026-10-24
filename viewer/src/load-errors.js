@@ -11,6 +11,7 @@ export const strings = {
     skippedHelp: 'Press "Copy fix request" and paste it into the AI chat to get the plan corrected.',
     skippedWall: 'its wall was skipped',
     skippedLevel: 'the level it leads to was skipped',
+    ignored: '{n} property ignored: {names}. planwalk does not use it.|{n} properties ignored: {names}. planwalk does not use them.',
     skippedMore: 'and {n} more',
     kindWall: 'wall',
     kindOpening: 'opening',
@@ -48,6 +49,7 @@ export const strings = {
     skippedHelp: 'Kliknij „Kopiuj prośbę o poprawkę” i wklej ją do czatu z AI, żeby poprawił plan.',
     skippedWall: 'jego ściana została pominięta',
     skippedLevel: 'piętro, do którego prowadzą, zostało pominięte',
+    ignored: 'Zignorowano {n} nieznaną właściwość: {names}. planwalk jej nie używa.|Zignorowano {n} nieznane właściwości: {names}. planwalk ich nie używa.|Zignorowano {n} nieznanych właściwości: {names}. planwalk ich nie używa.',
     skippedMore: 'i jeszcze {n}',
     kindWall: 'ściana',
     kindOpening: 'otwór',
@@ -143,6 +145,16 @@ export function skippedLines(skipped, max = 10) {
   const lines = skipped.slice(0, max).map(skippedLine);
   if (skipped.length > max) lines.push(t('skippedMore', { n: skipped.length - max }));
   return lines;
+}
+
+// The unknown properties the validator left out (result.ignored) as a banner line for a plan that is shown whole: how many, and the
+// names of the first three (the names are plan text and stay as written).
+export function ignoredMessage(ignored) {
+  const names = [...new Set(ignored.map((i) => i.key))];
+  const shown = names.slice(0, 3).join(', ') + (names.length > 3 ? ` ${t('skippedMore', { n: names.length - 3 })}` : '');
+  const forms = t('ignored').split('|');
+  const n = ignored.length;
+  return `${forms[Math.min(pluralIndex(n), forms.length - 1)].replace(/\{n\}/g, String(n)).replace('{names}', () => shown)} ${t('skippedHelp')}`;
 }
 
 // extractJson says in its repairs when an answer held several plans and it took the last one; the person is told too.

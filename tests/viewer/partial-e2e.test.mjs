@@ -36,7 +36,13 @@ test('a reading with unknown properties opens with warnings; a reading with one 
     assert.equal(a.partial, false);
     assert.equal(a.warnings.filter((w) => w.code === 'W116').length, 4);
     assert.deepEqual(await counts(page), expectedCounts(stray));
-    assert.equal(await banner(page), null, 'a whole plan needs no banner');
+    assert.match(await banner(page), /^4 properties ignored: furniture\. planwalk does not use them\. Press "Copy fix request"/, 'a whole plan, but the banner says what was ignored');
+    assert.deepEqual(await lines(page), [], 'one line, no list');
+    assert.ok(await page.evaluate('[...document.querySelectorAll(".pw-banner button")].some((b) => b.textContent === "Copy fix request")'), 'a fix request can be copied');
+    await page.evaluate('window.planwalk.setLang("pl")');
+    assert.match(await banner(page), /^Zignorowano 4 nieznane właściwości: furniture\. planwalk ich nie używa\./);
+    if (evidence) await page.screenshot(join(evidence, 'ignored-p6530-pl.jpg'));
+    await page.evaluate('window.planwalk.setLang("en")');
     assert.match(await issues(page), /W116/, 'the warnings are listed in the issues panel');
 
     // p6b7c: an opening of width 0 on the upper floor.

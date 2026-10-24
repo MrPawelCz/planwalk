@@ -651,8 +651,9 @@ function analyze(input, strict) {
     (code[0] === 'E' ? errors : warnings).push(issue);
   };
   let repairs = []; // what extractJson had to change to read a text input, as short English phrases
+  let ignored = []; // the unknown properties that are left out of the model (W116): { path, key }
   // skipped: the elements left out of `salvaged` ({ kind, id, path, why, reason }); partial: elements were left out, but a model can be built from the rest
-  const result = (normalized, salvaged = null, dropped = 0, skipped = []) => ({ ok: errors.length === 0, errors, warnings, normalized, salvaged, dropped, repairs, skipped, partial: normalized === null && skipped.length > 0 && hasWalls(salvaged) });
+  const result = (normalized, salvaged = null, dropped = 0, skipped = []) => ({ ok: errors.length === 0, errors, warnings, normalized, salvaged, dropped, repairs, skipped, partial: normalized === null && skipped.length > 0 && hasWalls(salvaged), ignored });
 
   let plan = input;
   if (typeof input === 'string') {
@@ -688,10 +689,10 @@ function analyze(input, strict) {
   // are allowed silently. A key that every object has ("__proto__", "constructor", "toString") stays an error. A plan with so many
   // violations that the check gave up is not read leniently.
   const hard = [], unknown = [];
-  const ignored = new Map(); // object -> the keys of it that the model ignores: a number that is not finite inside one is no error
+  const unread = new Map(); // object -> the keys of it that the model ignores: a number that is not finite inside one is no error
   const ignore = (v) => {
     const owner = nodeAt(plan, v.segs);
-    if (owner !== null && typeof owner === 'object') ignored.set(owner, (ignored.get(owner) || new Set()).add(v.key));
+    if (owner !== null && typeof owner === 'object') unread.set(owner, (unread.get(owner) || new Set()).add(v.key));
   };
   for (const v of viol) {
     if (v.rule === 'additionalProperties' && !truncated) {
@@ -701,7 +702,7 @@ function analyze(input, strict) {
     hard.push(v);
   }
   const nonFinite = [];
-  scanNonFinite(plan, [], nonFinite, new Set(), ignored);
+  scanNonFinite(plan, [], nonFinite, new Set(), unread);
   hard.slice(0, MAX_E002).forEach((v) => {
     add('E002', formatPath(v.segs), entityIdAt(plan, v.segs), `schema violation: ${v.detail} (JSON pointer ${jsonPointer(v.segs)}, rule "${v.rule}")`, v.fix);
   });
@@ -709,6 +710,7 @@ function analyze(input, strict) {
     add('E002', '', undefined, `${truncated ? 'at least ' : ''}${hard.length - MAX_E002} more schema violations are not listed (only the first ${MAX_E002} are shown)`, 'Fix the listed problems first, then validate again.');
   }
   unknown.forEach((v) => add('W116', formatPath(v.segs), entityIdAt(plan, v.segs), `${v.detail}; planwalk ignores it`, v.fix));
+  ignored = unknown.map((v) => ({ path: formatPath(v.segs), key: clip(v.key) }));
   nonFinite.slice(0, 20).forEach((n) => {
     add('E010', formatPath(n.segs), entityIdAt(plan, n.segs), `${formatPath(n.segs)} is ${String(n.value)}, which is not a finite number`,
       `Replace the value at ${formatPath(n.segs)} with a real number (measure it from the drawing or estimate it).`);
