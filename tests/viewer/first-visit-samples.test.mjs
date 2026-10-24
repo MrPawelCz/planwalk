@@ -17,8 +17,9 @@ test('the sample line and the link name exist in English and Polish, differ betw
     for (const lang of ['en', 'pl']) assert.ok(typeof STRINGS[lang][key] === 'string' && STRINGS[lang][key].trim().length > 0, `${lang}.${key}`);
     assert.notEqual(STRINGS.pl[key], STRINGS.en[key], key);
   }
-  assert.equal(STRINGS.en.samples, 'No floor plan at hand? Try a sample drawing:');
-  assert.equal(STRINGS.pl.samples, 'Nie masz rzutu pod ręką? Wypróbuj przykładowy rysunek:');
+  assert.equal(STRINGS.en.samples, 'No floor plan at hand? Try a sample:');
+  assert.equal(STRINGS.pl.samples, 'Nie masz rzutu pod ręką? Przykłady:');
+  for (const lang of ['en', 'pl']) assert.ok(STRINGS[lang].samples.length <= 38, `${lang}.samples stays short enough for one row on a 360 px phone (first-visit-e2e measures the row)`);
   for (const lang of ['en', 'pl']) assert.match(STRINGS[lang].sampleLink, /\{n\}/, `${lang}.sampleLink has the number`);
 });
 

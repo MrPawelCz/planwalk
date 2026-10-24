@@ -142,22 +142,29 @@ test('with both prompts embedded the card offers a switch: the page language is 
   assert.deepEqual(await pressed(), ['EN:true', 'PL:false']);
 }, both));
 
-test('on a phone the card is one line above the bottom bar and opens to a sheet that leaves the middle of the screen free; the touch targets are 44 px', { skip, timeout: 90000 }, withPage({ width: 390, height: 664, mobile: true, dpr: 2 }, async (p) => {
-  const box = () => p.evaluate(`(() => { const c = ${q('.pw-visit')}.getBoundingClientRect(), m = ${q('.pw-modebar')}.getBoundingClientRect(); return { l: c.left, r: c.right, t: c.top, b: c.bottom, modeTop: m.top, vw: innerWidth, vh: innerHeight, small: [...document.querySelectorAll('.pw-visit-btns button, .pw-visit-x, .pw-visit-open, .pw-visit-note button')].filter((b) => b.getBoundingClientRect().height < 44 || b.getBoundingClientRect().width < 44).length }; })()`);
-  let r = await box();
-  assert.equal(r.l, 0);
-  assert.equal(r.r, r.vw);
-  assert.equal(r.b, r.modeTop, 'the card stands on the bottom bar, not under it');
-  assert.ok(r.t > r.vh * 0.6, `the line starts at ${r.t} of ${r.vh}`);
-  assert.equal(r.small, 0, 'every button is at least 44 px');
-  await p.evaluate(`${q('.pw-visit-open')}.click(); ${settle}`);
-  r = await box();
-  assert.equal(r.l, 0);
-  assert.equal(r.r, r.vw);
-  assert.equal(r.b, r.modeTop);
-  assert.ok(r.t > r.vh * 0.35, `the open card starts at ${r.t} of ${r.vh}`);
-  assert.equal(r.small, 0, 'every button is at least 44 px');
-}));
+// The open sheet keeps its top at least 12 px below the 35 percent line of the screen (232 px of 664), in both languages: the Polish
+// texts are the longest, and a phone with another font should not push the sheet over the model.
+for (const [lang, search] of [['en', ''], ['pl', '?lang=pl']]) {
+  test(`on a phone the card (${lang}) is one line above the bottom bar and opens to a sheet that leaves the middle of the screen free, 12 px to spare; the touch targets are 44 px`, { skip, timeout: 90000 }, withPage({ width: 390, height: 664, mobile: true, dpr: 2, search }, async (p) => {
+    const box = () => p.evaluate(`(() => { const c = ${q('.pw-visit')}.getBoundingClientRect(), m = ${q('.pw-modebar')}.getBoundingClientRect(); return { l: c.left, r: c.right, t: c.top, b: c.bottom, modeTop: m.top, vw: innerWidth, vh: innerHeight, small: [...document.querySelectorAll('.pw-visit-btns button, .pw-visit-x, .pw-visit-open, .pw-visit-note button')].filter((b) => b.getBoundingClientRect().height < 44 || b.getBoundingClientRect().width < 44).length }; })()`);
+    let r = await box();
+    assert.equal(r.l, 0);
+    assert.equal(r.r, r.vw);
+    assert.equal(r.b, r.modeTop, 'the card stands on the bottom bar, not under it');
+    assert.ok(r.t > r.vh * 0.6, `the line starts at ${r.t} of ${r.vh}`);
+    assert.equal(r.b - r.t, 49, 'the collapsed card is one 48 px line and its border, as before the sample line');
+    assert.equal(r.small, 0, 'every button is at least 44 px');
+    await p.evaluate(`${q('.pw-visit-open')}.click(); ${settle}`);
+    r = await box();
+    assert.equal(r.l, 0);
+    assert.equal(r.r, r.vw);
+    assert.equal(r.b, r.modeTop);
+    assert.ok(r.t >= r.vh * 0.35 + 12, `the open card starts at ${r.t} of ${r.vh}, ${(r.t - r.vh * 0.35).toFixed(1)} px below the 35 percent line (12 px are needed)`);
+    assert.equal(r.small, 0, 'every button is at least 44 px');
+    const rows = await p.evaluate(`(() => { const s = ${q('.pw-visit-samples')}, lh = parseFloat(getComputedStyle(s).lineHeight); return Math.round(s.querySelector('span').getBoundingClientRect().height / lh); })()`);
+    assert.equal(rows, 1, 'the sample line is one row on a 390 px phone');
+  }));
+}
 
 test('Help has real links that open in a new tab, a Copy prompt button, the privacy facts and the cropping tip', { skip, timeout: 90000 }, withPage({}, async (p) => {
   await p.evaluate(`[...document.querySelectorAll('.pw-bar button')].find((b) => b.textContent === 'Help').click(); ${settle}`);

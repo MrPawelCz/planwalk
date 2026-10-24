@@ -66,12 +66,20 @@ test('the readings of the samples are kept in eval/results/2026-10-24-samples: t
   const folder = join(root, 'eval/results/2026-10-24-samples');
   const readme = readFileSync(join(folder, 'README.md'), 'utf8');
   const scores = readFileSync(join(folder, 'scores.md'), 'utf8');
+  const samplesReadme = readFileSync(join(dir, 'README.md'), 'utf8');
+  const codes = [];
   for (const name of NAMES) {
     const sha = createHash('sha256').update(readFileSync(join(dir, name))).digest('hex');
     const row = readme.split('\n').find((l) => l.startsWith(`| ${name} |`));
     assert.ok(row, `${name} has a row in the results README`);
     assert.ok(row.includes(sha), `${name} sha256 ${sha} is in its row: the picture that was read is the picture that is shipped`);
     const code = row.split('|')[2].trim();
+    codes.push(code);
+    const seed = Number(row.split('|')[3]);
+    assert.ok(Number.isInteger(seed) && seed >= 601, `${name} has a generator seed (${seed}) outside the seeds of the benchmark runs`);
+    assert.ok(!(seed >= 401 && seed <= 412) && !(seed >= 501 && seed <= 504), `${name} seed ${seed} is in a benchmark range`);
+    const listed = samplesReadme.split('\n').find((l) => l.startsWith(`| \`${name}\` |`));
+    assert.ok(listed && listed.trim().endsWith(`| ${seed} |`), `docs/samples/README.md names the seed ${seed} of ${name}`);
     const scoreRow = scores.split('\n').find((l) => l.startsWith(`| ${code} |`));
     assert.ok(scoreRow, `${code} has a row in scores.md`);
     const composite = Number(scoreRow.split('|')[4]);
@@ -79,4 +87,5 @@ test('the readings of the samples are kept in eval/results/2026-10-24-samples: t
     assert.match(scoreRow, /\| yes \|[^|]*\|$/, `${code} reads without validator errors`);
     assert.ok(existsSync(join(folder, 'readings-samples', `${code}.plan.json`)), `${code} reading is kept`);
   }
+  assert.deepEqual(readdirSync(join(folder, 'readings-samples')).sort(), codes.map((c) => `${c}.plan.json`).sort(), 'only the readings of the shipped pictures are kept');
 });
