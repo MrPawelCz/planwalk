@@ -21,7 +21,7 @@ All notable changes to planwalk are listed here. The format follows [Keep a Chan
 - `tools/make-social-preview.mjs` renders the link preview images (1200 by 630 JPEG, each under 150 KB, `--lang en,pl`) from the viewer; it needs Node 22 and Chrome.
 - `README.pl.md` and `docs/FAQ.pl.md` rewritten against the Polish interface: buttons and windows are named as the page spells them, jargon is explained at first use, the FAQ says how to send a model to a phone, and a test checks every quoted name against the interface strings.
 - `docs/BENCHMARK.md` has a second table, "Loads in the viewer", next to the strict "Loads" column: clean, warnings only, errors listed, partial and skipped elements for every stored run. `node eval/loads.mjs` prints it (`--json` for each plan); a test checks that the table equals the output and that every stored score file is still reproduced, because the scorer stays strict.
-- A row in "Runs by model" for the small model read with the current prompt (v4): mean composite 50.3 against 34.4 with the first prompt, and 9 of 12 plans load against 4 (`eval/results/2026-10-23-claude-haiku-4-5-v4/`). README and both FAQs quote the two rows.
+- A row in "Runs by model" for the small model read with the current prompt (v4): mean composite 50.3 against 34.4 with the first prompt, and 9 of 12 plans load against 4 (the run is stored in `eval/results/`). README and both FAQs quote the two rows.
 
 ### Changed
 
