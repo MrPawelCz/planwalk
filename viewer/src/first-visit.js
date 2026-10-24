@@ -2,6 +2,12 @@
 // user's own flat and offers the prompt. Strings live here as { en, pl }; main.js only creates the card and calls show/hide.
 import { makeT } from './i18n.js';
 import { copyText, defaultPromptLang, promptFor, promptLangs } from './prompt.js';
+import { SITE } from './site.js';
+
+// The sample drawings (docs/samples, published next to the page by .github/workflows/pages.yml). They are links to the public
+// site, so a page opened from a file or a fork offers the same pictures; clicking one is a navigation, the page itself requests nothing.
+export const SAMPLE_COUNT = 3;
+export const sampleUrl = (n) => `${SITE}samples/sample-${n}.png`;
 
 export const STRINGS = {
   en: {
@@ -11,6 +17,8 @@ export const STRINGS = {
     step1: 'Copy the prompt',
     step2: 'Give it to an AI chat together with a picture of your floor plan',
     step3: 'Paste the answer here',
+    samples: 'No floor plan at hand? Try a sample drawing:',
+    sampleLink: 'Sample drawing {n}',
     copy: 'Copy prompt', copied: 'Copied', copyFailed: 'Could not copy',
     copiedNext: 'Copied. Now open an AI chat, add the picture of your floor plan and paste the prompt.',
     paste: 'Paste answer', open: 'Open file', hide: 'Hide',
@@ -25,6 +33,8 @@ export const STRINGS = {
     step1: 'Skopiuj polecenie dla AI (prompt)',
     step2: 'Otwórz czat z AI, który przyjmuje zdjęcia, dodaj zdjęcie rzutu (zwykle przyciskiem ze spinaczem albo plusem) i wklej polecenie',
     step3: 'Wróć tutaj i wklej odpowiedź AI (wystarczy cały tekst)',
+    samples: 'Nie masz rzutu pod ręką? Wypróbuj przykładowy rysunek:',
+    sampleLink: 'Przykładowy rysunek {n}',
     copy: 'Kopiuj polecenie', copied: 'Skopiowano', copyFailed: 'Nie udało się skopiować',
     copiedNext: 'Skopiowano. Teraz otwórz czat z AI, dodaj zdjęcie rzutu i wklej polecenie.',
     paste: 'Wklej odpowiedź', open: 'Otwórz plik', hide: 'Ukryj',
@@ -42,6 +52,12 @@ const CSS = `
 .pw-visit-lead{margin:0 0 6px}
 .pw-visit-next{margin:8px 0 0;padding:6px 9px;background:#eaf3e6;border-radius:8px;font-size:12px}
 .pw-visit ol{margin:0 0 9px;padding-left:19px}.pw-visit li{margin:2px 0}
+.pw-visit-samples{display:flex;align-items:center;gap:6px;margin:0 0 9px;font-size:12px;line-height:1.4;color:#4a453d}
+.pw-visit-samples>span{flex:1 1 auto;min-width:0}
+.pw-visit-samples>span+span{flex:none;display:flex;gap:3px}
+.pw-visit-samples a{position:relative;display:block;min-width:18px;padding:0 8px;border:1px solid rgba(80,72,62,.25);border-radius:6px;background:#fbfaf7;color:inherit;font-weight:600;text-align:center;text-decoration:none}
+.pw-visit-samples a::after{content:'';position:absolute;left:-2px;right:-2px;top:-20px;bottom:-5px}
+.pw-visit-samples a:hover{background:#f0ece3}
 .pw-visit button{font:inherit;color:inherit;background:#fbfaf7;border:1px solid rgba(80,72,62,.25);border-radius:7px;padding:5px 11px;cursor:pointer}
 .pw-visit button:hover{background:#f0ece3}
 .pw-visit .pw-primary{background:#37332d;border-color:#37332d;color:#fff}.pw-visit .pw-primary:hover{background:#4a453d}
@@ -53,7 +69,9 @@ const CSS = `
 .pw-visit.pw-visit-line{display:flex;align-items:center;padding:0}
 .pw-visit-line .pw-visit-open{flex:1;min-height:48px;padding:0 14px;text-align:left;font-size:14px;background:none;border:0;border-radius:12px 0 0 0}
 .pw-visit.pw-visit-line .pw-visit-x{position:static;flex:none;width:48px;height:48px}
-@media (max-width:640px){.pw-visit{left:0;right:0;bottom:0;width:auto;border-radius:14px 14px 0 0;border-width:1px 0 0;padding:12px 14px calc(10px + env(safe-area-inset-bottom))}.pw-visit button{min-height:44px}.pw-visit .pw-visit-x{width:44px;height:44px;top:0;right:0}.pw-visit-note button{min-height:28px}}
+@media (max-width:640px){.pw-visit{left:0;right:0;bottom:0;width:auto;border-radius:14px 14px 0 0;border-width:1px 0 0;padding:12px 14px calc(10px + env(safe-area-inset-bottom))}.pw-visit button{min-height:44px}.pw-visit .pw-visit-x{width:44px;height:44px;top:0;right:0}.pw-visit-note button{min-height:28px}
+/* the sheet must not grow past the share of the screen it had before the sample line: tighter gaps, nothing removed */
+.pw-visit{padding-top:9px}.pw-visit h2{margin-bottom:3px}.pw-visit-lead{margin-bottom:3px}.pw-visit ol{margin-bottom:6px}.pw-visit li{margin:1px 0}.pw-visit-samples{margin-bottom:6px}.pw-visit-note{margin-top:4px}}
 `;
 
 // The open-file control of this build, when it has one: the window.planwalk.openFile() hook or a .pw-open-file button.
@@ -107,6 +125,8 @@ export function createFirstVisit({ h, onPaste }) {
       h('h2', {}, t('title')),
       h('p', { class: 'pw-visit-lead' }, t('lead')),
       h('ol', {}, [t('step1'), t('step2'), t('step3')].map((s) => h('li', {}, s))),
+      h('p', { class: 'pw-visit-samples' }, h('span', {}, t('samples')),
+        h('span', {}, Array.from({ length: SAMPLE_COUNT }, (_, i) => h('a', { href: sampleUrl(i + 1), target: '_blank', rel: 'noopener', download: `planwalk-sample-${i + 1}.png`, title: t('sampleLink', { n: i + 1 }), 'aria-label': t('sampleLink', { n: i + 1 }) }, String(i + 1))))),
       h('div', { class: 'pw-visit-btns' }, copy, h('button', { type: 'button', onclick: () => { next.hidden = true; onPaste(); } }, t('paste')), open ? h('button', { type: 'button', onclick: () => { next.hidden = true; open(); } }, t('open')) : null),
       next,
       ...(langPick ? [langPick] : []),

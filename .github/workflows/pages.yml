@@ -26,6 +26,7 @@ jobs:
           cp docs/social-preview.jpg site/social-preview.jpg
           cp docs/social-preview-pl.jpg site/social-preview-pl.jpg
           cp -r examples site/examples
+          cp -r docs/samples site/samples
       - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5.0.0
       - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
         with:
