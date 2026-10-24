@@ -104,8 +104,10 @@ var CAPS = Object.freeze({
   // characters of a user supplied value that a message may repeat
   message: 1500,
   // characters of one message or fix text
-  violations: 1e3
-  // schema violations collected before the check gives up
+  violations: 1e3,
+  // schema violations collected before the check gives up (unknown properties are not counted)
+  unknownProperties: 1e3
+  // unknown properties collected (W116); the rest are left out without a word and the plan is still read
 });
 var hasOwn = (obj, key) => Object.prototype.hasOwnProperty.call(obj, key);
 function clip(value, max = CAPS.echo) {
@@ -625,12 +627,14 @@ function schemaHint(s, root) {
   if (node.type) return article(Array.isArray(node.type) ? node.type[0] : node.type);
   return "a valid value";
 }
+var unknownKept = 0;
 function checkSchema(value, schema, root = schema, segs = [], out = []) {
   suggestBudget = SUGGEST_BUDGET;
+  unknownKept = 0;
   return checkNode(value, schema, root, segs, out);
 }
 function checkNode(value, schema, root, segs, out) {
-  if (out.length >= CAPS.violations) return out;
+  if (out.length - unknownKept >= CAPS.violations) return out;
   const push = (rule, detail, fix, at = segs, extra) => out.push({ segs: at.slice(), rule, detail, fix, ...extra });
   const where2 = segs.length ? formatPath(segs) : "the plan";
   if (schema.$ref) checkNode(value, resolveRef(schema.$ref, root), root, segs, out);
@@ -697,6 +701,8 @@ function checkNode(value, schema, root, segs, out) {
     for (const k of Object.keys(value)) {
       if (hasOwn(props, k)) checkNode(value[k], props[k], root, [...segs, k], out);
       else if (schema.additionalProperties === false) {
+        if (unknownKept >= CAPS.unknownProperties) continue;
+        unknownKept++;
         const near = closest(k, Object.keys(props));
         push(
           "additionalProperties",
@@ -717,16 +723,20 @@ var FATAL_RULES = /* @__PURE__ */ new Set(["type", "required", "const", "minimum
 var KIND = { walls: "wall", openings: "opening", rooms: "room", stairs: "stair", furniture: "furniture" };
 var isExtensionKey = (k) => k === "$schema" || typeof k === "string" && k.startsWith("x-");
 var hasWalls = (norm) => !!norm && norm.levels.some((L) => L.walls.length > 0);
-function scanNonFinite(v, segs, out, seen) {
+function scanNonFinite(v, segs, out, seen, ignored) {
   if (typeof v === "number") {
     if (!Number.isFinite(v)) out.push({ segs: segs.slice(), value: v });
     return;
   }
   if (v === null || typeof v !== "object" || seen.has(v) || segs.length > 12) return;
   seen.add(v);
-  if (Array.isArray(v)) v.forEach((x, i) => scanNonFinite(x, [...segs, i], out, seen));
-  else for (const k of Object.keys(v)) scanNonFinite(v[k], [...segs, k], out, seen);
+  if (Array.isArray(v)) v.forEach((x, i) => scanNonFinite(x, [...segs, i], out, seen, ignored));
+  else {
+    const skip = ignored.get(v);
+    for (const k of Object.keys(v)) if (!skip || !skip.has(k)) scanNonFinite(v[k], [...segs, k], out, seen, ignored);
+  }
 }
+var nodeAt = (plan, segs) => segs.reduce((node, seg) => node === null || typeof node !== "object" ? void 0 : node[seg], plan);
 function entityIdAt(plan, segs) {
   let node = plan, id;
   for (const seg of segs) {
@@ -1008,7 +1018,8 @@ function analyze(input, strict) {
     (code[0] === "E" ? errors2 : warnings2).push(issue);
   };
   let repairs2 = [];
-  const result = (normalized, salvaged = null, dropped2 = 0, skipped3 = []) => ({ ok: errors2.length === 0, errors: errors2, warnings: warnings2, normalized, salvaged, dropped: dropped2, repairs: repairs2, skipped: skipped3, partial: normalized === null && hasWalls(salvaged) });
+  let ignored = [];
+  const result = (normalized, salvaged = null, dropped2 = 0, skipped3 = []) => ({ ok: errors2.length === 0, errors: errors2, warnings: warnings2, normalized, salvaged, dropped: dropped2, repairs: repairs2, skipped: skipped3, partial: normalized === null && skipped3.length > 0 && hasWalls(salvaged), ignored });
   let plan = input;
   if (typeof input === "string") {
     const parsed = parseText(input);
@@ -1047,22 +1058,31 @@ function analyze(input, strict) {
     ));
     return result(null);
   }
-  const nonFinite = [];
-  scanNonFinite(plan, [], nonFinite, /* @__PURE__ */ new Set());
   const viol = checkSchema(plan, PLAN_SCHEMA);
   const MAX_E002 = 40;
-  const truncated = viol.length >= CAPS.violations;
+  const truncated = viol.filter((v) => v.rule !== "additionalProperties").length >= CAPS.violations;
   const hard = [], unknown = [];
+  const unread = /* @__PURE__ */ new Map();
+  const ignore = (v) => {
+    const owner = nodeAt(plan, v.segs);
+    if (owner !== null && typeof owner === "object") unread.set(owner, (unread.get(owner) || /* @__PURE__ */ new Set()).add(v.key));
+  };
   for (const v of viol) {
     if (v.rule === "additionalProperties" && !truncated) {
-      if (isExtensionKey(v.key)) continue;
+      if (isExtensionKey(v.key)) {
+        ignore(v);
+        continue;
+      }
       if (!strict && !(v.key in Object.prototype)) {
+        ignore(v);
         unknown.push(v);
         continue;
       }
     }
     hard.push(v);
   }
+  const nonFinite = [];
+  scanNonFinite(plan, [], nonFinite, /* @__PURE__ */ new Set(), unread);
   hard.slice(0, MAX_E002).forEach((v) => {
     add("E002", formatPath(v.segs), entityIdAt(plan, v.segs), `schema violation: ${v.detail} (JSON pointer ${jsonPointer(v.segs)}, rule "${v.rule}")`, v.fix);
   });
@@ -1070,6 +1090,7 @@ function analyze(input, strict) {
     add("E002", "", void 0, `${truncated ? "at least " : ""}${hard.length - MAX_E002} more schema violations are not listed (only the first ${MAX_E002} are shown)`, "Fix the listed problems first, then validate again.");
   }
   unknown.forEach((v) => add("W116", formatPath(v.segs), entityIdAt(plan, v.segs), `${v.detail}; planwalk ignores it`, v.fix));
+  ignored = unknown.map((v) => ({ path: formatPath(v.segs), key: clip(v.key) }));
   nonFinite.slice(0, 20).forEach((n) => {
     add(
       "E010",
@@ -1112,15 +1133,20 @@ function analyze(input, strict) {
     bad.levels.add(li);
     reason(`L${li}`);
   };
-  for (const v of viol) if (FATAL_RULES.has(v.rule)) markBad(v.segs, v.rule, v.detail);
+  for (const v of viol) if (FATAL_RULES.has(v.rule) || v.segs[0] === "units") markBad(v.segs, v.rule, v.detail);
   for (const n of nonFinite) markBad(n.segs, "type", `${formatPath(n.segs)} is ${String(n.value)}, which is not a finite number`);
+  const unusable = bad.noLevels || bad.units;
   let model = null;
   const skipped2 = [];
   const skip = (kind, e, path, why, reason = "invalid") => skipped2.push({ kind, id: isObj2(e) && typeof e.id === "string" ? clip(e.id) : void 0, path, why: clip(why, CAPS.message), reason });
-  if (!bad.noLevels && Array.isArray(plan.levels)) {
-    const pruned = { version: 1, name: typeof plan.name === "string" ? plan.name : "", units: !bad.units && hasOwn(UNIT_TO_M, plan.units ?? "m") ? plan.units ?? "m" : "m", meta: isObj2(plan.meta) ? plan.meta : {}, levels: [] };
+  if (!unusable && Array.isArray(plan.levels)) {
+    const pruned = { version: 1, name: typeof plan.name === "string" ? plan.name : "", units: plan.units ?? "m", meta: isObj2(plan.meta) ? plan.meta : {}, levels: [] };
     const map = [];
     const drop = { wallIds: /* @__PURE__ */ new Map(), incomplete: /* @__PURE__ */ new Set(), levelsDropped: false };
+    const keptIds = /* @__PURE__ */ new Set(), lostIds = /* @__PURE__ */ new Set();
+    plan.levels.forEach((lv, li) => {
+      if (isObj2(lv) && typeof lv.id === "string") (bad.levels.has(li) ? lostIds : keptIds).add(lv.id);
+    });
     plan.levels.forEach((lv, li) => {
       if (!isObj2(lv) || bad.levels.has(li)) {
         drop.levelsDropped = true;
@@ -1146,6 +1172,10 @@ function analyze(input, strict) {
             drop.incomplete.add(li);
             return;
           }
+          if (key === "stairs" && lostIds.has(e.to_level) && !keptIds.has(e.to_level)) {
+            skip("stair", e, path, "the level it leads to was skipped", "level-skipped");
+            return;
+          }
           copy[key].push(e);
           idx[key].push(j);
         });
@@ -1159,11 +1189,11 @@ function analyze(input, strict) {
       add("E001", "", void 0, `the plan could not be interpreted: ${String(e && e.message ? e.message : e)}`, "Check that the plan follows docs/SPEC.md section 2.");
     }
   }
-  const dropped = Array.isArray(plan.levels) ? plan.levels.length - (model ? model.map.length : 0) + (model ? model.norm.levels.reduce((s, _L, k) => s + ENTITY_ARRAYS.reduce((t, key) => t + ((Array.isArray(plan.levels[model.map[k].li][key]) ? plan.levels[model.map[k].li][key].length : 0) - model.map[k].idx[key].length), 0), 0) : 0) : 0;
+  const dropped = model ? plan.levels.length - model.map.length + model.norm.levels.reduce((s, _L, k) => s + ENTITY_ARRAYS.reduce((t, key) => t + ((Array.isArray(plan.levels[model.map[k].li][key]) ? plan.levels[model.map[k].li][key].length : 0) - model.map[k].idx[key].length), 0), 0) : 0;
   const structural = errors2.some((e) => e.code === "E001" || e.code === "E010");
   const finish = () => {
     let normalized = null;
-    if (!structural && dropped === 0 && !bad.noLevels && Array.isArray(plan.levels)) {
+    if (!structural && dropped === 0 && !unusable && Array.isArray(plan.levels)) {
       try {
         normalized = normalizePlan(plan);
       } catch {
