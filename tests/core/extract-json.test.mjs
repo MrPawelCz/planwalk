@@ -1,10 +1,22 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { extractJson } from '../../src/core/extract-json.js';
 import { MAX_PLAN_CHARS } from '../../src/core/limits.js';
 import { analyzePlan, validatePlan } from '../../src/core/validate.js';
 
 import { plan, bare, variants } from './paste-variants.mjs';
+
+// The hostile inputs run in a child process (extract-json-child.mjs) that is killed after 10 s: node:test cannot interrupt a
+// synchronous loop, so code that stopped being linear would stall the whole file instead of failing one test.
+const CHILD = fileURLToPath(new URL('./extract-json-child.mjs', import.meta.url));
+function child(name, mark = '') {
+  const r = spawnSync(process.execPath, [CHILD, name, mark], { encoding: 'utf8', timeout: 10000, killSignal: 'SIGKILL', maxBuffer: 1 << 20 });
+  const hung = r.error && r.error.code === 'ETIMEDOUT';
+  assert.equal(r.status, 0, `${name} ${mark}: ${hung ? 'no answer after 10 s, extractJson is no longer linear' : r.error || r.signal || r.stderr}`);
+  return JSON.parse(r.stdout.trim().split('\n').pop());
+}
 
 test('seven chat styles (and more) load to the same plan', () => {
   for (const [name, text] of Object.entries(variants)) {
@@ -95,11 +107,10 @@ test('text over the size limit is refused before any work', () => {
 
 test('a last line that is one long run of fence marks is read in linear time', () => {
   for (const mark of ['`', '~']) {
-    for (const text of [mark.repeat(MAX_PLAN_CHARS), `{"a":1}\n${mark.repeat(MAX_PLAN_CHARS - 20)}`, `${mark.repeat(MAX_PLAN_CHARS - 10)}x`, `x\n${mark.repeat(100000)} json`, `\n  ${mark.repeat(50000)}\n`]) {
-      const t0 = Date.now();
-      const r = extractJson(text);
-      assert.equal(typeof r.ok, 'boolean');
-      assert.ok(Date.now() - t0 < 300, `took ${Date.now() - t0} ms for ${text.slice(0, 12)}`);
+    for (const name of ['marksOnly', 'marksAfterObject', 'marksThenText', 'marksWithLabel', 'marksIndented']) {
+      const out = child(name, mark);
+      assert.equal(typeof out.ok, 'boolean', `${name} ${mark}`);
+      assert.ok(out.ms < 300, `${name} ${mark}: took ${out.ms} ms`);
     }
   }
   // the pattern still finds an ordinary block, also one fenced with a longer run of marks
@@ -206,24 +217,15 @@ test('zero width joiners and non-joiners inside strings are kept, noise between 
 });
 
 test('hostile input stays fast with the wider search', () => {
-  const t0 = Date.now();
-  const cases = [
-    '{ '.repeat(600000),
-    '{"a":'.repeat(300000),
-    '```\n{\n```\n'.repeat(200000),
-    '{"levels": [] '.repeat(100000),
-    '{"levels": []}'.repeat(100000),
-    '{"a": 1}'.repeat(200000),
-    `${'{x} '.repeat(300000)}${bare}`,
-  ];
-  for (const c of cases) {
-    const t1 = Date.now();
-    const r = extractJson(c.slice(0, MAX_PLAN_CHARS));
-    assert.equal(typeof r.ok, 'boolean');
-    assert.ok(Date.now() - t1 < 2500, `${c.slice(0, 12)}: ${Date.now() - t1} ms`);
+  let total = 0;
+  for (const name of ['openBraces', 'openObjects', 'fencedBraces', 'unclosedPlans', 'closedPlans', 'closedObjects', 'snippetsThenPlan']) {
+    const out = child(name);
+    assert.equal(typeof out.ok, 'boolean', name);
+    assert.ok(out.ms < 2500, `${name}: ${out.ms} ms`);
+    total += out.ms;
+    if (name === 'snippetsThenPlan') assert.deepEqual(out.value, plan, 'plain brace snippets are free, the plan behind them is found');
   }
-  assert.ok(Date.now() - t0 < 9000, `${Date.now() - t0} ms in all`);
-  assert.deepEqual(extractJson(`${'{x} '.repeat(300000)}${bare}`.slice(-1800000)).value, plan, 'plain brace snippets are free, the plan behind them is found');
+  assert.ok(total < 9000, `${total} ms in all`);
 });
 
 test('a zero width joiner or non-joiner after a typographic closing quote or before the first key does not break the plan', () => {
