@@ -6,6 +6,7 @@
 // Strings live here as { en, pl }; other modules put their controls into the Menu with registerExtra() (the end of the Menu, and the
 // desktop toolbar) or registerMenuHead() (the title row, phone only).
 import { makeT } from './i18n.js';
+import { followBar } from './under-bar.js';
 
 export const STRINGS = {
   en: {
@@ -84,7 +85,7 @@ const CSS = `
 .pw-compact .pw-issues-close{width:44px;margin:-8px -10px 0 6px;font-size:26px}
 .pw-compact .pw-visit{left:0;right:0;bottom:var(--pw-modebar-h);box-sizing:border-box;width:auto;max-height:calc(100% - 140px);overflow:auto;border-width:1px 0 0;border-radius:14px 14px 0 0}
 .pw-compact.pw-landscape .pw-visit{padding-bottom:calc(10px + env(safe-area-inset-bottom))}
-.pw-compact .pw-mini{z-index:2;top:calc(max(8px,env(safe-area-inset-top)) + 60px);bottom:auto;right:max(10px,env(safe-area-inset-right));width:112px;height:112px}
+.pw-compact .pw-mini{z-index:2;top:var(--pw-mini-top,calc(max(8px,env(safe-area-inset-top)) + 60px));bottom:auto;right:max(10px,env(safe-area-inset-right));width:112px;height:112px}
 .pw-compact .pw-hint{bottom:calc(var(--pw-modebar-h) + 12px)}
 .pw-compact .pw-dlg button,.pw-compact .pw-banner button,.pw-compact .pw-about button{min-height:44px;min-width:44px}
 .pw-dlg-xrow{display:none}
@@ -97,6 +98,10 @@ const CSS = `
 .pw-compact .pw-visit-note button{min-height:44px;min-width:44px;font-size:14px}
 .pw-compact .pw-visit-note{font-size:14px}
 .pw-compact .pw-banner-x{font-size:24px}
+.pw-compact .pw-banner{flex-wrap:wrap}
+.pw-compact .pw-banner > span:first-child{flex:1 1 calc(100% - 56px);min-width:0}
+.pw-compact .pw-banner .pw-banner-x{order:1}
+.pw-compact .pw-banner > button:not(.pw-banner-x){order:2;flex:1 1 100%}
 .pw-compact .pw-dlg select,.pw-compact .pw-dlg input,.pw-compact .pw-dlg textarea,.pw-compact select,.pw-compact textarea{font-size:16px}
 .pw-compact .pw-help a{display:inline-block;padding:10px 0}
 .pw-compact .pw-walkzones{display:flex;position:absolute;z-index:1;inset:0;pointer-events:none}
@@ -142,6 +147,8 @@ export function createCompact({ h, root, bar, nameEl, badge, tag, issuesEl, hint
   const zones = h('div', { class: 'pw-walkzones', hidden: '', 'aria-hidden': 'true' }, zoneL, zoneR);
   const touchHint = h('div', { class: 'pw-touchhint', hidden: '', 'aria-hidden': 'true' });
   root.append(modebar, scrim, menu, zones, touchHint);
+  // On a phone Walk's minimap sits under the top bar, and under the banner and the "Loaded" line while they are up (the stylesheet reads --pw-mini-top).
+  const placeMini = followBar(mini, () => bar, () => [root.querySelector('.pw-banner'), root.querySelector('.pw-loaded.on')], '--pw-mini-top');
 
   function texts() {
     menuBtn.textContent = t('menu'); menuTitle.textContent = t('menu');
@@ -232,6 +239,7 @@ export function createCompact({ h, root, bar, nameEl, badge, tag, issuesEl, hint
   // main.js calls this after every change of mode, plan or issues.
   function sync(s) {
     const entering = s.mode === 'walk' && mode !== 'walk';
+    placeMini();
     mode = s.mode; hasModel = !!s.hasModel; issueCount = s.issues; errorCount = s.errors || 0;
     texts();
     update();

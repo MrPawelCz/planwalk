@@ -3,6 +3,7 @@
 // Strings stay in this module (see i18n.js); plan text only ever reaches the page as text nodes.
 import { makeT, getLang } from './i18n.js';
 import { MAX_PLAN_CHARS } from '../../src/core/limits.js';
+import { followBar } from './under-bar.js';
 
 export const strings = {
   en: {
@@ -219,10 +220,7 @@ export function createNotices(root, getBar) {
     action.hidden = !shown.act;
     if (shown.act) { action.textContent = shown.act.label; action.onclick = shown.act.run; }
   };
-  const place = () => {
-    const bar = getBar && getBar();
-    el.style.top = `${bar ? Math.round(bar.getBoundingClientRect().bottom) + 8 : 10}px`;
-  };
+  const place = followBar(el, getBar); // stays under the toolbar when it wraps differently (window resize, late font, other language)
   captions();
   const fileIn = h('input', { type: 'file', accept: '.json,.txt,application/json,text/plain', hidden: '' });
   root.append(el, fileIn);
