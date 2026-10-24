@@ -1,0 +1,32 @@
+{
+  "code": "pd4cd",
+  "model": "claude-haiku-4-5",
+  "status": "ok",
+  "finishedAt": "2026-10-24 00:34:23",
+  "ms": 133795,
+  "answerChars": 5325,
+  "bare": false,
+  "fenceBlocks": 1,
+  "charsBeforeBlock": 0,
+  "charsAfterBlock": 499,
+  "extractOk": true,
+  "repairs": [
+    "took the code block"
+  ],
+  "planFile": "readings-sketch-zoom/pd4cd.plan.json",
+  "call": {
+    "turns": 3,
+    "costUsdList": 0.101063,
+    "inputTokens": 3387,
+    "outputTokens": 17526,
+    "subtype": "success"
+  },
+  "attempts": [
+    {
+      "n": 1,
+      "at": "2026-10-24 00:34:23",
+      "ms": 133795,
+      "ok": true
+    }
+  ]
+}

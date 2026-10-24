@@ -6,14 +6,35 @@ All notable changes to planwalk are listed here. The format follows [Keep a Chan
 
 ### Added
 
-- Copy link makes a short link that holds the plan (`#z=`, compressed, about 70 to 75 percent shorter than the `#plan=` form for the two examples); Copy long link makes the older `#plan=` form for browsers without compression. Older `#plan=` links keep opening. Share image hands the current view to the share sheet where the browser supports it, otherwise it downloads the PNG.
+- Copy link makes a short link that holds the plan (`#z=`, compressed, about 70 to 76 percent shorter than the `#plan=` form for the two examples); Copy long link makes the older `#plan=` form for browsers without compression. Older `#plan=` links keep opening. Share image hands the current view to the share sheet where the browser supports it, otherwise it downloads the PNG.
 - A damaged or oversized `#z=` link gives the plain banner and leaves the model on screen; a link typed into the address bar of an open tab is now read too.
 - Top view on a touch screen: one finger pans and two fingers pinch to zoom around the point between them (the mouse wheel zoomed already). The language switch (PL or EN) sits in the title row of the phone Menu.
+- Polish interface for the whole page: toolbar, dialogs, issues panel, room labels (decimal comma) and the Copy fix request text follow the language. The browser language decides, `?lang=pl` or `?lang=en` overrides it, and a PL | EN switch in Help changes it at once and keeps the model, the camera and your choices. The validator's own messages stay in English.
+- Phone layout for a window 700 px wide or less, or 450 px high or less (a phone on its side): a bar of one row with a Menu that holds the other controls, a bottom bar with the four modes (on its side they stay in the top bar), issues behind a badge that opens a sheet (on a desktop the issues panel gets a close cross and a badge to bring it back), the first visit card folded to one line until tapped, 44 px touch targets and a close cross in the dialogs.
+- The first view, Orbit, Top and the PNG export frame the whole model inside the area that no bar or card covers, with a small margin; turning the phone frames it again until you move the camera.
+- Walk on a touch screen in the phone layout shows two shaded halves and a one line hint ("Drag the left half to walk, the right half to look") for 4 seconds after you enter it.
+- A status line, "Loaded: name, 4 rooms" ("Wczytano: nazwa, 4 pomieszczenia" in Polish), shows for about 5 seconds under the toolbar after a paste, a dropped or opened file or a `?plan=` download. It takes no taps and screen readers announce it politely; links (`#plan=`, `#z=`) and the embedded plan stay quiet.
+- Tolerant reading in the validator: an unknown property is warning W116 and is ignored instead of error E002 (`$schema` and `x-` keys pass without a word), and `{ strict: true }` keeps E002. The result lists the elements that were left out (`skipped`: kind, id, path, reason) and sets `partial` when a model can be built from the rest.
+- A plan in which only some elements have errors opens without them: a banner says how many were skipped, lists the first ten and offers Copy fix request. With no wall left nothing opens and the model on screen stays. `window.planwalk.load` returns `partial` and `skipped`.
+- Command line (`tools/validate.mjs` and the skill's copy): an unknown property is a warning that does not fail the check and `--strict` fails on it; a last line says how many elements the viewer would skip, when there are any; `--json` adds `partial` and `skipped`.
+- A Polish landing page at `/pl/` with its own link preview image (`docs/social-preview-pl.jpg`). `tools/localize-page.mjs` derives it from the built demo page (Polish title, description and preview tags, `lang="pl"`, Polish as the default interface language, `?lang=en` still wins); the Pages workflow publishes both pages and both images, and the English page links to the Polish one with canonical and hreflang tags.
+- `tools/make-social-preview.mjs` renders the link preview images (1200 by 630 JPEG, each under 150 KB, `--lang en,pl`) from the viewer; it needs Node 22 and Chrome.
+- `README.pl.md` and `docs/FAQ.pl.md` rewritten against the Polish interface: buttons and windows are named as the page spells them, jargon is explained at first use, the FAQ says how to send a model to a phone, and a test checks every quoted name against the interface strings.
+- `docs/BENCHMARK.md` has a second table, "Loads in the viewer", next to the strict "Loads" column: clean, warnings only, errors listed, partial and skipped elements for every stored run. `node eval/loads.mjs` prints it (`--json` for each plan); a test checks that the table equals the output and that every stored score file is still reproduced, because the scorer stays strict.
+- A row in "Runs by model" for the small model read with the current prompt (v4): mean composite 50.3 against 34.4 with the first prompt, and 9 of 12 plans load against 4 (the run is stored in `eval/results/`). README and both FAQs quote the two rows.
 
 ### Changed
 
 - Walk starts looking along the longest free view from the starting point (a ray test in 5 degree steps against walls and furniture) instead of straight at the wall opposite the door.
 - Copy link and Copy long link keep the phone Menu open, so the "Copied" confirmation on the button can be seen.
+- Export file names (GLB, PNG, standalone HTML) turn Polish letters into plain letters instead of dropping them: "Żółta kuchnia 2" is saved as `zolta-kuchnia-2` (it was `ta-kuchnia-2`).
+- The "Scale estimated" badge appears only when the scale note says the scale itself is a guess, in English or Polish. A printed basis such as "scale from the printed dimension" cancels a note that only says the scale is missing, and words about other things ("wall thickness estimated") no longer raise it.
+- The first visit card opens with one sentence on what planwalk does, says what to do next after Copy prompt (open a chat, add the picture, paste the prompt), and its privacy line says that the picture of the plan goes only to the chat you choose, so names and addresses should be cropped out first. Copy prompt copies the Polish prompt on a Polish page, and also when the browser lists Polish anywhere and the language was not picked by hand.
+- README and FAQ describe Copy link (the plan is stored inside the link) and say that a plan with a few mistakes still opens.
+
+### Fixed
+
+- Help, About, the paste dialog and the share dialog open and close in Safari before 15.4, which has no `showModal`: one helper (`viewer/src/dialogs.js`) opens every dialog and Escape closes it.
 
 ## [0.1.1] - 2026-10-24
 

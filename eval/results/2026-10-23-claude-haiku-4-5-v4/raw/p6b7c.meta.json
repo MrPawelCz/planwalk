@@ -1,0 +1,32 @@
+{
+  "code": "p6b7c",
+  "model": "claude-haiku-4-5",
+  "status": "ok",
+  "finishedAt": "2026-10-24 00:24:44",
+  "ms": 189625,
+  "answerChars": 6866,
+  "bare": false,
+  "fenceBlocks": 1,
+  "charsBeforeBlock": 0,
+  "charsAfterBlock": 806,
+  "extractOk": true,
+  "repairs": [
+    "took the code block"
+  ],
+  "planFile": "readings/p6b7c.plan.json",
+  "call": {
+    "turns": 2,
+    "costUsdList": 0.149808,
+    "inputTokens": 3385,
+    "outputTokens": 27281,
+    "subtype": "success"
+  },
+  "attempts": [
+    {
+      "n": 1,
+      "at": "2026-10-24 00:24:44",
+      "ms": 189625,
+      "ok": true
+    }
+  ]
+}

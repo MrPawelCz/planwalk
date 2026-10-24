@@ -79,7 +79,7 @@ test('the facts of the English README are in README.pl.md too, and the two point
 });
 
 test('both Polish files say, like the English README, that only the English prompt was measured and the Polish prompt and drawings were not', () => {
-  for (const file of FILES) assert.match(read(file), /Polecenie po angielsku zmierzono na modelach z tabeli „Runs by model”.*Polskiego polecenia (ani|i) polskich rysunków jeszcze nie mierzono/, file);
+  for (const file of FILES) assert.match(read(file), /(Polecenie po angielsku zmierzono|Angielską wersję polecenia sprawdzono) na modelach z tabeli „Runs by model”.*(Polskiego polecenia|polskiej wersji) (ani|i) polskich rysunków (jeszcze )?nie mierzono/, file);
 });
 
 test('the behaviour sentences of README.pl.md are backed by the code', () => {

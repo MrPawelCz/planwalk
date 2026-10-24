@@ -1,0 +1,32 @@
+{
+  "code": "p6ea2",
+  "model": "claude-haiku-4-5",
+  "status": "ok",
+  "finishedAt": "2026-10-24 00:27:13",
+  "ms": 149218,
+  "answerChars": 5985,
+  "bare": false,
+  "fenceBlocks": 1,
+  "charsBeforeBlock": 0,
+  "charsAfterBlock": 691,
+  "extractOk": true,
+  "repairs": [
+    "took the code block"
+  ],
+  "planFile": "readings/p6ea2.plan.json",
+  "call": {
+    "turns": 2,
+    "costUsdList": 0.12179499999999999,
+    "inputTokens": 3386,
+    "outputTokens": 21667,
+    "subtype": "success"
+  },
+  "attempts": [
+    {
+      "n": 1,
+      "at": "2026-10-24 00:27:13",
+      "ms": 149218,
+      "ok": true
+    }
+  ]
+}

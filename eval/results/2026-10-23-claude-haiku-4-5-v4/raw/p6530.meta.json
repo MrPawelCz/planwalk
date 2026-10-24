@@ -1,0 +1,39 @@
+{
+  "code": "p6530",
+  "model": "claude-haiku-4-5",
+  "status": "ok",
+  "finishedAt": "2026-10-24 00:23:06",
+  "ms": 182533,
+  "answerChars": 4564,
+  "bare": false,
+  "fenceBlocks": 1,
+  "charsBeforeBlock": 0,
+  "charsAfterBlock": 737,
+  "extractOk": true,
+  "repairs": [
+    "took the code block"
+  ],
+  "planFile": "readings/p6530.plan.json",
+  "call": {
+    "turns": 2,
+    "costUsdList": 0.13863099999999998,
+    "inputTokens": 3385,
+    "outputTokens": 25102,
+    "subtype": "success"
+  },
+  "attempts": [
+    {
+      "n": 1,
+      "at": "2026-10-24 00:19:33",
+      "ms": 300268,
+      "ok": false,
+      "error": "timeout after 5 minutes"
+    },
+    {
+      "n": 2,
+      "at": "2026-10-24 00:23:06",
+      "ms": 182533,
+      "ok": true
+    }
+  ]
+}
