@@ -117,7 +117,7 @@ test('the paragraph about real plans in README.pl.md is short, names the report 
   assert.ok(m, 'heading and one paragraph');
   const sentences = m[1].split(/\.\s+(?=\p{Lu})/u);
   assert.ok(sentences.length >= 2 && sentences.length <= 4, `2 to 4 sentences, found ${sentences.length}`);
-  for (const must of ['„Zgłoś zły odczyt”', '`Real listing plans`', '[`docs/BENCHMARK.md`](docs/BENCHMARK.md)', 'umiarkowany']) assert.ok(m[1].includes(must), `the paragraph lacks ${must}`);
+  for (const must of ['„Zgłoś zły odczyt”', '`Real listing plans`', '[`docs/BENCHMARK.md`](docs/BENCHMARK.md)', 'mieszany']) assert.ok(m[1].includes(must), `the paragraph lacks ${must}`);
   const section = benchmarkSection();
   if (!section) return t.skip('docs/BENCHMARK.md has no "Real listing plans" section in this tree');
   checkFigures(read('README.pl.md'), section);
