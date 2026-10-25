@@ -1,12 +1,12 @@
 # Benchmark: reading plan images into planwalk JSON
 
-**Runs A and B are a synthetic smoke test.** They check that the pipeline (prompt, JSON format, validator, scorer) works on clean generated plans whose truth is known. They are **not** evidence that planwalk reads real floor plans well. No real drawing has been measured in this repository.
+**Runs A and B are a synthetic smoke test.** They check that the pipeline (prompt, JSON format, validator, scorer) works on clean generated plans whose truth is known. They are **not** evidence that planwalk reads real floor plans well. A first, small measurement on real plans from public listings is reported separately in [Real listing plans](#real-listing-plans); its result is moderate, and the plans and readings behind it are not in this repository.
 
-In runs A and B: one reading per plan, one reader, small numbers, no repeated runs. The reader was not blind to the harness, so this is a self-check, not an independent evaluation. Read "Leaks and limits" before quoting any number.
+In runs A and B: one reading per plan, one reader, small numbers, no repeated runs. The reader was not blind to the harness, so this is a self-check, not an independent evaluation. Read "Leaks and limits" (synthetic runs) and "Limits of this measurement" (real plans) before quoting any number.
 
 ## Result in one line
 
-Claude Sonnet 5.5, reading by hand in an agent session, read 12 clean synthetic plans in four drawing styles (including hand-style sketches with no printed scale) with a mean composite of 99.6 out of 100 (lowest 98.3, highest 100). Synthetic plans are easy, so this shows the pipeline works and gives a baseline for catching regressions; it does not show accuracy on real plans. One-shot calls with the prompt alone, from this model and from others, score lower on the same plans: see "Runs by model".
+Claude Sonnet 5.5, reading by hand in an agent session, read 12 clean synthetic plans in four drawing styles (including hand-style sketches with no printed scale) with a mean composite of 99.6 out of 100 (lowest 98.3, highest 100). Synthetic plans are easy, so this shows the pipeline works and gives a baseline for catching regressions; it does not show accuracy on real plans. One-shot calls with the prompt alone, from this model and from others, score lower on the same plans: see "Runs by model". On 20 real plans from public listings (a first, hand-picked set), one call with the prompt gave 3 of 30 readings by Claude Sonnet 5.5 that needed no change and 12 that needed at most three small corrections; Claude Haiku 4.5 gave 0 of 20 on either count (see "Real listing plans").
 
 ## What was built
 
@@ -60,14 +60,14 @@ Both runs together: 12 plans, mean 99.6, lowest 98.3, highest 100.
 ## Weak cases, honestly
 
 - **p6d0f (sketch, studio), openings F1 89.** One of nine openings was missed by the matching tolerance: the left window was read 1.7 m wide, the truth is 1.2 m (centre 0.2 m off, width 0.5 m off). In a wobbly sketch the window ends are ambiguous. Window extents are the least reliable part of a sketch reading; the rooms were right.
-- **Scale from doors in sketches (run B).** 1.3 to 3.6 percent error. This works here because the generator makes every door 0.8 to 0.9 m and a plan has five to eight doors, so the average is stable. Real plans have doors from 0.7 to 1.0 m and sometimes none that are drawn to standard; expect worse.
+- **Scale from doors in sketches (run B).** 1.3 to 3.6 percent error. This works here because the generator makes every door 0.8 to 0.9 m and a plan has five to eight doors, so the average is stable. Real plans have doors from 0.7 to 1.0 m and sometimes none that are drawn to standard; expect worse. On real plans (see "Real listing plans") a main room was more than about 20 percent off in width or depth against the printed numbers in 6 of the 17 readings by Claude Sonnet 5.5 that loaded.
 - **Unlabeled balcony (p7035, pc9c8).** The balcony is a box with thin walls and no printed name. The reader named it "Balcony" because a door leads to it; the prompt says to use printed names and not invent rooms, so this was a judgement call. In p7035 (run A) the call was made blind and matched the truth. In pc9c8 (run B) it was not blind: run A had been scored by then and had shown that the unlabeled box counts as a room. A stricter reading would lose one room of six in both.
 - **Mean IoU 97 on p7035 and pc9c8, 98 on pd4cd:** small boundary offsets from reading coordinates off pixels. In pc9c8 the balcony came out 3.0 m wide against 3.2 m in the truth (the scale was a 3.5 percent guess); the other rooms were not analysed one by one.
 - Nothing scored below 98 because the plans are easy (see below), not because the reading was careful in a way that would carry over.
 
 ## Runs by model
 
-Runs A and B were read by one model inside an agent session. This section reads the same 12 pictures (seeds 401 to 408 and 501 to 504) with several models, one call per picture, and scores them with the same scorer. All rows are on synthetic plans and say nothing about real drawings.
+Runs A and B were read by one model inside an agent session. This section reads the same 12 pictures (seeds 401 to 408 and 501 to 504) with several models, one call per picture, and scores them with the same scorer. All rows are on synthetic plans and say nothing about real drawings (see "Real listing plans" for those).
 
 **What a row measures.** One call per picture. The model gets the picture and the prompt (the text of [`PROMPT.md`](PROMPT.md) that a person pastes; the heading, the steps and the tips around it are not sent) and answers once. There are no tools except looking at the picture, no repository, no memory of the earlier pictures, no render-and-compare repair loop and no second round after validator messages. That is the plain "paste the prompt into a chat" route, not the agent route of `skill/planwalk`. The picture file is called `plan.png`, so its name does not tell the style. The answer is kept as it came (commentary and code block). The plan is taken out of it with the viewer's own extractor (`src/core/extract-json.js`, the first version of it), and two columns count what a person would meet: how often the whole answer was strict JSON as it stood ("Bare JSON") and how often the extracted plan loaded with no validator error ("Loads"). A picture whose answer gave no plan scores 0, as in `eval/report.mjs`.
 
@@ -138,6 +138,71 @@ Limits of these rows:
 - The calls ran in an empty folder that held only the picture, and `key.json` and `truth/` stayed closed until the readings were frozen. The generator, the drawer and the prompt are public in this repository, which a model with that in its training data could have seen.
 - The pictures were drawn again from the seeds when these rows were made. The truth is the same as in runs A and B; PNG pixels can differ slightly between Chrome versions.
 
+## Real listing plans
+
+This section reports one measurement on real floor plans from public property listings. It is a first look with a small, hand-picked set, not a benchmark, and it says nothing about drawings that look different from these 20.
+
+### What was measured
+
+- **The set:** 20 floor plan images from public property listings, 10 in Poland and 10 in the UK, 187 printed rooms and spaces in total. The plans were picked by hand to cover different drawing styles, not drawn at random. 7 of the 10 Polish plans are developer unit cards; the UK plans all come from estate agents. 10 of the 20 show more than one floor. 9 of the 10 Polish plans print the area of every room; none of the 10 UK plans does (10 of 10 print room dimensions instead, in metres and feet).
+- **The readers:** Claude Sonnet 5.5 and Claude Haiku 4.5, one call per plan with the published prompt (version 4: [`PROMPT.md`](PROMPT.md) for the UK plans, [`PROMPT.pl.md`](PROMPT.pl.md) for the Polish plans; Sonnet also read the Polish plans with the English prompt). Each reading was one call with the picture and the prompt only, like pasting into a chat. No corrections and no second try for a poor answer; the only repeat was one call of Claude Haiku 4.5 on a Polish plan that returned nothing within 6 minutes.
+- **Not measured:** Gemini (no credentials on the machine that ran the test, so it was not run) and gpt-6-astra (the login of the provider had expired when the run started, so it was not run). Nothing is claimed about them on real plans.
+- **The truth:** what is printed on each image (room labels, printed areas or dimensions, printed total area), transcribed by an AI reader that saw only the image, then a second time by another independent reader (three readers shared the plans), and checked by eye on 5 of the 20 plans. Nothing was measured from the drawing geometry. The two transcriptions agree on 178 of 178 compared room areas and on 20 of 20 printed totals; they differ in some printed room dimensions that the second transcriber copied from dimension chains (8 of 178 pairs) and in how many floors a sheet shows. This agreement catches random slips, not a systematic misreading that both readers share.
+- **Frozen first:** all readings were saved and fingerprinted (SHA-256) before any comparison with the truth, and the scoring is a script that gives the same numbers from the same inputs.
+
+### How the readings did, by script
+
+"Loads" means the validator reports no errors (warnings are allowed; this is the validator's default mode, as in the viewer, so a property the schema does not know is a warning here, while the strict "Loads" column of "Runs by model" counts it as an error). "Labels found" is the share of printed room labels that a read room matches one to one by name (exact, a close spelling or a synonym); it does not check where the room is. "Matching rooms" is the share of read rooms that match a printed room. "Area error" is the median absolute difference between the area of the read room (the polygon net of the walls) and the printed area; where a plan prints only dimensions (the UK plans), the printed width times depth is used, which overstates rooms that are not rectangles. "Rooms within 10%" counts the rooms whose area is within 10 percent of the printed one. "Total vs printed" is the median of the read total area divided by the printed total, which is sometimes a gross figure that includes walls.
+
+| Reading | Readings | Loads | Labels found | Matching rooms | Median area error | Rooms within 10% | Total vs printed |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Claude Haiku 4.5, Polish listings, Polish prompt | 10 | 6 of 10 (60%) | 96.5% | 91.1% | 19.1% (63 rooms) | 37% | 0.74 |
+| Claude Haiku 4.5, UK listings, English prompt | 10 | 3 of 10 (30%) | 94.1% | 86.8% | 11.2% (71 rooms) | 41% | 0.81 |
+| Claude Sonnet 5.5, Polish listings, English prompt | 10 | 10 of 10 (100%) | 100.0% | 100.0% | 5.9% (66 rooms) | 67% | 1.02 |
+| Claude Sonnet 5.5, Polish listings, Polish prompt | 10 | 9 of 10 (90%) | 100.0% | 100.0% | 4.8% (66 rooms) | 73% | 1.03 |
+| Claude Sonnet 5.5, UK listings, English prompt | 10 | 8 of 10 (80%) | 87.0% | 97.1% | 5.9% (63 rooms) | 59% | 0.74 |
+| **Claude Sonnet 5.5, all readings** | 30 | 27 of 30 (90%) | 95.7% | 99.0% | 5.4% (195 rooms) | 66% | 1.00 |
+| **Claude Haiku 4.5, all readings** | 20 | 9 of 20 (45%) | 95.3% | 89.0% | 12.8% (134 rooms) | 39% | 0.78 |
+
+### Would the reading be useful, as judged by an AI judge
+
+A judge that is a separate Claude Sonnet 5.5 instance, in a clean context, saw the printed plan and a top-down picture of each reading that loads (rooms, doors, windows and stairs, without furniture), with the readings of all models mixed under random letters, and gave one verdict per picture. **usable** means nothing needs changing: someone looking round the flat would not notice an error (the judge was told to pick small-fixes when in doubt). **small-fixes** means at most three separate corrections would make it usable. **wrong** means more than three corrections, a missing or merged main room, a missing floor or a wrong overall shape. A reading that does not load has no picture and counts here as "does not load", never as usable.
+
+| Reading | Readings | usable | small-fixes | wrong | Does not load |
+|---|---:|---:|---:|---:|---:|
+| Claude Haiku 4.5, Polish listings, Polish prompt | 10 | 0 | 0 | 6 | 4 |
+| Claude Haiku 4.5, UK listings, English prompt | 10 | 0 | 0 | 3 | 7 |
+| Claude Sonnet 5.5, Polish listings, English prompt | 10 | 1 | 5 | 4 | 0 |
+| Claude Sonnet 5.5, Polish listings, Polish prompt | 10 | 2 | 5 | 2 | 1 |
+| Claude Sonnet 5.5, UK listings, English prompt | 10 | 0 | 2 | 6 | 2 |
+| **Claude Sonnet 5.5, all readings** | 30 | 3 | 12 | 12 | 3 |
+| **Claude Haiku 4.5, all readings** | 20 | 0 | 0 | 9 | 11 |
+
+Of the 30 Claude Sonnet 5.5 readings, 3 (10%) were usable as they came, 12 (40%) needed at most three corrections, 12 (40%) were wrong and 3 (10%) did not load. The Polish listings, mostly developer unit cards, did better than the UK agent drawings: usable or small-fixes for 13 of 20 readings against 2 of 10. Of the 20 Claude Haiku 4.5 readings, 0 were usable, 0 needed small fixes, 9 were wrong and 11 did not load.
+
+How far to trust the judge: a second, independent pass by three other judge instances, on the same pictures with the same letters, gave the same verdict for 30 of 36 pictures (83%; Cohen's kappa 0.71), the same answer to "wrong or not" for 32 of 36, and never called one picture usable and the other wrong (6 disagreements were one step apart). That measures repeatability, not correctness: both judges are AI, and a human may see more or fewer errors, especially in doors and windows, which are thin in the pictures.
+
+### What went wrong most often
+
+Counted from the judges' notes (primary readings: those of Claude Sonnet 5.5 on the Polish plans with the Polish prompt and on the UK plans with the English prompt) and from the validator results:
+
+- stairs missing, incomplete or misplaced (6 of the 20 plans, from the judges' notes on the primary readings);
+- a hallway, landing or corridor without a printed name drawn as an empty area instead of a room (4 of the 20 plans);
+- a main room more than about 20 percent off in width or depth against the printed numbers (6 of the 17 primary readings that load);
+- a wall of zero length, which the validator rejects (3 of the 30 Claude Sonnet 5.5 readings), and stairs too short for their number of steps (5 of the 10 Claude Haiku 4.5 readings of the UK plans);
+- sheets that show several buildings or several drawings on one image, where the reading keeps only part of them (seen in the judges' notes, not counted).
+
+None of these was fixed in the prompt or the validator for this release. The prompt describes stairs in detail, so a missing staircase is a model omission, not a missing instruction, and changing the published prompt would change what every other number in this file refers to; a change needs its own before and after measurement, which is left for a later release.
+
+### Limits of this measurement
+
+- 20 plans, two countries, picked by hand; 7 of the 10 Polish plans are developer cards, the easiest kind. No hand sketches, one photo of a paper plan, no plans from other countries.
+- One reading per plan and model, one prompt version (v4). Readings of the same plan vary from call to call; with one reading each, differences of a few percentage points between rows are noise.
+- The truth is what is printed, transcribed by AI readers and checked by eye on 5 plans. A printed number that is itself wrong, or a misreading shared by every reader, would not be caught.
+- The judge is an AI that sees a top-down picture only; it cannot walk the model. The labels metric ignores where a room is.
+- Only Claude Sonnet 5.5 and Claude Haiku 4.5 were measured on real plans. Nothing here applies to other models, other chats or other versions of these models.
+- Measured on 24 October 2026. The readings, scores and verdicts are kept outside this repository, because the images come from third-party listings; only the summary figures above are published.
+
 ## Leaks and limits
 
 - **Not independent.** The reader is Claude Sonnet 5.5 and it had seen the generator, the drawer, the prompt and the scorer before the run. A self-check, not an independent evaluation.
@@ -168,4 +233,4 @@ To benchmark another model or your own prompt, give it only the images and the p
 
 ## What would make this a real benchmark
 
-Real plans, contributed with consent and with a hand-checked truth; several readers (other models, other prompts) in separate processes that cannot see this repository; repeated runs for variance; a harder generator (diagonal and curved walls, dimension clutter, resized scale bars, photos); a published leaderboard of `eval/report.mjs` output. Plans that break the reading are exactly the contribution we want most (see [`CONTRIBUTING.md`](../CONTRIBUTING.md)).
+The "Real listing plans" section is a first step, not that: 20 plans picked by hand, a truth transcribed from printed numbers by AI readers, one reading per plan, one prompt version, and the readings kept outside this repository because the images belong to third parties. What would make it a benchmark: more real plans, contributed with consent so that they and their readings can be published and rerun, with a hand-checked truth; several readers (other models, other prompts) in separate processes that cannot see this repository; repeated runs for variance; a harder generator (diagonal and curved walls, dimension clutter, resized scale bars, photos); a published leaderboard of `eval/report.mjs` output. Plans that break the reading are exactly the contribution we want most (see [`CONTRIBUTING.md`](../CONTRIBUTING.md)); the "Report a bad reading" button in the viewer opens a prefilled issue for that.

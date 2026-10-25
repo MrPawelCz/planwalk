@@ -4,6 +4,23 @@ All notable changes to planwalk are listed here. The format follows [Keep a Chan
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-25
+
+### Added
+
+- Three sample floor plan drawings in `docs/samples` (synthetic, CC0; the page publishes the three PNG files) and a line on the first-visit card, "No floor plan at hand? Try a sample:" ("Nie masz rzutu pod ręką? Przykłady:" in Polish) with three links that open or download a drawing, so a visitor without a plan can try the whole loop: drawing, AI chat, paste, model. The drawings were picked because a model read them well, so they show the loop, not how a model reads a typical drawing; the readings that were checked are in `eval/results/2026-10-24-samples`.
+- A "Report a bad reading" button (in the menu, on a phone in the Menu sheet, and in the issues panel next to "Copy fix request"): it copies the plan to the clipboard and opens a prefilled GitHub issue in a new tab; the address holds only the version, the languages and the validator codes with their counts (never the plan, names, ids or messages) and stays under 6000 characters, and the page itself sends nothing. When the clipboard is not available, the plan is shown in a box you can select.
+- The banner shown when a reading cannot be turned into any model has a "Report a bad reading" button too, and after a tap a short message says that the plan is on the clipboard and the report opens in a new tab (allow pop-ups if nothing opened).
+- An issue template, `.github/ISSUE_TEMPLATE/bad-reading.md`, with the same fields, for a report opened by hand.
+- A first measurement on real plans: `docs/BENCHMARK.md` has a "Real listing plans" section with 20 floor plans from public listings (10 Polish, 10 UK), each read in one call by Claude Sonnet 5.5 and by Claude Haiku 4.5 with the published prompt, scored against the numbers printed on the drawings and judged by an AI judge. The result is moderate: of 30 readings by Claude Sonnet 5.5, 3 needed no change and 12 needed at most three small corrections; none of the 20 readings by Claude Haiku 4.5 was usable. The Polish plans read better than the UK ones, and the section lists what went wrong most often and the limits of the measurement. The plans and the readings stay outside the repository, because the images come from third-party listings. README, README.pl.md and both FAQs state the measured result instead of saying that real plans have not been measured, and name the models it covers.
+
+### Changed
+
+- The first-visit card on a phone leaves more height to the model: the line with the sample links fits one row, so the open card stays under 35 percent of the window height with at least 12 px to spare in English and Polish; the folded card is unchanged.
+- The sample links on the card have touch targets of at least 44 by 44 px that do not overlap.
+- The sample links and the new tab of the report open with `noopener noreferrer`.
+- The Pages workflow publishes the three PNG files of `docs/samples` next to the page, not the README of that folder.
+
 ## [0.2.0] - 2026-10-24
 
 ### Added
@@ -84,7 +101,8 @@ First public version.
 - A benchmark harness in `eval/` (synthetic plan generator, four drawing styles, scorer) with the first results in `docs/BENCHMARK.md`.
 - Continuous integration (tests on Node 22), deployment of the viewer to GitHub Pages, issue templates, and the MIT licence with the third-party notices in `THIRD_PARTY_LICENSES.md`.
 
-[Unreleased]: https://github.com/MrPawelCz/planwalk/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/MrPawelCz/planwalk/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/MrPawelCz/planwalk/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/MrPawelCz/planwalk/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/MrPawelCz/planwalk/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/MrPawelCz/planwalk/releases/tag/v0.1.0

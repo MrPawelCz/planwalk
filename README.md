@@ -19,10 +19,10 @@
 **With a chat that can read images (nothing to install)**
 
 1. Open the [live viewer](https://mrpawelcz.github.io/planwalk/), or download `planwalk.html` from the [latest release](https://github.com/MrPawelCz/planwalk/releases/latest) and double click it (it works offline, straight from the file). From a clone, `npm start` serves it at http://127.0.0.1:8080/planwalk.html.
-2. Give your floor plan image and the prompt from [`docs/PROMPT.md`](docs/PROMPT.md) ([`docs/PROMPT.pl.md`](docs/PROMPT.pl.md) for Polish drawings) to a chat that can read images. Cover names, addresses and phone numbers on the drawing first. The prompt is designed for chats that can read images. The English prompt was measured on the models listed in the Runs by model table of [`docs/BENCHMARK.md`](docs/BENCHMARK.md) (the current prompt version on all 12 plans for Claude Sonnet 5.5 and Claude Haiku 4.5, on 7 of 12 plans for gpt-6-astra); the Polish prompt and Polish drawings have not been measured. Other chats that read images are expected to work, but that is an expectation, not a result (results are welcome).
+2. Give your floor plan image and the prompt from [`docs/PROMPT.md`](docs/PROMPT.md) ([`docs/PROMPT.pl.md`](docs/PROMPT.pl.md) for Polish drawings) to a chat that can read images. Cover names, addresses and phone numbers on the drawing first. The prompt is designed for chats that can read images. What has been measured is in [`docs/BENCHMARK.md`](docs/BENCHMARK.md): the English prompt on 12 synthetic plans (the current prompt version for Claude Sonnet 5.5 and Claude Haiku 4.5 on all 12, for gpt-6-astra on 7 of 12), and both prompts on 20 real listing plans (10 Polish plans with the Polish prompt, 10 UK plans with the English prompt) for Claude Sonnet 5.5 and Claude Haiku 4.5 only. Nothing has been measured for gpt-6-astra on real plans, for Gemini or for other chats: they may work, but that is an expectation, not a result (results are welcome).
 3. Paste the JSON it returns into the viewer ("Paste JSON"). If the viewer lists problems, press "Copy fix request", paste that back into the same chat, repeat. A plan with a few mistakes still opens: a property the format does not know is ignored, an element that cannot be read (for example an opening of width 0) is skipped and a banner lists what was left out. Only when nothing usable is left is no model built, and the model on screen stays. The exception is a `units` value the viewer does not understand (such as "feet"): that plan is refused and the fix request names it, because a wrong unit would show the model at the wrong scale.
 
-No floor plan at hand? The first-visit card in the viewer links three sample drawings (also in [`docs/samples`](docs/samples)) that you can download and run through the same three steps. They are synthetic and were picked because a model read them well, so they show the loop, not how a model reads a typical drawing.
+No floor plan at hand? The first-visit card in the viewer links three sample drawings (also in [`docs/samples`](docs/samples)) that you can open or download and run through the same three steps. They are synthetic and were picked because a model read them well, so they show the loop, not how a model reads a typical drawing.
 
 **With an agent that loads skill folders**
 
@@ -31,6 +31,10 @@ Give the agent the folder [`skill/planwalk`](skill/planwalk) (copy it into your 
 **Just look around**
 
 Pick an example from the menu: a one-bedroom flat and a two-level house with a stair.
+
+**What to expect on real plans**
+
+On 20 real floor plans from public listings (10 Polish, 10 UK), one call with the prompt gave a model that needed no change in 3 of 30 readings by Claude Sonnet 5.5 and at most three small corrections in 12 more, while the other 15 were wrong or did not load; none of the 20 readings by Claude Haiku 4.5 was usable even after small corrections (11 did not load). The Polish plans, mostly developer unit cards, did better than the UK agent drawings (for Claude Sonnet 5.5, usable or fixable with small corrections in 13 of 20 readings of Polish plans against 2 of 10 of UK plans), and the usual mistakes are missing or misplaced stairs, hallways drawn as empty areas and main rooms that are off in size, so compare the result with your drawing. This is a first look at a small, hand-picked set, scored against the numbers printed on the drawings and judged by an AI that compares the original with a top-down picture of each reading; the method and the limits are in [Real listing plans](docs/BENCHMARK.md#real-listing-plans). When a reading goes wrong, the viewer's "Report a bad reading" button opens a prefilled issue.
 
 ## What you get
 
@@ -84,15 +88,15 @@ npm run build:skill                               # build, then regenerate the t
 
 The validator and the build are plain ES modules that need Node 20 or newer (CI runs Node 20, 22 and 24); `tools/capture.mjs` and the full test suite need Node 22 or newer, and capture needs Chrome. The product has no runtime dependencies (three.js is bundled into the viewer; esbuild is a dev dependency).
 
-## Benchmark (a synthetic smoke test, not proof)
+## Benchmark (a synthetic smoke test and a first look at real plans)
 
 `eval/` generates synthetic plans with a known truth, draws them in four styles (clean CAD, hatched, hand-style sketch without any scale, scan) and scores how well an AI read the image back into the JSON (rooms, areas, openings, connectivity; composite 0 to 100).
 
-First run: Claude Sonnet 5.5 read 12 clean synthetic plans with a mean composite of **99.6 out of 100** (lowest 98.3). That was a reading by hand in an agent session. Reading the same plans in one call with the first prompt version, the way a person uses a chat, gave 92.4 and 95.3 (two runs of Claude Sonnet 5.5), 87.8 (gpt-6-astra) and 34.4 (Claude Haiku 4.5, where 4 of 12 answers loaded). With the current prompt version Claude Haiku 4.5 scored 50.3 and 9 of 12 answers loaded; every run and the other prompt versions are in the Runs by model table. The 99.6 shows the pipeline works. It does **not** show that real floor plans are read this well: the plans are easy, the reader was not blind to the harness, and it was one pass with no repeats. Every known leak and weak case is in [`docs/BENCHMARK.md`](docs/BENCHMARK.md), together with the readings, hashes and commands to reproduce or to run your own model.
+First run: Claude Sonnet 5.5 read 12 clean synthetic plans with a mean composite of **99.6 out of 100** (lowest 98.3). That was a reading by hand in an agent session. Reading the same plans in one call with the first prompt version, the way a person uses a chat, gave 92.4 and 95.3 (two runs of Claude Sonnet 5.5), 87.8 (gpt-6-astra) and 34.4 (Claude Haiku 4.5, where 4 of 12 answers loaded). With the current prompt version Claude Haiku 4.5 scored 50.3 and 9 of 12 answers loaded; every run and the other prompt versions are in the Runs by model table. The 99.6 shows the pipeline works. It does **not** show that real floor plans are read this well (they were measured separately, see below): the plans are easy, the reader was not blind to the harness, and it was one pass with no repeats. Every known leak and weak case is in [`docs/BENCHMARK.md`](docs/BENCHMARK.md), together with the readings, hashes and commands to reproduce or to run your own model.
 
-Real drawings have not been benchmarked yet: expect worse on sketches without a scale, scans and cluttered drawings. Plans that break the reading are the most useful contribution.
+Real drawings: a first measurement on 20 floor plans from public listings (10 Polish, 10 UK) is in the Real listing plans section of [`docs/BENCHMARK.md`](docs/BENCHMARK.md#real-listing-plans), with its method and limits (the figures are under "What to expect on real plans" above). The set is small and picked by hand, with no hand sketches and one photo of a paper plan; the truth was transcribed from the printed numbers with the help of AI readers; the plans and the readings are not published, because they come from third-party listings. Expect worse on hand sketches without a scale and on scans, which the set does not cover. Plans that break the reading are the most useful contribution.
 
-## Limits (v0.2)
+## Limits (v0.3)
 
 - Reading quality depends on the model and the drawing. Clean CAD drawings with printed dimensions work best; sketches without any scale are a guess. The About sheet shows the scale note the reader wrote, and a "Scale estimated" badge appears when that note says the scale itself is uncertain (it looks for phrases such as "scale estimated", "the scale is a guess", "standard door" or "no printed scale", and their Polish equivalents, unless the note also names a printed basis such as "scale from the printed dimension"; words about something else, such as "wall thickness estimated", do not count). The viewer does not measure anything itself: the validator only checks that the size is plausible and that declared room areas fit the polygons.
 - Straight stairs only; on a drawing of one floor a stair leaves the plan (drawn as steps, not walkable). No roofs, terrain or exterior. Textures follow the room `floor` kind and a few fixed rules, not your drawing. Furniture is decorative.
@@ -101,7 +105,7 @@ Real drawings have not been benchmarked yet: expect worse on sketches without a 
 
 ## FAQ
 
-See [`docs/FAQ.md`](docs/FAQ.md) for the longer list. Short version: the JSON is the contract between the AI, the validator and the viewer; the viewer works offline and without a GPU (slowly); the code is MIT and the example plans are CC0.
+See [`docs/FAQ.md`](docs/FAQ.md) for the longer list. Short version: the JSON is the contract between the AI, the validator and the viewer; the viewer works offline and without a GPU (slowly); the code is MIT and the example plans and the sample drawings are CC0.
 
 ## Development
 

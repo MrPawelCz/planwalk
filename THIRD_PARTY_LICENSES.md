@@ -12,7 +12,7 @@ The build copies that notice, together with `LICENSE`, into an HTML comment at t
 | @esbuild/* platform binaries | 0.28.2 | MIT | optional development dependencies of esbuild, not shipped |
 
 All of them are MIT. The full tree is in `package-lock.json` (28 packages in total, every one MIT).
-Fonts: the viewer uses the system font stack and ships no font files. Example plans in `examples/` are synthetic and CC0.
+Fonts: the viewer uses the system font stack and ships no font files. Example plans in `examples/` and the sample drawings in `docs/samples/` are synthetic and CC0.
 
 ## three.js
 
