@@ -78,9 +78,89 @@ test('the facts of the English README are in README.pl.md too, and the two point
   assert.ok(en.includes('README.pl.md') && pl.includes('README.md'));
 });
 
-test('both Polish files say, like the English README, that only the English prompt was measured and the Polish prompt and drawings were not', () => {
-  for (const file of FILES) assert.match(read(file), /(Polecenie po angielsku zmierzono|Angielską wersję polecenia sprawdzono) na modelach z tabeli „Runs by model”.*(Polskiego polecenia|polskiej wersji) (ani|i) polskich rysunków (jeszcze )?nie mierzono/, file);
+test('both Polish files say what was measured: the English prompt on the models of "Runs by model", the Polish prompt on 10 Polish real plans with the two Claude models only, nothing else on real plans', () => {
+  for (const file of FILES) {
+    const md = read(file);
+    assert.match(md, /(Polecenie po angielsku zmierzono|Angielską wersję polecenia sprawdzono) na modelach z tabeli „Runs by model”/, file);
+    assert.match(md, /(Polskie polecenie zmierzono|wersję polską) na 10 polskich rzutach/, `${file}: the measured state of the Polish prompt`);
+    assert.match(md, /tylko u Claude Sonnet 5\.5 i Claude Haiku 4\.5/, `${file}: only the two Claude models were measured on real plans`);
+    assert.match(md, /gpt-6-astra i Gemini (na prawdziwych rzutach nie mierzono|nie były na prawdziwych rzutach mierzone)/, `${file}: the models that were not measured on real plans`);
+    assert.doesNotMatch(md, /jeszcze nie mierzono|polskich rysunków nie mierzono/, `${file}: the old "not measured yet" sentence is gone`);
+  }
 });
+
+test('README.pl.md points at the sample drawings as something to open or download for the three steps, never as a measure of reading quality, and licenses them CC0', () => {
+  const md = read('README.pl.md');
+  assert.ok(VISIT.pl.samples.startsWith('Nie masz rzutu pod ręką?'), 'the card line the README echoes');
+  assert.match(md, /Nie masz rzutu pod ręką\? Karta pierwszej wizyty \(ta z napisem „To jest przykład”\) ma linijkę z trzema przykładowymi rysunkami[^.]*możesz otworzyć lub pobrać[^.]*\[`docs\/samples`\]\(docs\/samples\)/);
+  assert.match(md, /Rysunki są syntetyczne i wybrane, bo dobrze się czytają, więc pokazują kroki, a nie to, jak model czyta inne rysunki\./);
+  assert.doesNotMatch(md, /typow|reprezentatyw|przeciętn/i, 'no word that calls the drawings typical or representative');
+  assert.match(md, /przykładowe rysunki \(`docs\/samples\/`\) są na licencji CC0/);
+});
+
+// The figures of the real plans: the Polish files give them, the English section of docs/BENCHMARK.md (generated from the results) is
+// the source. Before that section is in the tree (a branch without it) the figure tests are skipped, not weakened.
+function benchmarkSection() {
+  const md = read('docs/BENCHMARK.md');
+  const at = md.indexOf('\n## Real listing plans');
+  if (at < 0) return null;
+  const end = md.indexOf('\n## ', at + 5);
+  return md.slice(at, end < 0 ? undefined : end);
+}
+// The numbers of a piece of text as a sorted set; model versions (5.5, 4.5) are not figures, and Polish says "żaden" for 0.
+const figures = (s) => [...new Set((s.replace(/\b[45]\.5\b/g, ' ').match(/\d+%?/g) || []).filter((n) => n !== '0'))].sort();
+const cells = (section, label, tableHas) => section.split('\n').filter((l) => l.startsWith(`| ${label} |`) && tableHas.test(l)).map((l) => l.split('|').slice(2, -1).map((c) => c.trim()));
+
+test('the paragraph about real plans in README.pl.md is short, names the report button, links the English section, and its figures are those of that section', (t) => {
+  const md = read('README.pl.md');
+  const m = md.match(/^### Czego się spodziewać po prawdziwych rzutach\n\n([^\n]+)\n/m);
+  assert.ok(m, 'heading and one paragraph');
+  const sentences = m[1].split(/\.\s+(?=\p{Lu})/u);
+  assert.ok(sentences.length >= 2 && sentences.length <= 4, `2 to 4 sentences, found ${sentences.length}`);
+  for (const must of ['„Zgłoś zły odczyt”', '`Real listing plans`', '[`docs/BENCHMARK.md`](docs/BENCHMARK.md)', 'umiarkowany']) assert.ok(m[1].includes(must), `the paragraph lacks ${must}`);
+  const section = benchmarkSection();
+  if (!section) return t.skip('docs/BENCHMARK.md has no "Real listing plans" section in this tree');
+  checkFigures(read('README.pl.md'), section);
+});
+
+test('the figures of the real plans in docs/FAQ.pl.md are those of the English section, and the Polish prompt numbers match its tables', (t) => {
+  const faq = read('docs/FAQ.pl.md');
+  const section = benchmarkSection();
+  if (!section) return t.skip('docs/BENCHMARK.md has no "Real listing plans" section in this tree');
+  checkFigures(faq, section);
+  const loads = /^\d+ of 10 \(/, judged = /\| \d+ \| \d+ \| \d+ \| \d+ \| \d+ \|$/;
+  const first = (rows) => { assert.equal(rows.length, 1, 'one table row expected'); return rows[0]; };
+  const sonnetPl = first(cells(section, 'Claude Sonnet 5.5, Polish listings, Polish prompt', /of 10 \(/));
+  const sonnetEn = first(cells(section, 'Claude Sonnet 5.5, Polish listings, English prompt', /of 10 \(/));
+  const haikuPl = first(cells(section, 'Claude Haiku 4.5, Polish listings, Polish prompt', /of 10 \(/));
+  const judgeSonnetPl = first(cells(section, 'Claude Sonnet 5.5, Polish listings, Polish prompt', judged));
+  const judgeSonnetEn = first(cells(section, 'Claude Sonnet 5.5, Polish listings, English prompt', judged));
+  const judgeHaikuPl = first(cells(section, 'Claude Haiku 4.5, Polish listings, Polish prompt', judged));
+  const n = (cell) => cell.match(/^(\d+) of 10/)[1];
+  assert.ok(loads.test(sonnetPl[1]) && loads.test(sonnetEn[1]) && loads.test(haikuPl[1]));
+  assert.ok(faq.includes(`u Claude Sonnet 5.5 wczytało się ${n(sonnetPl[1])} z 10 odczytów, ${judgeSonnetPl[1]} były użyteczne bez zmian i ${judgeSonnetPl[2]} do drobnych poprawek (z poleceniem angielskim na tych samych rzutach: ${n(sonnetEn[1])} z 10 wczytanych, ${judgeSonnetEn[1]} i ${judgeSonnetEn[2]};`), 'Claude Sonnet 5.5, Polish listings, both prompts');
+  assert.deepEqual([judgeHaikuPl[1], judgeHaikuPl[2]], ['0', '0'], 'the FAQ says no Haiku reading was usable or needed small fixes');
+  assert.ok(faq.includes(`z poleceniem polskim wczytało się ${n(haikuPl[1])} z 10 odczytów i żaden nie był użyteczny ani do drobnych poprawek`), 'Claude Haiku 4.5, Polish listings, Polish prompt');
+});
+
+// Each sentence with figures in the Polish text must carry the same numbers as its sentence of the English section.
+function checkFigures(pl, section) {
+  const pairs = [
+    ['Claude Sonnet 5.5, by verdict', /Of the \d+ Claude Sonnet 5\.5 readings.*?\.(?=\s)/s, /Z \d+ odczytów Claude Sonnet 5\.5.*?się nie wczytały/s],
+    ['Polish against UK plans', /usable or small-fixes for \d+ of \d+ readings against \d+ of \d+/, /użyteczne lub do drobnych poprawek: \d+ z \d+ odczytów.*?wobec \d+ z \d+/s],
+    ['Claude Haiku 4.5, by verdict', /Of the \d+ Claude Haiku 4\.5 readings.*?\.(?=\s)/s, /Z \d+ odczytów Claude Haiku 4\.5.*?się nie wczytało/s],
+  ];
+  for (const [what, en, plRe] of pairs) {
+    const e = section.match(en), p = pl.match(plRe);
+    assert.ok(e, `${what}: the English section no longer has this sentence; update the Polish figures and this test together`);
+    assert.ok(p, `${what}: the Polish text has no sentence of this shape`);
+    assert.deepEqual(figures(p[0]), figures(e[0]), what);
+  }
+  const set = section.match(/\*\*The set:\*\* (\d+) floor plan images from public property listings, (\d+) in Poland and (\d+) in the UK/);
+  assert.ok(set, 'the English section no longer describes the set this way');
+  assert.match(pl, new RegExp(`${set[1]} prawdziwych rzut(ach|ów)`), 'the size of the set');
+  assert.ok(pl.includes(`po ${set[2]} w Polsce i w Wielkiej Brytanii`) && set[2] === set[3], 'the split of the set between the two countries');
+}
 
 test('the behaviour sentences of README.pl.md are backed by the code', () => {
   const code = (file) => read(`viewer/src/${file}`);
