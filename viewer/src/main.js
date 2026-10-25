@@ -15,7 +15,7 @@ import { getLang, setLang } from './i18n.js';
 import { createFirstVisit } from './first-visit.js';
 import { createHelp } from './help.js';
 import { createCompact } from './compact.js';
-import { boxCorners, fitView, ndcRect, projectedBox, marginsOf } from './framing.js';
+import { boxCorners, fitView, ndcRect, projectedBox, marginsOf, orbitPolarLimit } from './framing.js';
 import { createLangSwitch, refreshLangSwitches } from './lang-switch.js';
 import { panTop, pinchTop } from './gesture.js';
 import { openDialog, closeDialog } from './dialogs.js';
@@ -355,9 +355,11 @@ function start() {
     };
   }
 
-  // The sun and the base follow the extent the camera is framed on: the whole range of the slider, or the current extent when live.
+  // The sun and the base follow the extent the camera is framed on: the whole range of the slider, or the current extent when live
+  // and in Walk, which stands at rest.
   function fitStage() {
-    if (liveFraming) stage.fit(model, explodeV); else stage.fitExtent(model, modelRangeExtent(model));
+    if (!model) return;
+    if (liveFraming || mode === 'walk') stage.fit(model, explodeV); else stage.fitExtent(model, modelRangeExtent(model));
   }
 
   // Live framing only: keeps the whole model in view while the levels pull apart (centre follows, distance scales with the size).
@@ -387,6 +389,15 @@ function start() {
     return { cx: (e.minX + e.maxX) / 2 - fx * half * a, cz: (e.minZ + e.maxZ) / 2 + fy * half, half };
   }
 
+  // OrbitControls keeps the camera above the horizon of its target. The target of a frame for the whole range of the slider is higher than the middle
+  // of the house at rest, so the limit is widened: the camera still goes down to the middle of the house at rest, as it did when the frame followed the extent.
+  function updatePolarLimit() {
+    let lowY = NaN;
+    if (model && !liveFraming) { const rest = modelExtent(model, 0); lowY = (rest.minY + rest.maxY) / 2; }
+    controls.maxPolarAngle = orbitPolarLimit(controls.target.y, lowY, persp.position.distanceTo(controls.target));
+  }
+  controls.addEventListener('change', updatePolarLimit);
+
   function frame() {
     if (!model) return;
     const { e, R } = extentInfo(liveFraming ? undefined : modelRangeExtent(model));
@@ -397,6 +408,7 @@ function start() {
     persp.position.copy(pose.position);
     controls.target.copy(pose.target);
     controls.minDistance = 1; controls.maxDistance = Math.max(R * 8, pose.distance * 4);
+    updatePolarLimit();
     controls.update();
     topView = topFit(persp.aspect, w, hgt, free, e);
     applyTop();

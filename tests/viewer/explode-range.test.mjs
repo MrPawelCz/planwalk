@@ -47,8 +47,8 @@ function manyLevels(n) {
   return buildModel(res.normalized);
 }
 
-test('three and four levels: the range starts at the ground floor and ends at the top of the last level at full explode', () => {
-  for (const n of [3, 4]) {
+test('three, four and twelve levels: the range starts at the ground floor and ends at the top of the last level at full explode', () => {
+  for (const n of [3, 4, 12]) {
     const m = manyLevels(n), rest = modelExtent(m, 0), full = modelExtent(m, 1), range = modelRangeExtent(m);
     assert.equal(m.levels.length, n);
     assert.equal(range.minY, rest.minY, `${n} levels: the ground floor stays where it is`);

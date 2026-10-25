@@ -1,12 +1,13 @@
 // Measures what the dollhouse frame does while the levels pull apart, from outside the page: it reads the camera from state(),
-// projects the corners of the ground floor with three.js and reports where they land on the screen (CSS px).
+// projects the corners of the plan (at the elevation of its first level, the ground floor) with three.js and reports where they land on the screen (CSS px).
 // Usage: node tools/measure-explode-frame.mjs --viewer FILE [--plan FILE] [--query ?framing=live] [--size 1280x720] [--out FILE.json]
 //                                              [--gl swiftshader|metal] [--chrome PATH]
 // The viewer is dist/planwalk-empty.html or any build of it. Needs Node 22+ (global WebSocket) and Chrome; run it through
 // tools/chrome-lock.sh when other browsers may be running. Prints a short summary and writes the whole record as JSON.
 // What it records: five steady states (explode 0, 0.25, 0.5, 0.75, 1), then the animation frame by frame (60 steps a second) up to
-// explode 1 and back to 0. For each: the screen position of the corners of the ground floor, the width of the ground floor, the
-// box of the whole model as the page itself reports it (framing()) and its smallest margin inside the free area.
+// explode 1 and back to 0. For a steady state: the screen position of the four corners of the plan at the elevation of the first level (the
+// ground floor), their width, the box of the whole model as the page itself reports it (framing()) and its smallest margin inside the free
+// area. For an animation step: the near corner, the width and the smallest margin.
 import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:net';
@@ -88,7 +89,7 @@ async function main() {
   const planText = readFileSync(o.plan, 'utf8');
   const model = buildModel(validatePlan(JSON.parse(planText)).normalized);
   const [W, H] = o.size;
-  // The corners of the ground floor slab (its top face) in world metres: x is the plan x, z is the plan y.
+  // The corners of the plan's bounds at the elevation of the first level (the ground floor) in world metres: x is the plan x, z is the plan y.
   const b = model.bounds, y0 = model.levels[0].elevation;
   const ground = [[b.minX, b.minY], [b.maxX, b.minY], [b.maxX, b.maxY], [b.minX, b.maxY]].map(([x, z]) => new THREE.Vector3(x, y0, z));
 

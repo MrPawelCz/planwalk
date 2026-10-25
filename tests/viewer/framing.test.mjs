@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
-import { boxCorners, fitView, ndcRect, projectedBox, marginsOf } from '../../viewer/src/framing.js';
+import { boxCorners, fitView, ndcRect, projectedBox, marginsOf, orbitPolarLimit } from '../../viewer/src/framing.js';
 
 const DIR = new THREE.Vector3(-0.45, 0.57, 0.68).normalize();
 const BOXES = [
@@ -52,4 +52,20 @@ test('the camera stays outside the box and a taller window moves it away less th
     const p = pose.position;
     assert.ok(p.x < e.minX || p.x > e.maxX || p.y > e.maxY || p.z < e.minZ || p.z > e.maxZ, 'the camera is outside the box');
   }
+});
+
+test('orbitPolarLimit lets the camera down to the given height and is the plain limit when there is nothing to widen', () => {
+  const plain = Math.PI / 2 - 0.02;
+  assert.equal(orbitPolarLimit(3, 3, 20), plain, 'a target at the lowest height: the plain limit');
+  assert.equal(orbitPolarLimit(2, 3, 20), plain, 'a target below the lowest height: the plain limit');
+  assert.equal(orbitPolarLimit(7, NaN, 20), plain, 'no usable height: the plain limit');
+  assert.equal(orbitPolarLimit(7, -Infinity, 20), plain, 'no height at all: the plain limit');
+  assert.equal(orbitPolarLimit(7, 3, 0), plain, 'no distance: the plain limit');
+  for (const [targetY, lowY, d] of [[7.2, 4.1, 25], [10.8, 5.5, 40], [3.7, 2.75, 17], [3.7, 2.75, 3]]) {
+    const limit = orbitPolarLimit(targetY, lowY, d);
+    assert.ok(limit > plain && limit <= Math.PI, `the limit ${limit} is wider than the plain one`);
+    const height = targetY + d * Math.cos(limit); // where the camera ends up at the limit
+    assert.ok(height >= lowY - 1e-9 && height <= lowY + 0.03 * d + 0.15, `at the limit the camera is at ${height.toFixed(2)} m, the lowest asked for is ${lowY} m`);
+  }
+  assert.ok(orbitPolarLimit(7.2, 4.1, 2) <= Math.PI, 'close to a high target the angle stays a real angle');
 });

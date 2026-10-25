@@ -77,3 +77,13 @@ export function marginsOf(box, free) {
   const fw = free.right - free.left, fh = free.bottom - free.top;
   return { left: (box.left - free.left) / fw, right: (free.right - box.right) / fw, top: (box.top - free.top) / fh, bottom: (free.bottom - box.bottom) / fh };
 }
+
+// OrbitControls keeps the camera above the horizon of its target (a polar angle of at most pi/2 minus a small margin). A frame for the whole
+// range of the explode slider has its target higher than the middle of the house at rest, so the plain limit would keep the camera higher too.
+// This returns the largest polar angle (measured from straight up) that still lets the camera go down to height lowY, for a target at height
+// targetY and a camera at the given distance from it; without a usable lowY it is the plain limit.
+export function orbitPolarLimit(targetY, lowY, distance, margin = 0.02) {
+  const plain = Math.PI / 2 - margin, drop = targetY - lowY;
+  if (!Number.isFinite(drop) || !(drop > 0) || !(distance > 1e-6)) return plain;
+  return plain + Math.asin(Math.min(1, drop / distance));
+}

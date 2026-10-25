@@ -5,7 +5,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import * as THREE from 'three';
 import { validatePlan } from '../../src/core/validate.js';
-import { buildModel } from '../../viewer/src/geometry.js';
+import { buildModel, modelExtent, modelRangeExtent } from '../../viewer/src/geometry.js';
+import { boxCorners } from '../../viewer/src/framing.js';
 import { PlanScene, Stage } from '../../viewer/src/scene.js';
 import { mat, texScale, textureSet } from '../../viewer/src/materials.js';
 import { TEXTURE_SPECS } from '../../viewer/src/textures.js';
@@ -135,4 +136,19 @@ test('textured materials read the glTF normal maps with a negative y scale; only
   assert.ok(mat('ceiling', 'textured').emissive.r > 0.05, 'the textured ceiling gives a little light back');
   assert.equal(mat('ceiling', 'clay').emissive.getHex(), 0, 'the clay ceiling does not glow');
   assert.equal(mat('wall', 'clay').normalMap, null, 'clay has no normal maps');
+});
+
+test('the sun frame fitted to the range of the explode slider holds the model at every setting, and the one fitted at rest does not', () => {
+  const model = plan(), stage = new Stage(new THREE.Scene());
+  const clearance = () => { // how far inside the shadow frustum the corners of the exploded model stay (1 = the middle, 0 = the edge, negative = outside)
+    const cam = stage.sun.shadow.camera;
+    cam.position.copy(stage.sun.position); cam.lookAt(stage.sun.target.position); cam.updateMatrixWorld(); cam.updateProjectionMatrix();
+    let worst = Infinity;
+    for (let k = 0; k <= 10; k++) for (const c of boxCorners(modelExtent(model, k / 10))) { const q = c.clone().project(cam); worst = Math.min(worst, 1 - Math.abs(q.x), 1 - Math.abs(q.y), 1 - Math.abs(q.z)); }
+    return worst;
+  };
+  stage.fitExtent(model, modelRangeExtent(model));
+  assert.ok(clearance() > 0, `the whole range sits inside the frustum (${clearance().toFixed(3)})`);
+  stage.fit(model, 0);
+  assert.ok(clearance() < 0, `a frame fitted at rest leaves the exploded model out (${clearance().toFixed(3)}), which is why the range is used`);
 });
