@@ -44,15 +44,16 @@ function groundOnScreen(model, st, w, h) {
   return { near, width: Math.max(...px.map((c) => c.x)) - Math.min(...px.map((c) => c.x)) };
 }
 
-async function open(search, planText) {
-  const p = await openPhone(page, { ...SIZE, search });
+const PHONE = { width: 390, height: 844, dpr: 3, mobile: true }; // a phone held upright
+async function open(search, planText, size = SIZE) {
+  const p = await openPhone(page, { ...size, search });
   const ok = await p.evaluate(`(() => { const r = window.planwalk.load(${JSON.stringify(JSON.parse(planText))}); window.planwalk.advanceTime(300); return r.ok; })()`);
   assert.equal(ok, true, 'the plan loads');
   return p;
 }
-const look = async (p, model) => {
+const look = async (p, model, size = SIZE) => {
   const [st, fr] = await p.evaluate('[window.planwalk.state(), window.planwalk.framing()]');
-  return { ...groundOnScreen(model, st, SIZE.width, SIZE.height), st, margin: Math.min(...Object.values(fr.margins)) };
+  return { ...groundOnScreen(model, st, size.width, size.height), st, margin: Math.min(...Object.values(fr.margins)) };
 };
 const modelOf = (planText) => buildModel(validatePlan(JSON.parse(planText)).normalized);
 const away = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
@@ -116,3 +117,30 @@ test('a plan with one level is framed the same with and without the fixed frame'
   assert.ok(away(shots[0].near, shots[1].near) <= 1, `the corner differs by ${away(shots[0].near, shots[1].near).toFixed(2)} px`);
   assert.ok(Math.abs(shots[0].width - shots[1].width) <= 1, `the width differs by ${Math.abs(shots[0].width - shots[1].width).toFixed(2)} px`);
 });
+
+// The two-level fixture with a copy of its upper level on top: the stack is taller, so the frame has more to hold.
+const threeLevels = () => {
+  const plan = JSON.parse(read('tests/fixtures/duplex-min.plan.json'));
+  plan.levels.push({ ...structuredClone(plan.levels[1]), id: 'L2', name: 'Top floor' });
+  return JSON.stringify(plan);
+};
+
+for (const [name, size] of [['a desktop window', SIZE], ['a phone held upright', PHONE]]) {
+  test(`three levels in ${name}: the ground floor stands still and the whole model stays inside the free area`, { skip, timeout: 180000 }, async () => {
+    const text = threeLevels(), model = modelOf(text);
+    assert.equal(model.levels.length, 3);
+    const p = await open('', text, size);
+    try {
+      const rest = await look(p, model, size);
+      for (const e of [0.5, 1, 0]) {
+        await p.evaluate(`window.planwalk.setExplode(${e}); window.planwalk.advanceTime(3000)`);
+        const now = await look(p, model, size);
+        assert.equal(now.st.explode, e);
+        assert.ok(away(now.near, rest.near) <= 2, `explode ${e}: the corner of the ground floor moved ${away(now.near, rest.near).toFixed(2)} px`);
+        assert.ok(now.margin >= 0.04, `explode ${e}: the model comes within ${(now.margin * 100).toFixed(1)} percent of the edge of the free area`);
+      }
+      assert.deepEqual((await look(p, model, size)).st.camera, rest.st.camera, 'after the trip the camera is where it was');
+      assert.deepEqual(p.issues, [], 'console stays clean');
+    } finally { await p.close(); }
+  });
+}

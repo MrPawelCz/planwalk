@@ -4,6 +4,19 @@ All notable changes to planwalk are listed here. The format follows [Keep a Chan
 
 ## [Unreleased]
 
+### Changed
+
+- The Dollhouse camera no longer moves while the levels pull apart. The first view and every re-frame (a change of window or language, leaving Walk) hold the whole range of the Explode slider, the extent at rest joined with the extent at full explode, and nothing is fitted again during the move. Until now the view was fitted again on every animation step: on plans of two levels in a 1280 by 720 window the lowest level slid by up to 118 px (median 51) and shrank by up to 18 percent (median 12) while the levels rose, the house reached under the toolbar or past the edge of the area that no bar or card covers on 9 of 13 plans, and after the levels closed the view was left up to 118 px off its starting place. Now the lowest level stays within 0 px, the whole house keeps at least 5 percent of margin at every step and the same view comes back (measured in Chrome on 42 plans, 72 pairs of plan and window size: 1280 by 720, 1440 by 900 and 390 by 844 held upright).
+- A plan of one level no longer jumps when the Explode slider is touched. Nothing rises on such a plan, yet the view was fitted again and slid by a median of 84 px (up to 140 px; 27 plans, 1280 by 720), with the house past the edge of the free area on 26 of the 27, and stayed off its place when the slider went back.
+- The sun and its shadow frame follow the same extent and stay put during the move.
+- The price of a view that holds still is a smaller house at rest on a plan of two or more levels, because the frame has to hold the exploded house: the lowest level is 15 to 23 percent narrower in a 1280 by 720 window (median 19, 13 plans), 3 to 6 percent on a phone held upright (median 5), and 30 and 35 percent for synthetic stacks of three and four levels (about 10 and 14 percent on the phone). A plan of one level looks as before.
+- `?framing=live` in the address brings back the earlier behaviour (see `docs/SPEC.md`).
+
+### Added
+
+- `tools/measure-explode-frame.mjs` measures from outside the page, in Chrome, how the lowest level moves on the screen while the levels pull apart: the screen position of the corners of the ground floor in five steady states and over the animation in both directions, its width and the smallest margin of the whole house, for any plan and window size (`--query ?framing=live` for the earlier behaviour).
+- Tests: `tests/viewer/explode-range.test.mjs` (the range extent for one to four levels) and `tests/viewer/explode-frame-e2e.test.mjs` (in Chrome: the lowest level stays within 2 px and the house within the margin on two and on three levels, in a desktop window and on a phone held upright; `?framing=live` keeps the earlier behaviour; a plan of one level is framed the same either way).
+
 ## [0.3.0] - 2026-10-25
 
 ### Added
