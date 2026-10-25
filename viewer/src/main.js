@@ -5,7 +5,7 @@ import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
 import { analyzePlan, validatePlan, modelOf } from '../../src/core/validate.js';
 import { extractJson } from '../../src/core/extract-json.js';
 import { createNotices, fetchPlanText, readPlanFile, reportCrash, loadMessage, downloadMessage, issueLines, severalPlansMessage, skippedMessage, skippedLines, ignoredMessage, noWebglText } from './load-errors.js';
-import { buildModel, roomAt, modelExtent, CUT_HEIGHT, PLAYER } from './geometry.js';
+import { buildModel, roomAt, modelExtent, modelRangeExtent, CUT_HEIGHT, PLAYER } from './geometry.js';
 import { PlanScene, Stage } from './scene.js';
 import { LOOKS, setTextureAnisotropy, withoutNormalMaps } from './materials.js';
 import { createWorld, createPlayer, teleport, stepPlayer, defaultSpawn } from './physics.js';
@@ -208,6 +208,9 @@ function start() {
   let mode = 'dollhouse', cutaway = true, labels = true, levelId = null;
   let materials = 'textured';
   let explodeT = 0, explodeV = 0;
+  // The frame is placed once for the whole range of the explode slider, so the lowest level stands still on the screen while the
+  // upper ones rise. ?framing=live brings back the earlier behaviour: the frame follows the current extent on every animation step.
+  const liveFraming = new URLSearchParams(location.search).get('framing') === 'live';
   let issues = { errors: [], warnings: [] };
   let samples = {};
   // The bundled examples are shown in the page language (names only, see examples-pl.js). sample(name) hands out the plan to load and
@@ -344,8 +347,7 @@ function start() {
   }
 
   let fitR = 1;
-  function extentInfo() {
-    const e = modelExtent(model, explodeV);
+  function extentInfo(e = modelExtent(model, explodeV)) {
     return {
       e,
       c: new THREE.Vector3((e.minX + e.maxX) / 2, (e.minY + e.maxY) / 2, (e.minZ + e.maxZ) / 2),
@@ -353,7 +355,12 @@ function start() {
     };
   }
 
-  // Keeps the whole model in view while the levels pull apart (centre follows, distance scales with the size).
+  // The sun and the base follow the extent the camera is framed on: the whole range of the slider, or the current extent when live.
+  function fitStage() {
+    if (liveFraming) stage.fit(model, explodeV); else stage.fitExtent(model, modelRangeExtent(model));
+  }
+
+  // Live framing only: keeps the whole model in view while the levels pull apart (centre follows, distance scales with the size).
   function refit() {
     if (!model || !(mode === 'dollhouse' || mode === 'orbit')) return;
     const { c, R } = extentInfo();
@@ -382,7 +389,7 @@ function start() {
 
   function frame() {
     if (!model) return;
-    const { e, R } = extentInfo();
+    const { e, R } = extentInfo(liveFraming ? undefined : modelRangeExtent(model));
     fitR = R;
     persp.fov = 50; persp.updateProjectionMatrix();
     const [w, hgt] = pageSize(), free = compact.freeRect();
@@ -462,7 +469,7 @@ function start() {
       levelId = null;
       explodeT = explodeV = 0;
       planScene.setExplode(0);
-      stage.fit(model, 0);
+      fitStage();
       rebuildLevelSelect();
       const keep = mode;
       mode = keep;
@@ -531,6 +538,7 @@ function start() {
       if (player.collisions === 0 && player.x === 0 && player.y === 0) spawn();
     } else if (was === 'walk') {
       persp.fov = 50; persp.updateProjectionMatrix();
+      fitStage();
       frame();
     }
     applyVisuals();
@@ -555,8 +563,7 @@ function start() {
       explodeV += (explodeT - explodeV) * (1 - Math.exp(-dt * 9));
       if (Math.abs(explodeT - explodeV) < 1e-3) explodeV = explodeT;
       planScene.setExplode(explodeV);
-      stage.fit(model, explodeV);
-      refit();
+      if (liveFraming) { stage.fit(model, explodeV); refit(); }
       updateLabels();
     }
     if (mode === 'walk') stepPlayer(world, player, effectiveInput(), dt);

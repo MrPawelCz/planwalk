@@ -349,3 +349,10 @@ export function modelExtent(model, explode = 0) {
   if (!model.levels.length) { minY = 0; maxY = 3; }
   return { minX: b.minX, maxX: b.maxX, minZ: b.minY, maxZ: b.maxY, minY, maxY };
 }
+
+// The extent that holds the model at every explode factor from 0 to 1: the footprint never changes and the levels only rise, so it
+// is the extent at rest joined with the extent at full explode. A camera framed on it never has to move while the levels pull apart.
+export function modelRangeExtent(model) {
+  const a = modelExtent(model, 0), z = modelExtent(model, 1);
+  return { minX: a.minX, maxX: a.maxX, minZ: a.minZ, maxZ: a.maxZ, minY: Math.min(a.minY, z.minY), maxY: Math.max(a.maxY, z.maxY) };
+}

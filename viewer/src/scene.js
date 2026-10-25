@@ -358,8 +358,10 @@ export class Stage {
     this.walk = false;
   }
 
-  fit(model, explode = 0) {
-    const e = modelExtent(model, explode);
+  fit(model, explode = 0) { return this.fitExtent(model, modelExtent(model, explode)); }
+
+  // Sun, shadow frustum, base plate and ground for the extent e (see modelExtent and modelRangeExtent).
+  fitExtent(model, e) {
     const cx = (e.minX + e.maxX) / 2, cz = (e.minZ + e.maxZ) / 2, cyy = (e.minY + e.maxY) / 2;
     const R = Math.max(2, 0.5 * Math.hypot(e.maxX - e.minX, e.maxY - e.minY, e.maxZ - e.minZ)) * 1.05;
     const dir = new THREE.Vector3(-0.55, 1.2, 0.3).normalize();
