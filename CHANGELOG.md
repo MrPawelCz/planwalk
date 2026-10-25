@@ -4,6 +4,8 @@ All notable changes to planwalk are listed here. The format follows [Keep a Chan
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-10-25
+
 ### Changed
 
 - The Dollhouse camera no longer moves while the levels pull apart. The first view and every re-frame (a change of window or language, leaving Walk) hold the whole range of the Explode slider, the extent at rest joined with the extent at full explode, and nothing is fitted again during the move. Until now the view was fitted again on every animation step: on plans of two levels in a 1280 by 720 window the lowest level slid by up to 118 px (median 51) and shrank by up to 18 percent (median 12) while the levels rose, the house reached under the toolbar or past the edge of the area that no bar or card covers on 9 of 13 plans, and after the levels closed the view was left up to 118 px off its starting place. Now the lowest level stays within 0 px, the whole house keeps at least 5 percent of margin at every step and the same view comes back (measured in Chrome on 42 plans, 72 pairs of plan and window size: 1280 by 720, 1440 by 900 and 390 by 844 held upright).
@@ -111,7 +113,8 @@ First public version.
 - A benchmark harness in `eval/` (synthetic plan generator, four drawing styles, scorer) with the first results in `docs/BENCHMARK.md`.
 - Continuous integration (tests on Node 22), deployment of the viewer to GitHub Pages, issue templates, and the MIT licence with the third-party notices in `THIRD_PARTY_LICENSES.md`.
 
-[Unreleased]: https://github.com/MrPawelCz/planwalk/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/MrPawelCz/planwalk/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/MrPawelCz/planwalk/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/MrPawelCz/planwalk/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/MrPawelCz/planwalk/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/MrPawelCz/planwalk/compare/v0.1.0...v0.1.1

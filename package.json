@@ -1,6 +1,6 @@
 {
   "name": "planwalk",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Turn a floor plan into a walkable 3D model: JSON plan format, validator, dollhouse and first-person viewer, GLB export. Made for AI agents and chats with vision.",
   "type": "module",
   "license": "MIT",
