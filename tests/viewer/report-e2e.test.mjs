@@ -66,6 +66,11 @@ async function assertRejectedBanner(page, { lang, label }) {
   assert.equal(await page.evaluate(`${buttons(L)}.filter((b) => b.getClientRects().length > 0)[0].closest(".pw-banner") !== null`), true, `${label}: it is in the banner`);
   assert.equal(await page.evaluate(`${buttons(L)}.filter((b) => b.getClientRects().length > 0 && (b.closest(".pw-bar") || b.closest(".pw-issues"))).length`), 0, `${label}: the toolbar and the issues panel still have none (the plan on screen is the example)`);
   assert.equal(await page.evaluate('document.querySelector(".pw-banner").hidden'), false);
+  // The button in the banner says which answer it is about (the toolbar button is for the plan on screen) and carries the same tip.
+  const attrs = await page.evaluate(`(() => { const b = ${buttons(L)}.find((x) => x.closest(".pw-banner")), t = ${buttons(L)}.find((x) => x.closest(".pw-bar")); return { title: b.title, barTitle: t.title, aria: b.getAttribute("aria-label") }; })()`);
+  assert.equal(attrs.aria, lang === 'pl' ? 'Zgłoś zły odczyt (wklejona odpowiedź)' : 'Report a bad reading (the answer you pasted)', `${label}: the accessible name`);
+  assert.ok(attrs.title.length > 40 && attrs.title === attrs.barTitle, `${label}: the same tip as the toolbar button`);
+  assert.match(attrs.title, lang === 'pl' ? /Nic nie zostanie opublikowane, dopóki go nie wyślesz\./ : /Nothing is posted until you submit it/);
   assert.ok(rejectedIssues.errors.length > 0, 'the answer has errors');
   await page.evaluate(`${buttons(L)}.find((b) => b.closest(".pw-banner")).click()`);
   assert.ok(await page.waitFor(`window.__opened.length === ${before + 1}`), `${label}: the tab opened`);

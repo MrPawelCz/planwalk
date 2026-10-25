@@ -171,8 +171,9 @@ for (const [lang, search] of [['en', ''], ['pl', '?lang=pl']]) {
     const rows = await p.evaluate(`(() => { const s = ${q('.pw-visit-samples')}, lh = parseFloat(getComputedStyle(s).lineHeight); return Math.round(s.querySelector('span').getBoundingClientRect().height / lh); })()`);
     assert.equal(rows, 1, 'the sample line is one row on a 390 px phone');
     if (process.env.PW_EVIDENCE && lang === 'pl') await p.shot(join(process.env.PW_EVIDENCE, 'phone-card-pl.jpg'), 55);
-    // The three links are real links, in this language, and their tap areas are 44 x 44 px around the link: the four corners and the middle of that
-    // square belong to the link (not to a neighbour link, not to the list text above, not to a button below), and no list text is taken over.
+    // The three links are real links, in this language. Each has a tap area 44 px wide and as high as the link plus 13 px above it and the margin under the
+    // row (6 px on a phone), so about 38 px: its four corners and its middle belong to the link, the point 1 px under it belongs to what is below (a button or
+    // the margin) and never to the link, and the top 8 px of every button under the row belong to the button. No list text is taken over either.
     const links = await p.evaluate(`[...document.querySelectorAll('.pw-visit-samples a')].map((a) => ({ href: a.getAttribute('href'), target: a.target, rel: a.rel, download: a.getAttribute('download'), label: a.getAttribute('aria-label'), title: a.title, text: a.textContent }))`);
     assert.equal(links.length, 3, 'exactly three links');
     links.forEach((l, i) => {
@@ -185,8 +186,31 @@ for (const [lang, search] of [['en', ''], ['pl', '?lang=pl']]) {
       assert.equal(l.title, l.label);
       assert.equal(l.text, String(n));
     });
-    const taps = await p.evaluate(`[...document.querySelectorAll('.pw-visit-samples a')].map((a) => { const r = a.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2; return [[-21.5, -21.5], [21.5, -21.5], [-21.5, 21.5], [21.5, 21.5], [0, 0]].map(([dx, dy]) => { const el = document.elementFromPoint(cx + dx, cy + dy); return el === a || a.contains(el) ? 'link' : (el ? el.tagName + '.' + el.className : 'nothing'); }); })`);
-    for (const row of taps) assert.deepEqual(row, ['link', 'link', 'link', 'link', 'link'], `a 44 x 44 px tap area for every link: ${JSON.stringify(taps)}`);
+    const taps = await p.evaluate(`(() => {
+      const row = document.querySelector('.pw-visit-samples'), margin = parseFloat(getComputedStyle(row).marginBottom);
+      const own = (a, x, y) => { const el = document.elementFromPoint(x, y); return el === a || a.contains(el); };
+      return { margin, links: [...row.querySelectorAll('a')].map((a) => {
+        const r = a.getBoundingClientRect(), l = r.left - 4, rt = r.right + 4, t = r.top - 13, b = r.bottom + margin, cx = (l + rt) / 2, e = 0.5;
+        return { width: rt - l, height: b - t,
+          inside: [[l + e, t + e], [rt - e, t + e], [l + e, b - e], [rt - e, b - e], [cx, (t + b) / 2]].map(([x, y]) => own(a, x, y)),
+          under: [[l + e, b + 1], [cx, b + 1], [rt - e, b + 1]].map(([x, y]) => own(a, x, y)) };
+      }) };
+    })()`);
+    assert.equal(taps.margin, 6, 'the margin under the row on a phone');
+    assert.equal(taps.links.length, 3);
+    for (const t of taps.links) {
+      assert.ok(Math.abs(t.width - 44) < 0.05, `the tap area is ${t.width} px wide, the 36 px link and 4 px on each side`);
+      assert.ok(t.height >= 37.5 && t.height <= 41.5, `the tap area is ${t.height} px high: the link, 13 px above and the margin under the row`);
+      assert.deepEqual(t.inside, [true, true, true, true, true], `the corners and the middle of the tap area belong to the link: ${JSON.stringify(taps)}`);
+      assert.deepEqual(t.under, [false, false, false], `1 px under the tap area is a button or the margin, not the link: ${JSON.stringify(taps)}`);
+    }
+    const buttonTops = await p.evaluate(`[...document.querySelectorAll('.pw-visit-btns button')].map((b) => {
+      const r = b.getBoundingClientRect(); let miss = 0;
+      for (const dy of [1, 4, 7]) for (const f of [0.1, 0.5, 0.9]) { const el = document.elementFromPoint(r.left + r.width * f, r.top + dy); if (!(el === b || b.contains(el))) miss++; }
+      return { label: b.textContent, miss };
+    })`);
+    assert.ok(buttonTops.length >= 2, 'the buttons under the sample line');
+    for (const b of buttonTops) assert.equal(b.miss, 0, `the top 8 px of "${b.label}" belong to the button, not to a sample link: ${JSON.stringify(buttonTops)}`);
     const stolen = await p.evaluate(`(() => { let n = 0; for (const li of document.querySelectorAll('.pw-visit ol li')) { const range = document.createRange(); range.selectNodeContents(li); for (const r of range.getClientRects()) for (let i = 1; i <= 9; i++) { const el = document.elementFromPoint(r.left + (r.width * i) / 10, r.top + r.height / 2); if (el && el.closest('.pw-visit-samples')) n++; } } return n; })()`);
     assert.equal(stolen, 0, 'no tap on the text of the steps opens a picture');
     // A tap on each link is a navigation the browser makes: the page itself sends and stores nothing.

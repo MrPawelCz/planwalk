@@ -56,8 +56,10 @@ const CSS = `
 .pw-visit-samples>span{flex:1 1 auto;min-width:0}
 .pw-visit-samples>span+span{flex:none;display:flex;gap:8px}
 .pw-visit-samples a{position:relative;display:block;min-width:18px;padding:0 8px;border:1px solid rgba(80,72,62,.25);border-radius:6px;background:#fbfaf7;color:inherit;font-weight:600;text-align:center;text-decoration:none}
-/* the link looks as before (36 x 19 px); its tap area is 44 x 44 px around it: the 8 px gaps make the areas meet and not overlap, the 14 px above and below are symmetric and reach only into the margins and the foot of the last list line */
-.pw-visit-samples a::after{content:'';position:absolute;left:-5px;right:-5px;top:-14px;bottom:-14px}
+/* The link looks as before (36 x 19 px). Its tap area is 44 px wide (the 8 px gaps make the areas of neighbours meet, not overlap) and 38 to 41 px high: it
+   reaches 13 px above the link (the margin above and the foot of the last list line) and down to the end of the margin under the row (9 px here, 6 px on a
+   phone, see the media query), so it never covers the buttons under the line. The 1 px border is part of the offsets. */
+.pw-visit-samples a::after{content:'';position:absolute;left:-5px;right:-5px;top:-14px;bottom:-10px}
 .pw-visit-samples a:hover{background:#f0ece3}
 .pw-visit button{font:inherit;color:inherit;background:#fbfaf7;border:1px solid rgba(80,72,62,.25);border-radius:7px;padding:5px 11px;cursor:pointer}
 .pw-visit button:hover{background:#f0ece3}
@@ -72,7 +74,7 @@ const CSS = `
 .pw-visit.pw-visit-line .pw-visit-x{position:static;flex:none;width:48px;height:48px}
 @media (max-width:640px){.pw-visit{left:0;right:0;bottom:0;width:auto;border-radius:14px 14px 0 0;border-width:1px 0 0;padding:12px 14px calc(10px + env(safe-area-inset-bottom))}.pw-visit button{min-height:44px}.pw-visit .pw-visit-x{width:44px;height:44px;top:0;right:0}.pw-visit-note button{min-height:28px}
 /* the sheet must not grow past the share of the screen it had before the sample line: tighter gaps, nothing removed */
-.pw-visit{padding-top:9px}.pw-visit h2{margin-bottom:3px}.pw-visit-lead{margin-bottom:3px}.pw-visit ol{margin-bottom:6px}.pw-visit li{margin:1px 0}.pw-visit-samples{margin-bottom:6px}.pw-visit-note{margin-top:4px}}
+.pw-visit{padding-top:9px}.pw-visit h2{margin-bottom:3px}.pw-visit-lead{margin-bottom:3px}.pw-visit ol{margin-bottom:6px}.pw-visit li{margin:1px 0}.pw-visit-samples{margin-bottom:6px}.pw-visit-note{margin-top:4px}.pw-visit-samples a::after{bottom:-7px}}
 `;
 
 // The open-file control of this build, when it has one: the window.planwalk.openFile() hook or a .pw-open-file button.

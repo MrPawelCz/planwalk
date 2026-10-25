@@ -223,7 +223,7 @@ test('the texts: same keys in both languages, nothing empty, no long dashes, the
 });
 
 test('the new captions of the main window exist in both languages and the Polish button is "Zgłoś zły odczyt"', () => {
-  for (const key of ['reportBad', 'reportBadTip', 'reportCopyFailed', 'reportLabel', 'reportClose', 'reportSent']) {
+  for (const key of ['reportBad', 'reportBadTip', 'reportCopyFailed', 'reportLabel', 'reportClose', 'reportSent', 'reportBadAnswer']) {
     assert.ok(MAIN.en[key] && MAIN.pl[key], key);
     assert.notEqual(MAIN.pl[key], MAIN.en[key], key);
     assert.deepEqual(englishLeft(MAIN.pl[key]), [], `${key}: ${MAIN.pl[key]}`);
@@ -233,6 +233,12 @@ test('the new captions of the main window exist in both languages and the Polish
   assert.equal(MAIN.pl.reportBad, 'Zgłoś zły odczyt');
   assert.match(MAIN.en.reportBadTip, /Nothing is posted until you submit it/);
   assert.match(MAIN.pl.reportBadTip, /Nic nie zostanie opublikowane, dopóki go nie wyślesz/);
+});
+
+test('the button in the banner of a rejected answer has a name that says it is about the pasted answer, in both languages, and starts with the name of the other button', () => {
+  assert.equal(MAIN.en.reportBadAnswer, 'Report a bad reading (the answer you pasted)');
+  assert.equal(MAIN.pl.reportBadAnswer, 'Zgłoś zły odczyt (wklejona odpowiedź)');
+  for (const lang of ['en', 'pl']) assert.ok(MAIN[lang].reportBadAnswer.startsWith(MAIN[lang].reportBad), `${lang}: the visible caption is the start of the accessible name`);
 });
 
 test('the message after a tap says the plan is on the clipboard, where the report opens, what to do when nothing opened and to cover names and addresses, in both languages', () => {
@@ -301,4 +307,37 @@ test('sendReport: no issues at all gives a plain title and an address that does 
   await go('x'.repeat(2000000));
   assert.equal(opened[0], opened[1], 'the text never reaches the address');
   assert.equal(decode(opened[0]).title, 'Bad reading');
+});
+
+test('sendReport: a tab that cannot be opened does not stop the note or the window, and nothing a callback throws escapes', async () => {
+  const log = [];
+  const base = { json: 'text', issues: [], version: pkg.version, lang: 'en' };
+  const sandbox = () => { throw new Error('window.open is blocked here'); };
+  await sendReport({ ...base, copy: () => Promise.resolve(true), open: sandbox, onSent: () => log.push('sent'), onFailed: () => log.push('failed') });
+  assert.deepEqual(log, ['sent'], 'open() threw, the copy worked: the note');
+  log.length = 0;
+  await sendReport({ ...base, copy: () => Promise.reject(new Error('refused')), open: sandbox, onSent: () => log.push('sent'), onFailed: (t) => log.push(['failed', t]) });
+  assert.deepEqual(log, [['failed', 'text']], 'open() threw, the copy was refused: the window gets the text');
+  log.length = 0;
+  await sendReport({ ...base, copy: () => { throw new Error('at once'); }, open: sandbox, onFailed: (t) => log.push(['failed', t]) });
+  assert.deepEqual(log, [['failed', 'text']], 'open() and copy() both threw: the window');
+  // A callback that throws leaves no rejection behind: the returned promise resolves (an await that rejected would fail this test).
+  await sendReport({ ...base, copy: () => Promise.resolve(true), open: () => {}, onSent: () => { throw new Error('note failed'); } });
+  await sendReport({ ...base, copy: () => Promise.resolve(false), open: () => {}, onFailed: () => { throw new Error('window failed'); } });
+  await sendReport({ ...base, copy: () => Promise.reject(new Error('refused')), open: () => {}, onFailed: () => { throw new Error('window failed'); } });
+});
+
+test('sendReport: no text to copy (the plan could not be written as JSON) opens the tab and says nothing about the clipboard: no copy, no note, no window', async () => {
+  const issues = { errors: [issue('E006')], warnings: [] };
+  for (const json of ['', undefined, null, 5]) {
+    const log = [];
+    await sendReport({ json, issues, version: pkg.version, lang: 'en', copy: (t) => { log.push(['copy', t]); return Promise.resolve(true); }, open: (u) => log.push(['open', u]), onSent: () => log.push(['sent']), onFailed: (t) => log.push(['failed', t]) });
+    assert.deepEqual(log, [['open', reportUrl({ version: pkg.version, lang: 'en', issues })]], `json ${JSON.stringify(json)}: only the tab`);
+  }
+  // An empty text does not even need a copy function, and a tab that cannot be opened is still no error.
+  await sendReport({ json: '', issues, version: pkg.version, lang: 'en', open: () => { throw new Error('blocked'); } });
+  // A text that is there still goes the whole way (the other tests of sendReport hold the details).
+  const log = [];
+  await sendReport({ json: '{}', issues, version: pkg.version, lang: 'en', copy: (t) => { log.push(['copy', t]); return Promise.resolve(true); }, open: () => log.push(['open']), onSent: () => log.push(['sent']) });
+  assert.deepEqual(log, [['copy', '{}'], ['open'], ['sent']]);
 });

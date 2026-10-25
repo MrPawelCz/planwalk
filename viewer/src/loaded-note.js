@@ -1,7 +1,9 @@
 // The short confirmation after a plan got into the viewer from a paste, a dropped or opened file or a ?plan= address:
 // "Loaded: <name>, 4 rooms" for about five seconds, in a polite status line under the toolbar. It takes no taps
 // (pointer-events none), so it cannot cover a control. Strings live here as { en, pl } (see i18n.js); the plan name only
-// reaches the page as a text node.
+// reaches the page as a text node. The same line has a second use: the note after a tap on "Report a bad reading" (the plan is on the
+// clipboard, the report opens in a new tab), given as show({ text: () => string }, MESSAGE_MS) and kept for 12 seconds; the text is a
+// function, so it follows a change of language like the "Loaded" line does.
 import { getLang, makeT } from './i18n.js';
 import { pluralIndex } from './strings.js';
 import { followBar } from './under-bar.js';

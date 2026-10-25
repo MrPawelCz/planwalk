@@ -232,6 +232,8 @@ export function createNotices(root, getBar) {
     action.hidden = !shown.act;
     if (shown.act) { action.textContent = shown.act.label; action.onclick = shown.act.run; }
     extra.hidden = !shown.more;
+    extra.title = (shown.more && shown.more.title) || '';
+    if (shown.more && shown.more.aria) extra.setAttribute('aria-label', shown.more.aria); else extra.removeAttribute('aria-label');
     if (shown.more) { extra.textContent = shown.more.label; extra.onclick = shown.more.run; }
   };
   const place = followBar(el, getBar); // stays under the toolbar when it wraps differently (window resize, late font, other language)
@@ -254,7 +256,7 @@ export function createNotices(root, getBar) {
     restore() { if (shown) { draw(); place(); el.hidden = false; } },
     // text: the message, or a function that makes it (so the banner can follow a change of language); act: { label, run } or nothing;
     // lines: extra detail lines (validator messages, English: they are written for the AI), or a function that makes them;
-    // more: a second action { label, run } next to the first.
+    // more: a second action { label, run, title?, aria? } next to the first (title: the tip, aria: the name for a screen reader).
     show(text, act, lines, more) {
       shown = { text, act, lines, more };
       draw();

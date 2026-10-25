@@ -95,13 +95,19 @@ export function reportUrl(fields) {
 // tab takes the focus, and the tab is opened by the tap itself, which popup blockers allow. The tab cannot tell whether the copy worked
 // (window.open with noopener always answers null), so the page follows the answer of the copy: onSent() when the JSON is on the
 // clipboard (the person is told so), onFailed(json) when it is not (a window shows the JSON). copy, open, onSent and onFailed are given
-// by the caller, so Node tests the order and the address without a browser. Resolves when the copy has answered.
+// by the caller, so Node tests the order and the address without a browser. Resolves when the copy has answered (at once for an empty
+// json, which is not copied); it never rejects, and an open() that throws is ignored (the copy still tells the person).
 export function sendReport({ json, issues, version, lang = getLang(), promptLang = lang, copy, open, onSent = () => {}, onFailed = () => {} }) {
   const url = reportUrl({ version, lang, promptLang, issues });
+  const text = typeof json === 'string' ? json : '';
+  const openTab = () => { try { open(url); } catch { /* a tab that cannot be opened (a sandboxed frame, a replaced window.open) must not take the note or the window with it */ } };
+  // No text at all (the plan could not be written as JSON): the issue opens, and the page claims no copy, shows no note and no empty window,
+  // and leaves what is on the clipboard alone.
+  if (text === '') { openTab(); return Promise.resolve(); }
   let copying;
-  try { copying = Promise.resolve(copy(json)); } catch (err) { copying = Promise.reject(err); } // a copy that throws is a copy that failed: the tab still opens
-  open(url);
-  return copying.then((ok) => { if (ok) onSent(); else onFailed(json); }, () => onFailed(json));
+  try { copying = Promise.resolve(copy(text)); } catch (err) { copying = Promise.reject(err); } // a copy that throws is a copy that failed: the tab still opens
+  openTab();
+  return copying.then((ok) => { if (ok) onSent(); else onFailed(text); }, () => onFailed(text)).catch(() => {}); // nothing the callbacks throw leaves a rejection behind
 }
 
 const CSS = `
@@ -113,7 +119,7 @@ const CSS = `
 // h is main.js's element helper. isUserPlan() is true for a plan the person loaded (not for the bundled example), getJson() the plan
 // text for the clipboard, getIssues() the validator's { errors, warnings }, version the planwalk version. onSent() tells the person that
 // the plan is on the clipboard and the report is opening. open(url) opens the tab (replaced in tests). Returns the toolbar button,
-// panelButton() (a fresh button for the issues panel), action(getData) ({ label, run } for a banner about an answer that could not be
+// panelButton() (a fresh button for the issues panel), action(getData) ({ label, title, aria, run } for a banner about an answer that could not be
 // built into a model; getData() answers { json, issues } of that answer), the window that shows the JSON when copying fails (add it to
 // the page before the phone layout is built) and update(), which shows or hides the buttons.
 export function createReport({ h, isUserPlan, getJson, getIssues, version, onSent = () => {}, open = (url) => window.open(url, '_blank', 'noopener,noreferrer') }) {
@@ -146,6 +152,8 @@ export function createReport({ h, isUserPlan, getJson, getIssues, version, onSen
   function action(getData) {
     return {
       get label() { return String(T.reportBad); },
+      get title() { return String(T.reportBadTip); }, // the same tip as the toolbar button
+      get aria() { return String(T.reportBadAnswer); }, // says which plan it is about: the answer that was pasted, not the one on screen
       run: () => {
         let data;
         try { data = getData(); } catch { data = { json: '', issues: [] }; }

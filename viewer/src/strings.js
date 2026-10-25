@@ -29,6 +29,7 @@ export const STRINGS = {
     reportBadTip: 'Opens a new GitHub issue in a new tab, filled in with the version and the validator codes only, and copies the plan JSON to your clipboard. Nothing is posted until you submit it.',
     reportCopyFailed: 'Copying did not work here. Select the plan below, copy it, and paste it into the GitHub issue after covering names and addresses.',
     reportLabel: 'Plan JSON to copy', reportClose: 'Close',
+    reportBadAnswer: 'Report a bad reading (the answer you pasted)', // the name of the button in the banner of an answer that could not be built
     reportSent: 'Plan copied to your clipboard. The report opens in a new tab; if nothing opened, allow pop-ups and tap again. Cover names and addresses before you paste.',
   },
   pl: {
@@ -54,6 +55,7 @@ export const STRINGS = {
     reportBadTip: 'Otwiera w nowej karcie nowe zgłoszenie na GitHubie, wypełnione tylko wersją i kodami walidatora, i kopiuje JSON planu do schowka. Nic nie zostanie opublikowane, dopóki go nie wyślesz.',
     reportCopyFailed: 'Tutaj kopiowanie nie zadziałało. Zaznacz plan poniżej, skopiuj go i wklej do zgłoszenia na GitHubie, po zasłonięciu imion i adresów.',
     reportLabel: 'JSON planu do skopiowania', reportClose: 'Zamknij',
+    reportBadAnswer: 'Zgłoś zły odczyt (wklejona odpowiedź)',
     reportSent: 'Plan jest skopiowany do schowka. Zgłoszenie otworzy się w nowej karcie. Jeśli nic się nie otworzyło, zezwól na wyskakujące okna i naciśnij przycisk jeszcze raz. Zasłoń imiona i adresy, zanim wkleisz plan.',
   },
 };

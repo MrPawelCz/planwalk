@@ -438,7 +438,7 @@ function start() {
     if (!built && model) {
       // The answer is the worst kind of bad reading, and the plan on screen is not it (the buttons of the toolbar are for that plan), so the banner
       // carries its own "Report a bad reading": what was pasted goes to the clipboard, the codes of this answer into the address.
-      const reject = () => ({ json: typeof input === 'string' ? input : JSON.stringify(obj, null, 2), issues: failed });
+      const reject = () => ({ json: typeof input === 'string' ? input : (JSON.stringify(obj, null, 2) ?? ''), issues: failed }); // JSON.stringify(undefined) is undefined, not a text
       notes.show(() => loadMessage('unusable'), fixAction(), issueLines(res.errors), report.action(reject));
       return { ok: res.ok, partial: false, errors: res.errors, warnings: res.warnings, repairs, skipped: res.skipped };
     }

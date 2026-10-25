@@ -2,7 +2,7 @@
 // This is a text check, not a YAML run: GitHub's own result for a pushed branch is the final word.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -79,12 +79,21 @@ test('pages publishes the Polish page and both preview images next to the Englis
 
 test('pages publishes the sample drawings next to the examples, before the site folder is uploaded, and the release does not carry them', () => {
   const pages = read('.github/workflows/pages.yml');
-  assert.match(pages, /^ {10}cp -r examples site\/examples$/m);
+  assert.match(pages, /^ {10}mkdir site\/examples$/m);
+  assert.match(pages, /^ {10}cp examples\/\*\.plan\.json site\/examples\/$/m);
+  assert.doesNotMatch(pages, /cp -r examples/, 'only the plan files of examples/ are published, not whatever else lands there');
+  assert.ok(pages.indexOf('cp examples/*.plan.json site/examples/') < pages.indexOf('upload-pages-artifact'), 'the examples are copied before the site folder is uploaded');
   assert.match(pages, /^ {10}mkdir site\/samples$/m);
   assert.match(pages, /^ {10}cp docs\/samples\/sample-\*\.png site\/samples\/$/m);
   assert.doesNotMatch(pages, /cp -r docs\/samples/, 'only the drawings are published, not the README next to them');
   assert.ok(pages.indexOf('cp docs/samples/sample-*.png site/samples/') < pages.indexOf('upload-pages-artifact'), 'the samples are copied before the site folder is uploaded');
   assert.doesNotMatch(release, /docs\/samples|site\/samples/);
+});
+
+test('examples/ holds only plan files (*.plan.json), which is all that pages publishes from it', () => {
+  const entries = readdirSync(join(root, 'examples'), { withFileTypes: true });
+  assert.ok(entries.length >= 2, 'the bundled example plans are there');
+  for (const e of entries) assert.ok(e.isFile() && /^[a-z0-9-]+\.plan\.json$/.test(e.name), `examples/${e.name} is not a *.plan.json file: pages would leave it out, move it elsewhere`);
 });
 
 test('dependabot updates npm and github-actions weekly, grouped', () => {
