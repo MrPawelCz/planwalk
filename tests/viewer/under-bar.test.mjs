@@ -14,7 +14,7 @@ beforeEach(() => {
   globalThis.window = { addEventListener(type, fn) { listeners.push([type, fn]); } };
   globalThis.ResizeObserver = class { constructor(cb) { this.cb = cb; this.seen = []; observers.push(this); } observe(e) { this.seen.push(e); } };
 });
-afterEach(() => { delete globalThis.window; delete globalThis.ResizeObserver; });
+afterEach(() => { delete globalThis.window; delete globalThis.ResizeObserver; delete globalThis.requestAnimationFrame; });
 
 const make = () => { const el = note(); note.last = el; return el; };
 
@@ -72,4 +72,21 @@ test('without a toolbar the note goes to 10 px; without ResizeObserver the resiz
   place();
   assert.equal(el.props.top, '58px');
   assert.equal(listeners.filter(([type]) => type === 'resize').length, 2, 'both notes listen for the window resize');
+});
+
+
+test('a toolbar that was measured at a height it does not keep is measured again after the frame', () => {
+  const frames = [];
+  globalThis.requestAnimationFrame = (f) => { frames.push(f); return frames.length; };
+  const bar = box(134.4), el = make();
+  const place = followBar(el, () => bar);
+  place();
+  assert.equal(el.props.top, '142px', 'measured in the middle of a change of language');
+  assert.equal(frames.length, 1, 'one more measurement waits for the frame');
+  bar.bottom = 104.56; // all the labels are set now; the observer says nothing, the toolbar is as high as at its last notification
+  frames.shift()();
+  assert.equal(el.props.top, '113px', 'the note moved up with the toolbar');
+  assert.equal(frames.length, 0, 'the measurement after the frame does not ask for another frame');
+  place(); place(); place();
+  assert.equal(frames.length, 1, 'a burst of calls asks for one frame');
 });

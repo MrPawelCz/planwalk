@@ -25,6 +25,9 @@ wrap(window, 'fetch', 'fetch'); wrap(XMLHttpRequest.prototype, 'open', 'xhr'); w
 document.addEventListener('click', (e) => { const a = e.target.closest && e.target.closest('.pw-visit-samples a'); if (a) { window.__clicks.push(a.getAttribute('href')); e.preventDefault(); } }, true);`;
 const settle = 'new Promise((r) => setTimeout(r, 150))';
 const q = (sel) => `document.querySelector(${JSON.stringify(sel)})`;
+// The default font of a Linux runner (DejaVu Sans, which system-ui resolves to there) is 13 percent wider than the fonts of a phone, so the Polish sheet there is
+// 50 px taller than on a phone. The check below is about the layout, so it pins Arial (Liberation Sans on Linux has the same widths) and says the same on every machine.
+const PIN_FONT = `document.addEventListener('DOMContentLoaded', () => { const s = document.createElement('style'); s.textContent = '*, *::before, *::after { font-family: Arial, "Liberation Sans", Helvetica, sans-serif !important }'; document.head.append(s); });`;
 const withPage = (opts, fn, file = page) => async () => { const p = await openPage(file, { beforeLoad: STUB, ...opts }); try { await fn(p); assert.deepEqual(p.issues, [], 'console stays clean'); } finally { await p.close(); } };
 // The same page with a Polish prompt block that is certainly there, so the language switch is tested whether or not docs/PROMPT.pl.md exists.
 const both = join(out, 'both.html');
@@ -152,7 +155,7 @@ test('with both prompts embedded the card offers a switch: the page language is 
 // The open sheet keeps its top at least 12 px below the 35 percent line of the screen (232 px of 664), in both languages: the Polish
 // texts are the longest, and a phone with another font should not push the sheet over the model.
 for (const [lang, search] of [['en', ''], ['pl', '?lang=pl']]) {
-  test(`on a phone the card (${lang}) is one line above the bottom bar and opens to a sheet that leaves the middle of the screen free, 12 px to spare; the touch targets are 44 px`, { skip, timeout: 90000 }, withPage({ width: 390, height: 664, mobile: true, dpr: 2, search }, async (p) => {
+  test(`on a phone the card (${lang}) is one line above the bottom bar and opens to a sheet that leaves the middle of the screen free, 12 px to spare; the touch targets are 44 px`, { skip, timeout: 90000 }, withPage({ width: 390, height: 664, mobile: true, dpr: 2, search, beforeLoad: `${STUB}${PIN_FONT}` }, async (p) => {
     const box = () => p.evaluate(`(() => { const c = ${q('.pw-visit')}.getBoundingClientRect(), m = ${q('.pw-modebar')}.getBoundingClientRect(); return { l: c.left, r: c.right, t: c.top, b: c.bottom, modeTop: m.top, vw: innerWidth, vh: innerHeight, small: [...document.querySelectorAll('.pw-visit-btns button, .pw-visit-x, .pw-visit-open, .pw-visit-note button')].filter((b) => b.getBoundingClientRect().height < 44 || b.getBoundingClientRect().width < 44).length }; })()`);
     let r = await box();
     assert.equal(r.l, 0);
