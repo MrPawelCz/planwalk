@@ -4,6 +4,10 @@ All notable changes to planwalk are listed here. The format follows [Keep a Chan
 
 ## [Unreleased]
 
+### Changed
+
+- The measurement on real listing plans now includes gpt-6-astra (20 readings, one per plan, measured on 25 October 2026): 4 usable as they came, 7 needing at most three small corrections, 6 wrong and 3 that failed validation and were not visually judged, by the same kind of AI judge, with the extra differences listed in `docs/BENCHMARK.md` (Real listing plans). The same figures are quoted in `README.md`, `README.pl.md`, `docs/FAQ.md` and `docs/FAQ.pl.md`. The viewer and the release files are unchanged.
+
 ## [0.3.1] - 2026-10-25
 
 ### Changed

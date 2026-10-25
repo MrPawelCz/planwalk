@@ -78,13 +78,14 @@ test('the facts of the English README are in README.pl.md too, and the two point
   assert.ok(en.includes('README.pl.md') && pl.includes('README.md'));
 });
 
-test('both Polish files say what was measured: the English prompt on the models of "Runs by model", the Polish prompt on 10 Polish real plans with the two Claude models only, nothing else on real plans', () => {
+test('both Polish files say what was measured: the English prompt on the models of "Runs by model", the Polish prompt on 10 Polish real plans with the two Claude models and gpt-6-astra only, nothing else on real plans', () => {
   for (const file of FILES) {
     const md = read(file);
     assert.match(md, /(Polecenie po angielsku zmierzono|Angielską wersję polecenia sprawdzono) na modelach z tabeli „Runs by model”/, file);
     assert.match(md, /(Polskie polecenie zmierzono|wersję polską) na 10 polskich rzutach/, `${file}: the measured state of the Polish prompt`);
-    assert.match(md, /tylko u Claude Sonnet 5\.5 i Claude Haiku 4\.5/, `${file}: only the two Claude models were measured on real plans`);
-    assert.match(md, /gpt-6-astra i Gemini (na prawdziwych rzutach nie mierzono|nie były na prawdziwych rzutach mierzone)/, `${file}: the models that were not measured on real plans`);
+    assert.match(md, /tylko u Claude Sonnet 5\.5, Claude Haiku 4\.5 i gpt-6-astra/, `${file}: only the two Claude models and gpt-6-astra were measured on real plans`);
+    assert.match(md, /Gemini (na prawdziwych rzutach nie mierzono|nie był na prawdziwych rzutach mierzony)/, `${file}: the model that was not measured on real plans`);
+    assert.doesNotMatch(md, /gpt-6-astra i Gemini/, `${file}: gpt-6-astra is no longer in the not-measured sentence`);
     assert.doesNotMatch(md, /jeszcze nie mierzono|polskich rysunków nie mierzono/, `${file}: the old "not measured yet" sentence is gone`);
   }
 });
@@ -138,17 +139,25 @@ test('the figures of the real plans in docs/FAQ.pl.md are those of the English s
   const judgeHaikuPl = first(cells(section, 'Claude Haiku 4.5, Polish listings, Polish prompt', judged));
   const n = (cell) => cell.match(/^(\d+) of 10/)[1];
   assert.ok(loads.test(sonnetPl[1]) && loads.test(sonnetEn[1]) && loads.test(haikuPl[1]));
-  assert.ok(faq.includes(`u Claude Sonnet 5.5 wczytało się ${n(sonnetPl[1])} z 10 odczytów, ${judgeSonnetPl[1]} były użyteczne bez zmian i ${judgeSonnetPl[2]} do drobnych poprawek (z poleceniem angielskim na tych samych rzutach: ${n(sonnetEn[1])} z 10 wczytanych, ${judgeSonnetEn[1]} i ${judgeSonnetEn[2]};`), 'Claude Sonnet 5.5, Polish listings, both prompts');
+  assert.ok(faq.includes(`u Claude Sonnet 5.5 kontrolę walidatora przeszło ${n(sonnetPl[1])} z 10 odczytów, ${judgeSonnetPl[1]} były użyteczne bez zmian i ${judgeSonnetPl[2]} do drobnych poprawek (z poleceniem angielskim na tych samych rzutach: ${n(sonnetEn[1])} z 10 po kontroli walidatora, ${judgeSonnetEn[1]} i ${judgeSonnetEn[2]};`), 'Claude Sonnet 5.5, Polish listings, both prompts');
   assert.deepEqual([judgeHaikuPl[1], judgeHaikuPl[2]], ['0', '0'], 'the FAQ says no Haiku reading was usable or needed small fixes');
-  assert.ok(faq.includes(`z poleceniem polskim wczytało się ${n(haikuPl[1])} z 10 odczytów i żaden nie był użyteczny ani do drobnych poprawek`), 'Claude Haiku 4.5, Polish listings, Polish prompt');
+  assert.ok(faq.includes(`z poleceniem polskim kontrolę walidatora przeszło ${n(haikuPl[1])} z 10 odczytów i żaden nie był użyteczny ani do drobnych poprawek`), 'Claude Haiku 4.5, Polish listings, Polish prompt');
+  const gptPl = first(cells(section, 'gpt-6-astra, Polish listings, Polish prompt', /of 10 \(/));
+  const gptUk = first(cells(section, 'gpt-6-astra, UK listings, English prompt', /of 10 \(/));
+  const judgeGptPl = first(cells(section, 'gpt-6-astra, Polish listings, Polish prompt', judged));
+  const judgeGptUk = first(cells(section, 'gpt-6-astra, UK listings, English prompt', judged));
+  assert.ok(loads.test(gptPl[1]) && loads.test(gptUk[1]));
+  assert.ok(faq.includes(`u gpt-6-astra kontrolę walidatora przeszło ${n(gptPl[1])} z 10 odczytów, ${judgeGptPl[1]} były użyteczne bez zmian i ${judgeGptPl[2]} do drobnych poprawek (na brytyjskich rzutach z poleceniem angielskim kontrolę walidatora przeszło ${n(gptUk[1])} z 10, a użyteczny lub do drobnych poprawek był ${Number(judgeGptUk[1]) + Number(judgeGptUk[2])})`), 'gpt-6-astra, both countries');
 });
 
 // Each sentence with figures in the Polish text must carry the same numbers as its sentence of the English section.
 function checkFigures(pl, section) {
   const pairs = [
-    ['Claude Sonnet 5.5, by verdict', /Of the \d+ Claude Sonnet 5\.5 readings.*?\.(?=\s)/s, /Z \d+ odczytów Claude Sonnet 5\.5.*?się nie wczytały/s],
+    ['Claude Sonnet 5.5, by verdict', /Of the \d+ Claude Sonnet 5\.5 readings.*?\.(?=\s)/s, /Z \d+ odczytów Claude Sonnet 5\.5.*?nie przeszły kontroli walidatora i nie były oceniane wzrokowo/s],
     ['Polish against UK plans', /usable or small-fixes for \d+ of \d+ readings against \d+ of \d+/, /użyteczne lub do drobnych poprawek: \d+ z \d+ odczytów.*?wobec \d+ z \d+/s],
-    ['Claude Haiku 4.5, by verdict', /Of the \d+ Claude Haiku 4\.5 readings.*?\.(?=\s)/s, /Z \d+ odczytów Claude Haiku 4\.5.*?się nie wczytało/s],
+    ['Claude Haiku 4.5, by verdict', /Of the \d+ Claude Haiku 4\.5 readings.*?\.(?=\s)/s, /Z \d+ odczytów Claude Haiku 4\.5.*?nie przeszło kontroli walidatora i nie było oceniane wzrokowo/s],
+    ['gpt-6-astra, by verdict', /Of the \d+ gpt-6-astra readings.*?\.(?=\s)/s, /[Zz] \d+ odczytów gpt-6-astra.*?nie przeszły kontroli walidatora i nie były oceniane wzrokowo/s],
+    ['gpt-6-astra, Polish against UK plans', /usable or small-fixes for \d+ of \d+ readings of the Polish plans against \d+ of \d+/, /na polskich rzutach \d+ z \d+ odczytów było użytecznych lub do drobnych poprawek, na brytyjskich \d+ z \d+/],
   ];
   for (const [what, en, plRe] of pairs) {
     const e = section.match(en), p = pl.match(plRe);
