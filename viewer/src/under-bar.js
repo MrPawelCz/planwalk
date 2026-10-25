@@ -30,7 +30,9 @@ export function followBar(el, getBar, getAbove, prop = 'top') {
     // A change of language sets the labels of the toolbar one after the other in the same task, so a call in the middle of it can measure the toolbar
     // at a height it will not keep, and the observer then stays silent when the toolbar ends as high as it was at its last notification (seen on a
     // runner with a wider font). One more measurement after the frame puts the note right in that case too.
-    if (!frame && typeof requestAnimationFrame === 'function') frame = requestAnimationFrame(() => { frame = 0; put(); });
+    if (!frame) {
+      try { if (typeof requestAnimationFrame === 'function') frame = requestAnimationFrame(() => { frame = 0; put(); }); } catch { /* no frames (a page that failed to boot): the measurement above stands */ }
+    }
   }
   return place;
 }

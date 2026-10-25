@@ -90,3 +90,11 @@ test('a toolbar that was measured at a height it does not keep is measured again
   place(); place(); place();
   assert.equal(frames.length, 1, 'a burst of calls asks for one frame');
 });
+
+test('a page whose requestAnimationFrame throws (a boot that failed) still gets its first measurement and no error', () => {
+  Object.defineProperty(globalThis, 'requestAnimationFrame', { configurable: true, get() { throw new Error('no frames'); } });
+  const bar = box(80), el = make();
+  const place = followBar(el, () => bar);
+  assert.doesNotThrow(() => place());
+  assert.equal(el.props.top, '88px');
+});
