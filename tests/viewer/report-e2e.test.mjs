@@ -43,6 +43,54 @@ const planText = JSON.stringify(planObject);
 const analysis = analyzePlan(JSON.parse(planText));
 const issues = { errors: analysis.errors, warnings: analysis.warnings };
 const clean = JSON.stringify(JSON.parse(readFileSync(join(root, 'tests/fixtures/duplex-min.plan.json'), 'utf8')));
+// An answer that cannot be built into a model (no levels), wrapped in a chat sentence that holds a person's name: the banner of such an
+// answer carries its own "Report a bad reading". What was pasted goes to the clipboard as it was, the codes of THIS answer into the address.
+const rejectedJson = '{"version": 1, "units": "m", "levels": []}';
+const rejectedText = `Here is the plan for ${NAME}:\n${rejectedJson}\nTell me if it needs a change.`;
+const rejected = analyzePlan(JSON.parse(rejectedJson));
+const rejectedIssues = { errors: rejected.errors, warnings: rejected.warnings };
+const SENT = { en: 'Plan copied to your clipboard. The report opens in a new tab; if nothing opened, allow pop-ups and tap again. Cover names and addresses before you paste.', pl: 'Plan jest skopiowany do schowka. Zgłoszenie otworzy się w nowej karcie. Jeśli nic się nie otworzyło, zezwól na wyskakujące okna i naciśnij przycisk jeszcze raz. Zasłoń imiona i adresy, zanim wkleisz plan.' };
+const WORKING_CLIPBOARD = `Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: (t) => { window.__copied = t; return Promise.resolve(); } } }); window.__copied = null; window.__copy = "ok"`;
+const REFUSING_CLIPBOARD = `Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: () => Promise.reject(new DOMException("no", "NotAllowedError")) } }); document.execCommand = () => false; window.__copied = null`;
+const noteText = 'document.querySelector(".pw-loaded.on") ? document.querySelector(".pw-loaded.on").textContent : null';
+
+// The banner of a rejected answer, on a page that shows the bundled example: the button is in the banner (and only there), a tap copies
+// what was pasted and opens the issue with the codes of that answer, the page says what happened, a refused copy shows the pasted text.
+async function assertRejectedBanner(page, { lang, label }) {
+  const L = lang === 'pl' ? PL : EN;
+  assert.equal(await page.evaluate(visible(L)), 0, `${label}: the example is on screen, so no button yet`);
+  await page.evaluate(`window.__copy = "ok"; ${WORKING_CLIPBOARD}`);
+  const before = await page.evaluate('window.__opened.length');
+  await page.evaluate(`window.planwalk.load(${JSON.stringify(rejectedText)}, 'paste')`);
+  assert.ok(await page.waitFor(`${visible(L)} === 1`), `${label}: one button, in the banner`);
+  assert.equal(await page.evaluate(`${buttons(L)}.filter((b) => b.getClientRects().length > 0)[0].closest(".pw-banner") !== null`), true, `${label}: it is in the banner`);
+  assert.equal(await page.evaluate(`${buttons(L)}.filter((b) => b.getClientRects().length > 0 && (b.closest(".pw-bar") || b.closest(".pw-issues"))).length`), 0, `${label}: the toolbar and the issues panel still have none (the plan on screen is the example)`);
+  assert.equal(await page.evaluate('document.querySelector(".pw-banner").hidden'), false);
+  assert.ok(rejectedIssues.errors.length > 0, 'the answer has errors');
+  await page.evaluate(`${buttons(L)}.find((b) => b.closest(".pw-banner")).click()`);
+  assert.ok(await page.waitFor(`window.__opened.length === ${before + 1}`), `${label}: the tab opened`);
+  const opened = await page.evaluate(`window.__opened[${before}]`);
+  assert.deepEqual(opened.slice(1), ['_blank', 'noopener,noreferrer']);
+  assert.equal(opened[0], reportUrl({ version: pkg.version, lang, promptLang: lang, issues: rejectedIssues }), `${label}: the codes of the rejected answer`);
+  assert.match(decode(opened[0]).title, /^Bad reading: E\d{3}/);
+  for (const secret of ['Doe', 'Quillfeather', 'Here is the plan', 'levels']) assert.ok(!decodeURIComponent(opened[0]).includes(secret), `${label}: "${secret}" is in the address`);
+  assert.ok(await page.waitFor('window.__copied !== null'), `${label}: nothing was copied`);
+  assert.equal(await page.evaluate('window.__copied'), rejectedText, `${label}: what was pasted, as it was`);
+  assert.ok(await page.waitFor(`(${noteText}) === ${JSON.stringify(SENT[lang])}`), `${label}: the note says what happened: ${await page.evaluate(noteText)}`);
+  assert.equal(await page.evaluate('document.querySelector(".pw-loaded").getClientRects().length > 0'), true, `${label}: the note is on screen`);
+  // The clipboard refuses: the tab still opens and the window holds the pasted text.
+  await page.evaluate(`${REFUSING_CLIPBOARD}`);
+  await page.evaluate(`${buttons(L)}.find((b) => b.closest(".pw-banner")).click()`);
+  assert.ok(await page.waitFor(`window.__opened.length === ${before + 2}`), `${label}: the tab opens even when copying fails`);
+  assert.ok(await page.waitFor(dialogOpen), `${label}: the window`);
+  assert.equal(await page.evaluate('document.querySelector("dialog.pw-report-dlg textarea").value'), rejectedText);
+  await page.evaluate('document.querySelector("dialog.pw-report-dlg button[type=submit]").click()');
+  assert.ok(await page.waitFor(`!${dialogOpen}`));
+  // A text without a plan in it has nothing to report: the banner says so and has no such button.
+  await page.evaluate(`${WORKING_CLIPBOARD}; window.planwalk.load("hello, there is no plan here", "paste")`);
+  assert.equal(await page.evaluate('document.querySelector(".pw-banner").hidden'), false);
+  assert.equal(await page.evaluate(visible(L)), 0, `${label}: no plan found, nothing to report`);
+}
 
 before(() => {
   if (skip) return;
@@ -81,7 +129,7 @@ async function assertReported(page, count, { lang, promptLang = lang, label }) {
   const opened = await page.evaluate(`window.__opened[${count - 1}]`);
   assert.equal(opened.length, 3, `${label}: window.open(url, target, features)`);
   assert.equal(opened[1], '_blank', `${label}: a new tab`);
-  assert.equal(opened[2], 'noopener', `${label}: without a link back`);
+  assert.equal(opened[2], 'noopener,noreferrer', `${label}: without a link back and without a referrer`);
   const url = opened[0];
   assert.equal(url, reportUrl({ version: pkg.version, lang, promptLang, issues }), `${label}: the address`);
   assert.ok(url.length <= MAX_URL, `${label}: ${url.length} characters`);
@@ -116,6 +164,7 @@ test('computer, English: hidden for the bundled example, shown for a loaded plan
     // One tap on the toolbar button.
     await page.evaluate(`${buttons(EN)}.find((b) => b.closest(".pw-bar")).click()`);
     const url = await assertReported(page, 1, { lang: 'en', label: 'toolbar' });
+    assert.ok(await page.waitFor(`(${noteText}) === ${JSON.stringify(SENT.en)}`), 'toolbar: the note says the plan is on the clipboard and the report opens in a new tab');
     assert.ok(decode(url).body.includes('**Interface language:** en'));
     assert.equal(await page.evaluate(dialogOpen), false, 'copying worked, so no window');
     // The text "Copy fix request" puts on the clipboard ends with the very same JSON.
@@ -162,6 +211,8 @@ test('computer, English: hidden for the bundled example, shown for a loaded plan
     // Back to a bundled example: the button goes away again.
     await page.evaluate('(() => { const s = document.querySelector(".pw-bar select[title=Examples]"); s.value = s.options[1].value; s.dispatchEvent(new Event("change")); })()');
     assert.ok(await page.waitFor(`${visible(EN)} === 0`), 'hidden again for an example');
+    await assertRejectedBanner(page, { lang: 'en', label: 'banner, English' });
+    if (evidence) { await page.evaluate(`window.planwalk.load(${JSON.stringify(rejectedText)}, 'paste'); ${buttons(EN)}.find((b) => b.closest(".pw-banner")).click()`); await page.waitFor(`(${noteText}) !== null`); await page.screenshot(join(evidence, 'desktop-banner-en.jpg'), 55); }
 
     assert.deepEqual(await page.evaluate('window.__net'), [], 'the page sent nothing and stored nothing');
     assert.deepEqual(page.pageErrors, []);
@@ -184,6 +235,7 @@ test('computer, Polish: the button says "Zgłoś zły odczyt", the issue text is
     assert.match(await page.evaluate(`${buttons(PL)}[0].title`), /Nic nie zostanie opublikowane, dopóki go nie wyślesz\./);
     await page.evaluate(`${buttons(PL)}.find((b) => b.closest(".pw-bar")).click()`);
     const url = await assertReported(page, 1, { lang: 'pl', label: 'Polish' });
+    assert.ok(await page.waitFor(`(${noteText}) === ${JSON.stringify(SENT.pl)}`), 'Polish: the note in Polish');
     const d = decode(url);
     assert.ok(d.body.startsWith(`**Wersja planwalk:** ${pkg.version}\n**Język interfejsu:** pl\n**Zaproponowany język polecenia:** pl\n**Kody walidatora (bez komunikatów):** `), d.body.slice(0, 200));
     assert.match(d.body, /\*\*Model AI i czat:\*\* \n/);
@@ -196,7 +248,9 @@ test('computer, Polish: the button says "Zgłoś zły odczyt", the issue text is
     await page.evaluate(`${buttons(EN)}.find((b) => b.closest(".pw-bar")).click()`);
     assert.ok(await page.waitFor('window.__opened.length === 2'));
     assert.ok(decode((await page.evaluate('window.__opened[1]'))[0]).body.startsWith(`**planwalk version:** ${pkg.version}\n**Interface language:** en\n`));
+    assert.ok(await page.waitFor(`(${noteText}) === ${JSON.stringify(SENT.en)}`), 'the note follows a switch to English');
     assert.equal(await page.evaluate('window.planwalk.setLang("pl")'), 'pl');
+    assert.ok(await page.waitFor(`(${noteText}) === ${JSON.stringify(SENT.pl)}`), 'and back to Polish');
     // Refused copy: the window in Polish.
     await page.evaluate('window.__copy = "refuse"; document.execCommand = () => false');
     await page.evaluate(`${buttons(PL)}.find((b) => b.closest(".pw-issues")).click()`);
@@ -205,6 +259,10 @@ test('computer, Polish: the button says "Zgłoś zły odczyt", the issue text is
     assert.match(text, /Tutaj kopiowanie nie zadziałało\. Zaznacz plan poniżej, skopiuj go i wklej do zgłoszenia na GitHubie, po zasłonięciu imion i adresów\./);
     assert.match(text, /Zamknij/);
     assert.equal(await page.evaluate('document.querySelector("dialog.pw-report-dlg textarea").getAttribute("aria-label")'), 'JSON planu do skopiowania');
+    await page.evaluate('document.querySelector("dialog.pw-report-dlg button[type=submit]").click()');
+    await page.evaluate('(() => { const s = document.querySelector(".pw-bar select[title=Przykłady]"); s.value = s.options[1].value; s.dispatchEvent(new Event("change")); })()');
+    assert.ok(await page.waitFor(`${visible(PL)} === 0`), 'an example on screen again');
+    await assertRejectedBanner(page, { lang: 'pl', label: 'banner, Polish' });
     assert.deepEqual(await page.evaluate('window.__net'), []);
     assert.deepEqual(page.pageErrors, []);
     assert.deepEqual(page.consoleErrors, []);
@@ -240,7 +298,7 @@ test('phone, Polish (390 x 844): the Menu sheet and the issues sheet hold the bu
     assert.ok(await p.evaluate('window.__opened.length === 1'), 'the tap opened the issue');
     assert.equal(await p.evaluate('document.querySelector(".pw-menu").hidden'), true, 'the Menu got out of the way');
     const opened = await p.evaluate('window.__opened[0]');
-    assert.deepEqual(opened.slice(1), ['_blank', 'noopener']);
+    assert.deepEqual(opened.slice(1), ['_blank', 'noopener,noreferrer']);
     assert.equal(opened[0], reportUrl({ version: pkg.version, lang: 'pl', promptLang: 'pl', issues }));
     assert.equal(await p.evaluate('window.__copied'), prettyOf(planText));
     assert.equal(await p.evaluate('document.querySelector("dialog.pw-report-dlg").open'), false);
@@ -270,6 +328,37 @@ test('phone, Polish (390 x 844): the Menu sheet and the issues sheet hold the bu
     await p.tap('dialog.pw-report-dlg .pw-dlg-x');
     assert.equal(await p.evaluate('document.querySelector("dialog.pw-report-dlg").open'), false, 'the cross closes it');
 
+    assert.deepEqual(await p.evaluate('window.__net'), [], 'the page sent nothing and stored nothing');
+    assert.deepEqual(p.issues, [], 'the console stays clean');
+  } finally {
+    await p.close();
+  }
+});
+
+test('phone, Polish (390 x 844): the banner of an answer that cannot be built has "Zgłoś zły odczyt" with a 44 px tap target, a tap opens the issue, and the page says what happened', { skip, timeout: 240000 }, async () => {
+  const p = await openPhone(FILE, { width: 390, height: 844, dpr: 2, search: '?lang=pl', beforeLoad: `${STUBS}${PL_BROWSER}` });
+  try {
+    const shot = (name) => (evidence ? p.shot(join(evidence, name), 50) : null);
+    assert.match(await p.evaluate('document.getElementById("pw-app").className'), /pw-compact/);
+    await p.evaluate(`window.planwalk.load(${JSON.stringify(rejectedText)}, 'paste'); window.planwalk.advanceTime(300)`);
+    await p.settle();
+    const box = await p.evaluate(`(() => { const b = document.querySelector(".pw-banner .pw-banner-more"), r = b.getBoundingClientRect(); return { label: b.textContent, hidden: b.hidden, w: r.width, h: r.height, inside: r.left >= 0 && r.right <= innerWidth + 1 && r.top >= 0 && r.bottom <= innerHeight + 1 }; })()`);
+    assert.equal(box.label, PL);
+    assert.equal(box.hidden, false);
+    assert.ok(box.h >= 43.5 && box.w >= 43.5, `tap target ${Math.round(box.w)} x ${Math.round(box.h)}`);
+    assert.equal(box.inside, true, 'the button is on the screen');
+    assert.equal(await p.evaluate(`${visible(PL)}`), 1, 'only the banner has one: the plan on screen is the example');
+    await shot('phone-banner-pl.jpg');
+    await p.tap('.pw-banner .pw-banner-more');
+    assert.ok(await p.evaluate('window.__opened.length === 1'), 'the tap opened the issue');
+    assert.equal(await p.evaluate('window.__opened[0][0]'), reportUrl({ version: pkg.version, lang: 'pl', promptLang: 'pl', issues: rejectedIssues }));
+    assert.deepEqual((await p.evaluate('window.__opened[0]')).slice(1), ['_blank', 'noopener,noreferrer']);
+    assert.equal(await p.evaluate('window.__copied'), rejectedText);
+    await p.settle(300);
+    assert.equal(await p.evaluate(noteText), SENT.pl, 'the note says what happened');
+    const note = await p.evaluate('(() => { const r = document.querySelector(".pw-loaded").getBoundingClientRect(); return { l: r.left, r: r.right, t: r.top, b: r.bottom, vw: innerWidth, vh: innerHeight }; })()');
+    assert.ok(note.l >= 0 && note.r <= note.vw + 1 && note.t >= 0 && note.b <= note.vh + 1, JSON.stringify(note));
+    await shot('phone-sent-pl.jpg');
     assert.deepEqual(await p.evaluate('window.__net'), [], 'the page sent nothing and stored nothing');
     assert.deepEqual(p.issues, [], 'the console stays clean');
   } finally {

@@ -35,7 +35,7 @@ test('there are exactly three links, absolute on the public site, ending in samp
 
 test('the card builds each link as a download that opens a new tab safely, and no address is spelled out a second time', () => {
   assert.match(src, /target: '_blank'/);
-  assert.match(src, /rel: 'noopener'/);
+  assert.match(src, /rel: 'noopener noreferrer'/);
   assert.match(src, /download: /);
   assert.ok(!/https?:\/\//.test(src.replace(/\/\/[^\n]*/g, '')), 'the only address comes from site.js');
 });

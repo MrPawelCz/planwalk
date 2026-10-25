@@ -23,7 +23,7 @@ import { fileSlug } from './slug.js';
 import { T, issuesHeading, fixRequestText } from './strings.js'; // every caption of this window, English and Polish
 import { createShare, linkProblem } from './share.js';
 import { createReport } from './report.js';
-import { createLoadedNote } from './loaded-note.js';
+import { createLoadedNote, MESSAGE_MS } from './loaded-note.js';
 import { decodeShort, parseHash } from './share-link.js';
 import { exampleId, exampleTitle, localizeExample } from './examples-pl.js';
 
@@ -152,7 +152,8 @@ function start() {
   const share = createShare({ h, getPlan: () => plan, getName: () => plan?.name || '', getSlug: () => slug(), getImage: () => api.screenshot(), download });
   // "Report a bad reading" is for a plan the person loaded (pasted, opened or from a link), not for the bundled example. The text for the
   // clipboard is the plan the way "Copy fix request" ends with it.
-  const report = createReport({ h, isUserPlan: () => !!plan && !samplePlans.has(plan), getJson: () => (plan ? JSON.stringify(plan, null, 2) : rawText), getIssues: () => issues, version: PW_VERSION });
+  const report = createReport({ h, isUserPlan: () => !!plan && !samplePlans.has(plan), getJson: () => (plan ? JSON.stringify(plan, null, 2) : rawText), getIssues: () => issues, version: PW_VERSION,
+    onSent: () => loaded.show({ text: () => String(T.reportSent) }, MESSAGE_MS) }); // what a tap did: the plan is on the clipboard, the report opens in a new tab
   const bar = h('div', { class: 'pw-bar' },
     h('span', { class: 'pw-brand' }, 'planwalk'), nameEl, about.badge, visit.tag,
     h('div', { class: 'pw-seg' }, MODES.map((m) => modeBtns[m])),
@@ -435,7 +436,10 @@ function start() {
     const failed = { errors: res.errors, warnings: res.warnings };
     const fixAction = () => notes.copyFixAction(() => fixRequest(obj && typeof obj === 'object' ? obj : null, typeof input === 'string' ? input : '', failed));
     if (!built && model) {
-      notes.show(() => loadMessage('unusable'), fixAction(), issueLines(res.errors));
+      // The answer is the worst kind of bad reading, and the plan on screen is not it (the buttons of the toolbar are for that plan), so the banner
+      // carries its own "Report a bad reading": what was pasted goes to the clipboard, the codes of this answer into the address.
+      const reject = () => ({ json: typeof input === 'string' ? input : JSON.stringify(obj, null, 2), issues: failed });
+      notes.show(() => loadMessage('unusable'), fixAction(), issueLines(res.errors), report.action(reject));
       return { ok: res.ok, partial: false, errors: res.errors, warnings: res.warnings, repairs, skipped: res.skipped };
     }
     notes.hide();

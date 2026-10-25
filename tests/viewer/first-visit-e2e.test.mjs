@@ -8,6 +8,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'no
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { SITE } from '../../viewer/src/site.js';
 import { openPage, promptOfFile, skipReason } from './first-visit-cdp.mjs';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
@@ -15,7 +16,13 @@ const skip = skipReason();
 const out = mkdtempSync(join(tmpdir(), 'planwalk-visit-e2e-'));
 const page = join(out, 'planwalk.html');
 const prompt = (name) => (existsSync(join(root, 'docs', name)) ? promptOfFile(readFileSync(join(root, 'docs', name), 'utf8')) : null);
-const STUB = "Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: (t) => { window.__copied = t; return Promise.resolve(); } } });";
+// The clipboard keeps the last text; every way a page could send or store something is counted in __net, and a click on a sample link is stopped
+// before the browser navigates (the test must not fetch the picture from the public site) after it has been counted in __clicks.
+const STUB = `Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: (t) => { window.__copied = t; return Promise.resolve(); } } });
+window.__net = []; window.__clicks = [];
+const wrap = (obj, name, tag) => { const o = obj && obj[name]; if (typeof o === 'function') obj[name] = function () { window.__net.push(tag); return o.apply(this, arguments); }; };
+wrap(window, 'fetch', 'fetch'); wrap(XMLHttpRequest.prototype, 'open', 'xhr'); wrap(navigator, 'sendBeacon', 'beacon'); wrap(Storage.prototype, 'setItem', 'storage'); wrap(window, 'WebSocket', 'websocket');
+document.addEventListener('click', (e) => { const a = e.target.closest && e.target.closest('.pw-visit-samples a'); if (a) { window.__clicks.push(a.getAttribute('href')); e.preventDefault(); } }, true);`;
 const settle = 'new Promise((r) => setTimeout(r, 150))';
 const q = (sel) => `document.querySelector(${JSON.stringify(sel)})`;
 const withPage = (opts, fn, file = page) => async () => { const p = await openPage(file, { beforeLoad: STUB, ...opts }); try { await fn(p); assert.deepEqual(p.issues, [], 'console stays clean'); } finally { await p.close(); } };
@@ -163,6 +170,29 @@ for (const [lang, search] of [['en', ''], ['pl', '?lang=pl']]) {
     assert.equal(r.small, 0, 'every button is at least 44 px');
     const rows = await p.evaluate(`(() => { const s = ${q('.pw-visit-samples')}, lh = parseFloat(getComputedStyle(s).lineHeight); return Math.round(s.querySelector('span').getBoundingClientRect().height / lh); })()`);
     assert.equal(rows, 1, 'the sample line is one row on a 390 px phone');
+    if (process.env.PW_EVIDENCE && lang === 'pl') await p.shot(join(process.env.PW_EVIDENCE, 'phone-card-pl.jpg'), 55);
+    // The three links are real links, in this language, and their tap areas are 44 x 44 px around the link: the four corners and the middle of that
+    // square belong to the link (not to a neighbour link, not to the list text above, not to a button below), and no list text is taken over.
+    const links = await p.evaluate(`[...document.querySelectorAll('.pw-visit-samples a')].map((a) => ({ href: a.getAttribute('href'), target: a.target, rel: a.rel, download: a.getAttribute('download'), label: a.getAttribute('aria-label'), title: a.title, text: a.textContent }))`);
+    assert.equal(links.length, 3, 'exactly three links');
+    links.forEach((l, i) => {
+      const n = i + 1;
+      assert.equal(l.href, `${SITE}samples/sample-${n}.png`, `link ${n}: the picture on the public site`);
+      assert.equal(l.target, '_blank');
+      assert.deepEqual(l.rel.split(/\s+/).sort(), ['noopener', 'noreferrer'], `link ${n}: rel`);
+      assert.equal(l.download, `planwalk-sample-${n}.png`);
+      assert.equal(l.label, lang === 'pl' ? `Przykładowy rysunek ${n}` : `Sample drawing ${n}`, `link ${n}: the name in this language`);
+      assert.equal(l.title, l.label);
+      assert.equal(l.text, String(n));
+    });
+    const taps = await p.evaluate(`[...document.querySelectorAll('.pw-visit-samples a')].map((a) => { const r = a.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2; return [[-21.5, -21.5], [21.5, -21.5], [-21.5, 21.5], [21.5, 21.5], [0, 0]].map(([dx, dy]) => { const el = document.elementFromPoint(cx + dx, cy + dy); return el === a || a.contains(el) ? 'link' : (el ? el.tagName + '.' + el.className : 'nothing'); }); })`);
+    for (const row of taps) assert.deepEqual(row, ['link', 'link', 'link', 'link', 'link'], `a 44 x 44 px tap area for every link: ${JSON.stringify(taps)}`);
+    const stolen = await p.evaluate(`(() => { let n = 0; for (const li of document.querySelectorAll('.pw-visit ol li')) { const range = document.createRange(); range.selectNodeContents(li); for (const r of range.getClientRects()) for (let i = 1; i <= 9; i++) { const el = document.elementFromPoint(r.left + (r.width * i) / 10, r.top + r.height / 2); if (el && el.closest('.pw-visit-samples')) n++; } } return n; })()`);
+    assert.equal(stolen, 0, 'no tap on the text of the steps opens a picture');
+    // A tap on each link is a navigation the browser makes: the page itself sends and stores nothing.
+    await p.evaluate(`document.querySelectorAll('.pw-visit-samples a').forEach((a) => a.click())`);
+    assert.deepEqual(await p.evaluate('window.__clicks'), [1, 2, 3].map((n) => `${SITE}samples/sample-${n}.png`));
+    assert.deepEqual(await p.evaluate('window.__net'), [], 'the page sent nothing and stored nothing');
   }));
 }
 

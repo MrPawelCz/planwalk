@@ -8,7 +8,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { analyzePlan } from '../../src/core/validate.js';
-import { MAX_CODES, MAX_TITLE_CODES, MAX_URL, STRINGS, TITLE, buildReport, reportUrl, tallyCodes } from '../../viewer/src/report.js';
+import { MAX_CODES, MAX_TITLE_CODES, MAX_URL, STRINGS, TITLE, buildReport, reportUrl, sendReport, tallyCodes } from '../../viewer/src/report.js';
 import { REPO, SITE } from '../../viewer/src/site.js';
 import { setLang } from '../../viewer/src/i18n.js';
 import { STRINGS as MAIN } from '../../viewer/src/strings.js';
@@ -223,7 +223,7 @@ test('the texts: same keys in both languages, nothing empty, no long dashes, the
 });
 
 test('the new captions of the main window exist in both languages and the Polish button is "Zgłoś zły odczyt"', () => {
-  for (const key of ['reportBad', 'reportBadTip', 'reportCopyFailed', 'reportLabel', 'reportClose']) {
+  for (const key of ['reportBad', 'reportBadTip', 'reportCopyFailed', 'reportLabel', 'reportClose', 'reportSent']) {
     assert.ok(MAIN.en[key] && MAIN.pl[key], key);
     assert.notEqual(MAIN.pl[key], MAIN.en[key], key);
     assert.deepEqual(englishLeft(MAIN.pl[key]), [], `${key}: ${MAIN.pl[key]}`);
@@ -233,6 +233,15 @@ test('the new captions of the main window exist in both languages and the Polish
   assert.equal(MAIN.pl.reportBad, 'Zgłoś zły odczyt');
   assert.match(MAIN.en.reportBadTip, /Nothing is posted until you submit it/);
   assert.match(MAIN.pl.reportBadTip, /Nic nie zostanie opublikowane, dopóki go nie wyślesz/);
+});
+
+test('the message after a tap says the plan is on the clipboard, where the report opens, what to do when nothing opened and to cover names and addresses, in both languages', () => {
+  assert.equal(MAIN.en.reportSent, 'Plan copied to your clipboard. The report opens in a new tab; if nothing opened, allow pop-ups and tap again. Cover names and addresses before you paste.');
+  assert.match(MAIN.pl.reportSent, /schowka/);
+  assert.match(MAIN.pl.reportSent, /nowej karcie/);
+  assert.match(MAIN.pl.reportSent, /zezwól na wyskakujące okna/);
+  assert.match(MAIN.pl.reportSent, /Zasłoń imiona i adresy/);
+  for (const lang of ['en', 'pl']) assert.ok(MAIN[lang].reportSent.length < 220, `${lang}: short enough to read in one glance`);
 });
 
 test('the issue template carries the same labels as the text of the button, in the same order', () => {
@@ -252,6 +261,44 @@ test('the module cannot send or store anything: no network call, no beacon, no i
   for (const bad of ['fetch(', 'XMLHttpRequest', 'sendBeacon', 'WebSocket', 'EventSource', 'new Image', 'createElement(\'script\')', 'createElement(\'img\')', 'importScripts', 'localStorage', 'sessionStorage', 'indexedDB', 'document.cookie', 'caches.', 'openDatabase']) {
     assert.ok(!src.includes(bad), `report.js uses ${bad}`);
   }
-  assert.match(src, /window\.open\(url, '_blank', 'noopener'\)/, 'a new tab, without a link back to the page');
+  assert.match(src, /window\.open\(url, '_blank', 'noopener,noreferrer'\)/, 'a new tab, without a link back to the page and without the address of this page as the referrer');
   assert.ok(!/https?:\/\//.test(src.replace(/\/\/.*$/gm, '')), 'no address of its own: the repository comes from site.js');
+});
+
+// What one tap does, for a plan on screen and for a rejected answer alike (the banner of an answer that cannot be built calls the same
+// function): the copy starts before the tab is opened, the address holds the codes of the issues it was given and nothing of the text,
+// a copy that worked tells the person, a copy that did not (false or an error) gives the text to the window.
+test('sendReport: the copy starts first, then the tab opens on an address of codes and counts only, and the answer of the copy picks the note or the window', async () => {
+  const text = 'My plan for Jane Doe, 5 Quillfeather Road: {"version": 1}';
+  const issues = { errors: [issue('E006'), issue('E006')], warnings: [issue('W102')] };
+  const run = async (copy) => {
+    const log = [];
+    await sendReport({ json: text, issues, version: pkg.version, lang: 'pl', promptLang: 'en',
+      copy: (t) => { log.push(['copy', t]); return copy(); }, open: (url) => log.push(['open', url]), onSent: () => log.push(['sent']), onFailed: (t) => log.push(['failed', t]) });
+    return log;
+  };
+  const ok = await run(() => Promise.resolve(true));
+  assert.deepEqual(ok.map((e) => e[0]), ['copy', 'open', 'sent'], 'copy, then open, then the note');
+  assert.equal(ok[0][1], text, 'the whole text goes to the clipboard');
+  assert.equal(ok[1][1], reportUrl({ version: pkg.version, lang: 'pl', promptLang: 'en', issues }), 'the same address as reportUrl()');
+  const d = decode(ok[1][1]);
+  assert.equal(d.title, 'Bad reading: E006 W102');
+  assert.ok(d.body.includes('E006 x2, W102 x1'));
+  assert.ok(!decodeURIComponent(ok[1][1]).includes('Quillfeather') && !decodeURIComponent(ok[1][1]).includes('Jane'), 'nothing of the text in the address');
+  assert.ok(ok[1][1].length <= MAX_URL);
+  assert.deepEqual((await run(() => Promise.resolve(false))).map((e) => e[0]), ['copy', 'open', 'failed'], 'a refused copy: the window gets the text');
+  const rejected = await run(() => Promise.reject(new Error('no')));
+  assert.deepEqual(rejected.map((e) => e[0]), ['copy', 'open', 'failed'], 'a copy that throws: the same');
+  assert.equal(rejected[2][1], text);
+  const thrown = await run(() => { throw new Error('sync'); });
+  assert.deepEqual(thrown.map((e) => e[0]), ['copy', 'open', 'failed'], 'a copy that throws at once: the tab still opens and the window gets the text');
+});
+
+test('sendReport: no issues at all gives a plain title and an address that does not grow with the text', async () => {
+  const opened = [];
+  const go = (json) => sendReport({ json, issues: [], version: pkg.version, lang: 'en', copy: () => Promise.resolve(true), open: (u) => opened.push(u) });
+  await go('');
+  await go('x'.repeat(2000000));
+  assert.equal(opened[0], opened[1], 'the text never reaches the address');
+  assert.equal(decode(opened[0]).title, 'Bad reading');
 });

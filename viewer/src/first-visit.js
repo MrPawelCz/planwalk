@@ -54,9 +54,10 @@ const CSS = `
 .pw-visit ol{margin:0 0 9px;padding-left:19px}.pw-visit li{margin:2px 0}
 .pw-visit-samples{display:flex;align-items:center;gap:6px;margin:0 0 9px;font-size:12px;line-height:1.4;color:#4a453d}
 .pw-visit-samples>span{flex:1 1 auto;min-width:0}
-.pw-visit-samples>span+span{flex:none;display:flex;gap:3px}
+.pw-visit-samples>span+span{flex:none;display:flex;gap:8px}
 .pw-visit-samples a{position:relative;display:block;min-width:18px;padding:0 8px;border:1px solid rgba(80,72,62,.25);border-radius:6px;background:#fbfaf7;color:inherit;font-weight:600;text-align:center;text-decoration:none}
-.pw-visit-samples a::after{content:'';position:absolute;left:-2px;right:-2px;top:-20px;bottom:-5px}
+/* the link looks as before (36 x 19 px); its tap area is 44 x 44 px around it: the 8 px gaps make the areas meet and not overlap, the 14 px above and below are symmetric and reach only into the margins and the foot of the last list line */
+.pw-visit-samples a::after{content:'';position:absolute;left:-5px;right:-5px;top:-14px;bottom:-14px}
 .pw-visit-samples a:hover{background:#f0ece3}
 .pw-visit button{font:inherit;color:inherit;background:#fbfaf7;border:1px solid rgba(80,72,62,.25);border-radius:7px;padding:5px 11px;cursor:pointer}
 .pw-visit button:hover{background:#f0ece3}
@@ -126,7 +127,7 @@ export function createFirstVisit({ h, onPaste }) {
       h('p', { class: 'pw-visit-lead' }, t('lead')),
       h('ol', {}, [t('step1'), t('step2'), t('step3')].map((s) => h('li', {}, s))),
       h('p', { class: 'pw-visit-samples' }, h('span', {}, t('samples')),
-        h('span', {}, Array.from({ length: SAMPLE_COUNT }, (_, i) => h('a', { href: sampleUrl(i + 1), target: '_blank', rel: 'noopener', download: `planwalk-sample-${i + 1}.png`, title: t('sampleLink', { n: i + 1 }), 'aria-label': t('sampleLink', { n: i + 1 }) }, String(i + 1))))),
+        h('span', {}, Array.from({ length: SAMPLE_COUNT }, (_, i) => h('a', { href: sampleUrl(i + 1), target: '_blank', rel: 'noopener noreferrer', download: `planwalk-sample-${i + 1}.png`, title: t('sampleLink', { n: i + 1 }), 'aria-label': t('sampleLink', { n: i + 1 }) }, String(i + 1))))),
       h('div', { class: 'pw-visit-btns' }, copy, h('button', { type: 'button', onclick: () => { next.hidden = true; onPaste(); } }, t('paste')), open ? h('button', { type: 'button', onclick: () => { next.hidden = true; open(); } }, t('open')) : null),
       next,
       ...(langPick ? [langPick] : []),

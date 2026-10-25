@@ -220,16 +220,19 @@ export function createNotices(root, getBar) {
   const msg = h('span');
   const detail = h('span', { class: 'pw-banner-detail' });
   const action = h('button', { type: 'button', hidden: '' });
+  const extra = h('button', { type: 'button', class: 'pw-banner-more', hidden: '' }); // a second action, for the banner about an answer that could not be built
   const x = h('button', { type: 'button', class: 'pw-banner-x' }, '×');
-  const el = h('div', { class: 'pw-banner', role: 'alert', hidden: '' }, h('span', {}, msg, detail), action, x);
+  const el = h('div', { class: 'pw-banner', role: 'alert', hidden: '' }, h('span', {}, msg, detail), action, extra, x);
   const openers = [];
-  let shown = null; // { text, act, lines } of the banner on screen; text and lines may be functions, which are asked again after a change of language
+  let shown = null; // { text, act, lines, more } of the banner on screen; text and lines may be functions, which are asked again after a change of language
   const captions = () => { x.setAttribute('aria-label', t('close')); x.title = t('close'); for (const b of openers) b.textContent = t('openFile'); };
   const draw = () => {
     msg.textContent = typeof shown.text === 'function' ? shown.text() : shown.text;
     detail.replaceChildren(...((typeof shown.lines === 'function' ? shown.lines() : shown.lines) || []).map((line) => h('div', {}, line)));
     action.hidden = !shown.act;
     if (shown.act) { action.textContent = shown.act.label; action.onclick = shown.act.run; }
+    extra.hidden = !shown.more;
+    if (shown.more) { extra.textContent = shown.more.label; extra.onclick = shown.more.run; }
   };
   const place = followBar(el, getBar); // stays under the toolbar when it wraps differently (window resize, late font, other language)
   captions();
@@ -250,9 +253,10 @@ export function createNotices(root, getBar) {
     get up() { return !el.hidden; },
     restore() { if (shown) { draw(); place(); el.hidden = false; } },
     // text: the message, or a function that makes it (so the banner can follow a change of language); act: { label, run } or nothing;
-    // lines: extra detail lines (validator messages, English: they are written for the AI), or a function that makes them.
-    show(text, act, lines) {
-      shown = { text, act, lines };
+    // lines: extra detail lines (validator messages, English: they are written for the AI), or a function that makes them;
+    // more: a second action { label, run } next to the first.
+    show(text, act, lines, more) {
+      shown = { text, act, lines, more };
       draw();
       place();
       el.hidden = false;

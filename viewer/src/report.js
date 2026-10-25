@@ -84,16 +84,24 @@ export function buildReport({ version, lang = getLang(), promptLang = lang, issu
   return { title: codes.length ? `${TITLE}: ${codes.join(' ')}` : TITLE, body };
 }
 
-// The address of the new issue. No `template` and no `labels`. It cannot pass MAX_URL by construction; if it ever did, the list of
-// codes is cut in halves until it fits.
+// The address of the new issue. No `template` and no `labels`. Its size cannot pass MAX_URL by construction (the text is fixed, the
+// list of codes is cut at MAX_CODES and every code has the same shape), and tests/viewer/report.test.mjs measures the longest one.
 export function reportUrl(fields) {
-  let limit = MAX_CODES, url;
-  for (;;) {
-    const { title, body } = buildReport(fields, limit);
-    url = `${REPO}/issues/new?title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}`;
-    if (url.length <= MAX_URL || limit === 0) return url;
-    limit = Math.floor(limit / 2);
-  }
+  const { title, body } = buildReport(fields);
+  return `${REPO}/issues/new?title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}`;
+}
+
+// What one tap does, for a plan on screen and for an answer that could not be built into a model alike: the copy starts before the new
+// tab takes the focus, and the tab is opened by the tap itself, which popup blockers allow. The tab cannot tell whether the copy worked
+// (window.open with noopener always answers null), so the page follows the answer of the copy: onSent() when the JSON is on the
+// clipboard (the person is told so), onFailed(json) when it is not (a window shows the JSON). copy, open, onSent and onFailed are given
+// by the caller, so Node tests the order and the address without a browser. Resolves when the copy has answered.
+export function sendReport({ json, issues, version, lang = getLang(), promptLang = lang, copy, open, onSent = () => {}, onFailed = () => {} }) {
+  const url = reportUrl({ version, lang, promptLang, issues });
+  let copying;
+  try { copying = Promise.resolve(copy(json)); } catch (err) { copying = Promise.reject(err); } // a copy that throws is a copy that failed: the tab still opens
+  open(url);
+  return copying.then((ok) => { if (ok) onSent(); else onFailed(json); }, () => onFailed(json));
 }
 
 const CSS = `
@@ -103,10 +111,12 @@ const CSS = `
 `;
 
 // h is main.js's element helper. isUserPlan() is true for a plan the person loaded (not for the bundled example), getJson() the plan
-// text for the clipboard, getIssues() the validator's { errors, warnings }, version the planwalk version. open(url) opens the tab
-// (replaced in tests). Returns the toolbar button, panelButton() (a fresh button for the issues panel), the window that shows the JSON
-// when copying fails (add it to the page before the phone layout is built) and update(), which shows or hides the buttons.
-export function createReport({ h, isUserPlan, getJson, getIssues, version, open = (url) => window.open(url, '_blank', 'noopener') }) {
+// text for the clipboard, getIssues() the validator's { errors, warnings }, version the planwalk version. onSent() tells the person that
+// the plan is on the clipboard and the report is opening. open(url) opens the tab (replaced in tests). Returns the toolbar button,
+// panelButton() (a fresh button for the issues panel), action(getData) ({ label, run } for a banner about an answer that could not be
+// built into a model; getData() answers { json, issues } of that answer), the window that shows the JSON when copying fails (add it to
+// the page before the phone layout is built) and update(), which shows or hides the buttons.
+export function createReport({ h, isUserPlan, getJson, getIssues, version, onSent = () => {}, open = (url) => window.open(url, '_blank', 'noopener,noreferrer') }) {
   const style = h('style', { 'data-pw': '1' });
   style.textContent = CSS;
   document.head.append(style);
@@ -125,16 +135,23 @@ export function createReport({ h, isUserPlan, getJson, getIssues, version, open 
     area.scrollTop = 0; // selecting everything scrolls to the end of the text; show it from the top
   }
 
-  // Both happen inside the tap: the copy starts before the new tab takes the focus, and the tab is opened by the tap itself, which
-  // popup blockers allow. The tab cannot tell whether the copy worked, so the window follows the answer of the copy.
+  // Every tap, from the buttons and from the banner, goes through sendReport().
+  const send = ({ json, issues }) => sendReport({ json, issues, version, lang: getLang(), promptLang: defaultPromptLang(), copy: copyText, open, onSent, onFailed: showJson });
   function press() {
     if (!isUserPlan()) return;
     let json = '';
     try { json = getJson(); } catch { json = ''; } // a plan object that cannot be written as JSON: the issue still opens
-    const url = reportUrl({ version, lang: getLang(), promptLang: defaultPromptLang(), issues: getIssues() });
-    const copying = copyText(json);
-    open(url);
-    copying.then((ok) => { if (!ok) showJson(json); }, () => showJson(json));
+    send({ json, issues: getIssues() });
+  }
+  function action(getData) {
+    return {
+      get label() { return String(T.reportBad); },
+      run: () => {
+        let data;
+        try { data = getData(); } catch { data = { json: '', issues: [] }; }
+        send(data);
+      },
+    };
   }
 
   const buttons = new Set();
@@ -148,6 +165,7 @@ export function createReport({ h, isUserPlan, getJson, getIssues, version, open 
   return {
     toolbarButton,
     dialog,
+    action,
     panelButton() {
       for (const b of buttons) if (b !== toolbarButton && !b.isConnected) buttons.delete(b); // the buttons of earlier panels
       const b = make('pw-report pw-report-panel');

@@ -13,6 +13,7 @@ export const STRINGS = {
 const t = makeT(STRINGS);
 
 export const SHOW_MS = 5000;
+export const MESSAGE_MS = 12000; // a sentence takes longer to read than "Loaded: name, 4 rooms"
 const NAME_MAX = 60;
 
 // "1 pomieszczenie", "2 pomieszczenia", "5 pomieszczeń" (Polish: one | 2 to 4 except 12 to 14 | the rest); "1 room", "2 rooms".
@@ -43,7 +44,8 @@ export function createLoadedNote({ h, root, getBar }) {
   const el = h('div', { class: 'pw-loaded', role: 'status', 'aria-live': 'polite', 'aria-atomic': 'true' });
   root.append(el);
   let info = null, timer = 0;
-  const draw = () => { el.textContent = info ? loadedText(info) : ''; };
+  // info is { name, rooms } for the "Loaded" line, or { text } (a function, so it follows a change of language) for another short message.
+  const draw = () => { el.textContent = info ? (typeof info.text === 'function' ? info.text() : loadedText(info)) : ''; };
   const place = followBar(el, getBar, () => root.querySelector('.pw-banner')); // under the banner while one is shown, and under the toolbar as it wraps
   const note = {
     el,
