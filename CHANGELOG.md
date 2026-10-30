@@ -4,13 +4,13 @@ All notable changes to planwalk are listed here. The format follows [Keep a Chan
 
 ## [Unreleased]
 
-### Fixed
-
-- Walk in the bundled one-bedroom flat (`examples/flat-1.plan.json`): the player could not walk between the coffee table and the sofa, and could not enter the study at all. The table stood 15 cm from the sofa and the end of the sofa left 34 cm to the wall at the door of the study, and the player is 40 cm wide, so the 6.6 m2 of floor in the study could not be reached from where Walk starts. The sofa is now 1.6 m long and the table stands 60 cm from it, which leaves 60 cm between the two and 64 cm at the door of the study. The coffee table of the two-level house (`examples/duplex-1.plan.json`) moves 20 cm away from its sofa, from 40 to 60 cm. The Walk physics did not change: walls and furniture block as before, only the layout of the two examples did.
-
 ### Added
 
-- `tests/viewer/walk-examples.test.mjs` (Node only, no browser): on both bundled examples every room can be reached from where Walk starts, or from where the stair arrives on the level above, every door can be walked up to from both sides, a coffee table keeps at least 50 cm from a sofa or an armchair, and on the one-bedroom flat a simulated walk goes along the front of the sofa, between it and the table, round the end of the sofa and through the door of the study.
+- `tests/viewer/walk-examples.test.mjs` (Node only, no browser): on both bundled examples every room can be reached from where Walk starts, or from where the stair arrives on the level above, every door can be walked up to from both sides (the street side of the front door apart), a coffee table keeps at least 50 cm from a sofa or an armchair, and on the one-bedroom flat a simulated walk goes along the front of the sofa, between it and the table, round the end of the sofa and through the door of the study.
+
+### Fixed
+
+- Walk in the bundled one-bedroom flat (`examples/flat-1.plan.json`): the player could not walk between the coffee table and the sofa, and could not enter the study at all. The table stood 15 cm from the sofa and the end of the sofa left 34 cm to the wall at the door of the study, and the player is 40 cm wide, so the study could not be reached from where Walk starts. The sofa is now 1.6 m long and the table stands 60 cm from it, which also leaves 64 cm between the end of the sofa and the wall at the door of the study. The coffee table of the two-level house (`examples/duplex-1.plan.json`) moves 20 cm away from its sofa, from 40 to 60 cm. The Walk physics did not change: walls and furniture block as before, only the layout of the two examples did.
 
 ## [0.3.1] - 2026-10-25
 

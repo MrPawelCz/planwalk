@@ -67,7 +67,8 @@ for (const file of EXAMPLES) {
           if (reach.has(x, y)) got++;
         }
         assert.ok(free > 0, `${lv.id}/${room.id}: no free floor at all`);
-        assert.ok(got / free >= 0.95, `${lv.id}/${room.id}: only ${Math.round((100 * got) / free)} % of its free floor can be reached`);
+        const lost = (free - got) * CELL * CELL; // a few cells next to a wall are rounding of the grid, 0.05 m2 or more is a corner that the player cannot get into
+        assert.ok(lost < 0.05, `${lv.id}/${room.id}: ${lost.toFixed(2)} m2 of its free floor cannot be reached (${Math.round((100 * got) / free)} % of it can)`);
       }
     }
   });
@@ -103,7 +104,17 @@ for (const file of EXAMPLES) {
 }
 
 const corners = (c) => [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([a, b]) => [c.cx + a * c.hx * c.ux - b * c.hy * c.uy, c.cy + a * c.hx * c.uy + b * c.hy * c.ux]);
+// Two rectangles overlap when no side of either one separates them.
+function overlap(A, B) {
+  const a = corners(A), b = corners(B);
+  for (const c of [A, B]) for (const [ax, ay] of [[c.ux, c.uy], [-c.uy, c.ux]]) {
+    const pa = a.map((p) => p[0] * ax + p[1] * ay), pb = b.map((p) => p[0] * ax + p[1] * ay);
+    if (Math.max(...pa) <= Math.min(...pb) || Math.max(...pb) <= Math.min(...pa)) return false;
+  }
+  return true;
+}
 function gapBetween(A, B) {
+  if (overlap(A, B)) return 0;
   const segDist = (p, a, b) => { const dx = b[0] - a[0], dy = b[1] - a[1], t = Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / (dx * dx + dy * dy || 1))); return Math.hypot(p[0] - a[0] - t * dx, p[1] - a[1] - t * dy); };
   const a = corners(A), b = corners(B);
   let best = Infinity;
