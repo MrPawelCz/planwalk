@@ -40,8 +40,8 @@
         { "id": "study", "name": "Study", "use": "office", "polygon": [[4, 3], [8, 3], [8, 6], [4, 6]], "floor": "wood", "area": 10.6 }
       ],
       "furniture": [
-        { "id": "f1", "type": "sofa", "center": [3.6, 2.35], "rotation": 180 },
-        { "id": "f2", "type": "table-coffee", "center": [3.6, 1.45] },
+        { "id": "f1", "type": "sofa", "center": [3.5, 2.35], "size": [1.6, 0.9], "rotation": 180 },
+        { "id": "f2", "type": "table-coffee", "center": [3.5, 1.0] },
         { "id": "f3", "type": "table-dining", "center": [1.5, 1.2], "size": [1.6, 0.9] },
         { "id": "f4", "type": "bed-double", "center": [6.75, 1.5], "rotation": 90 },
         { "id": "f5", "type": "wardrobe", "center": [5.56, 0.45], "size": [1.0, 0.6] },

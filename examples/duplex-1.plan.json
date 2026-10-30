@@ -47,7 +47,7 @@
         { "id": "w1", "type": "toilet", "center": [8.5, 0.6] },
         { "id": "w2", "type": "basin", "center": [7.5, 0.5] },
         { "id": "l1", "type": "sofa", "center": [6.4, 5.55], "rotation": 180 },
-        { "id": "l2", "type": "table-coffee", "center": [6.4, 4.4] },
+        { "id": "l2", "type": "table-coffee", "center": [6.4, 4.2] },
         { "id": "l3", "type": "tv-unit", "center": [6.4, 2.75] },
         { "id": "l4", "type": "rug", "center": [6.4, 4.4] },
         { "id": "l5", "type": "table-dining", "center": [4.1, 4.9], "size": [1.6, 0.9] },
