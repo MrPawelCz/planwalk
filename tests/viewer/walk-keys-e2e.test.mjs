@@ -81,6 +81,33 @@ test('the space bar jumps from the floor, once, and a click on Walk does not mak
   }
 });
 
+test('Ctrl, Alt or Meta with the space bar is left to the browser, and a jump cut short by leaving Walk does not go on when the player is back', { skip, timeout: 120000 }, async () => {
+  const p = await openPage({ size: [1100, 620] });
+  try {
+    await walkPage(p);
+    await p.evaluate(`window.planwalk.walkTo(2.4, 1.6, 'L0', 0, -35); window.planwalk.advanceTime(50); window.__space.length = 0`);
+    for (const modifiers of [2, 1, 4]) { // Ctrl, Alt, Meta
+      await p.key('keyDown', { ...SPACE, modifiers });
+      await p.key('keyUp', { ...SPACE, modifiers });
+    }
+    await p.evaluate('window.planwalk.advanceTime(100)');
+    assert.equal((await state(p)).jump, 0, 'no jump with a modifier key down');
+    const downs = (await p.evaluate('window.__space')).filter((e) => e.startsWith('keydown'));
+    assert.deepEqual(downs, ['keydown:false', 'keydown:false', 'keydown:false'], 'the browser keeps those key presses (a shortcut of the system)');
+    // a jump that leaving Walk cuts short does not hang in the air until the player is back
+    await press(p);
+    await p.evaluate('window.planwalk.advanceTime(150)');
+    assert.ok((await state(p)).jump > 0.1, 'in the air');
+    await p.evaluate(`window.planwalk.setMode('dollhouse'); window.planwalk.setMode('walk')`);
+    const back = await state(p);
+    assert.equal(back.jump, 0, 'on the floor again');
+    assert.equal(back.camera.y, 1.6);
+    assert.deepEqual(p.pageErrors.concat(p.consoleErrors), []);
+  } finally {
+    p.close();
+  }
+});
+
 test('a text field keeps its spaces and Walk does not jump while one is focused', { skip, timeout: 120000 }, async () => {
   const p = await openPage({ size: [1100, 620] });
   try {

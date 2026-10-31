@@ -88,8 +88,8 @@ export async function openPage({ query = '', hash = '', size = [960, 540], befor
     };
     await navigate(`${pathToFileURL(viewerFile).href}${query}${hash}`);
     // One key event of the real keyboard path (Input.dispatchKeyEvent): type 'keyDown' or 'keyUp'. text makes a keyDown a typed character,
-    // which is what lets a space on a focused button click it on the key up.
-    const key = (type, { code, key: k, vk, text, autoRepeat = false }) => send('Input.dispatchKeyEvent', { type, code, key: k, windowsVirtualKeyCode: vk, nativeVirtualKeyCode: vk, text: type === 'keyDown' ? text : undefined, autoRepeat });
+    // which is what lets a space on a focused button click it on the key up. modifiers holds the keys that are down: 1 Alt, 2 Ctrl, 4 Meta, 8 Shift.
+    const key = (type, { code, key: k, vk, text, autoRepeat = false, modifiers = 0 }) => send('Input.dispatchKeyEvent', { type, code, key: k, windowsVirtualKeyCode: vk, nativeVirtualKeyCode: vk, text: type === 'keyDown' ? text : undefined, autoRepeat, modifiers });
     // A real mouse click in the middle of the first element that matches selector (it takes the focus like a person's click does).
     const clickAt = async (selector) => {
       const [x, y] = await evaluate(`(() => { const r = document.querySelector(${JSON.stringify(selector)}).getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; })()`);
