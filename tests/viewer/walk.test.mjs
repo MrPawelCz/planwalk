@@ -54,13 +54,13 @@ test('a window is not an exit: the sill is below eye height so the gap stays sol
   assert.ok(p.y > 0.15, `y = ${p.y}`);
 });
 
-test('furniture blocks, the player never ends up inside a collider', () => {
+test('furniture does not block: the player walks through the sofa and stops only at the wall behind it', () => {
   const m = duplex();
   const w = createWorld(m);
-  // sofa f1 centre (6.0, 3.9), 2.0 x 0.9, rotation 0: walking +y from (6.0, 2.0) must stop at its edge
+  // sofa f1 centre (6.0, 3.9), 2.0 x 0.9, rotation 0: walking +y from (6.0, 3.0) crosses it; the wall g3 (y = 5, 0.3 thick) is behind it
   const p = walk(w, player(w, 6.0, 3.0, 90), { forward: 1 }, 3);
-  assert.ok(p.y < 3.9 - 0.45 + 1e-3, `y = ${p.y}`);
-  assert.equal(maxPenetration(m.levels[0], p.x, p.y) < 1e-3, true);
+  assert.ok(Math.abs(p.y - (5 - 0.15 - 0.2)) < 1e-2, `y = ${p.y}`);
+  assert.equal(maxPenetration({ colliders: w.solid[0].colliders }, p.x, p.y) < 1e-3, true, 'the player never ends up inside a wall');
 });
 
 test('stairs carry the player to the upper level', () => {

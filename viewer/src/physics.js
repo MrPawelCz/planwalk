@@ -1,9 +1,12 @@
-// Walk physics: 2D circle against oriented rectangles, stair ramps, deterministic. No DOM, no three.js.
-import { PLAYER, STAIR_SWITCH, roomAt } from './geometry.js';
+// Walk physics: 2D circle against oriented rectangles, stair ramps, jumps and doors, deterministic. No DOM, no three.js.
+// The player walks through furniture: only walls, window gaps, stairs with their rails and shut doors stop it.
+import { PLAYER, STAIR_SWITCH, JUMP, DOOR_REACH, DOOR_CONE_DEG, DOOR_SECONDS, roomAt } from './geometry.js';
 import { pointInPolygon } from '../../src/core/geom2d.js';
 
 const MAX_SUBSTEP = 0.04; // metres per collision pass, well under the thinnest wall (0.08) plus the radius
 const EPS_PEN = 1e-3;
+const DOOR_MARGIN = 0.02; // a door does not shut on a player this close to it (metres beyond the radius)
+const DOOR_SAMPLES = [0.1, 0.3, 0.5, 0.7, 0.9]; // points along the opening that a player must be able to see to work the door
 const rad = (d) => (d * Math.PI) / 180;
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const wrap = (a) => {
@@ -11,15 +14,26 @@ const wrap = (a) => {
   return a - t * Math.floor((a + Math.PI) / t);
 };
 
+// solid[i] is what stops the player on level i: the colliders of the model without the furniture, plus the doors that are shut.
+// fixed[i] is the same without the doors. doors holds the state of every door that can be shut (all open at the start).
 export function createWorld(model, margin = 6) {
   const b = model.bounds;
-  return {
+  const fixed = model.levels.map((lv) => ({ colliders: lv.colliders.filter((c) => c.kind !== 'furniture') }));
+  const world = {
     model,
     levels: model.levels,
     stairs: model.stairs,
     radius: PLAYER.radius,
     bounds: { minX: b.minX - margin, maxX: b.maxX + margin, minY: b.minY - margin, maxY: b.maxY + margin },
+    fixed,
+    solid: fixed.map((l) => ({ colliders: [...l.colliders] })),
+    doors: model.levels.flatMap((lv) => lv.doors.map((d) => ({ ...d, closed: false, t: 1 }))),
   };
+  return world;
+}
+
+function rebuildSolid(world, li) {
+  world.solid[li].colliders = [...world.fixed[li].colliders, ...world.doors.filter((d) => d.level === li && d.closed).map((d) => d.collider)];
 }
 
 // Push vector that moves a circle (x, y, r) out of rect c, or null when they do not overlap.
@@ -74,7 +88,7 @@ function clampBounds(world, p) {
 }
 
 function settle(world, p) {
-  const level = world.levels[p.level];
+  const level = world.solid[p.level];
   clampBounds(world, p);
   resolve(level, p, world.radius);
   if (maxPenetration(level, p.x, p.y, world.radius) <= EPS_PEN) return;
@@ -104,11 +118,11 @@ function updateStairs(world, p) {
     if (Math.abs(t) > st.width / 2 || r < 0 || r > 1) continue;
     const lowE = world.levels[st.lower].elevation;
     if (p.level === st.lower) {
-      if (r >= STAIR_SWITCH) { p.level = st.upper; floor = world.levels[st.upper].elevation; resolve(world.levels[p.level], p, world.radius); }
+      if (r >= STAIR_SWITCH) { p.level = st.upper; floor = world.levels[st.upper].elevation; resolve(world.solid[p.level], p, world.radius); }
       else { floor = lowE + r * st.delta; p.onStair = st.id; }
     } else if (r < STAIR_SWITCH) {
       p.level = st.lower; floor = lowE + r * st.delta; p.onStair = st.id;
-      resolve(world.levels[p.level], p, world.radius);
+      resolve(world.solid[p.level], p, world.radius);
     } else {
       floor = world.levels[st.upper].elevation;
     }
@@ -118,7 +132,7 @@ function updateStairs(world, p) {
 }
 
 export function createPlayer(world, { level = 0, x = 0, y = 0, yawDeg = 0, pitchDeg = 0 } = {}) {
-  const p = { level: clamp(level, 0, Math.max(0, world.levels.length - 1)), x, y, yaw: rad(yawDeg), pitch: rad(pitchDeg), floor: 0, onStair: null, collisions: 0 };
+  const p = { level: clamp(level, 0, Math.max(0, world.levels.length - 1)), x, y, yaw: rad(yawDeg), pitch: rad(pitchDeg), floor: 0, onStair: null, collisions: 0, jumpH: 0, jumpV: 0 };
   teleport(world, p, x, y, p.level);
   return p;
 }
@@ -126,8 +140,25 @@ export function createPlayer(world, { level = 0, x = 0, y = 0, yawDeg = 0, pitch
 export function teleport(world, p, x, y, level = p.level) {
   p.level = clamp(level, 0, Math.max(0, world.levels.length - 1));
   p.x = x; p.y = y;
+  p.jumpH = 0; p.jumpV = 0;
   if (world.levels.length) { settle(world, p); updateStairs(world, p); }
   return p;
+}
+
+// Starts a jump (JUMP.speed up) when the player stands on the floor; in the air it does nothing. Returns true when the jump started.
+export function jump(world, p) {
+  if (!world.levels.length || p.jumpH > 0 || p.jumpV > 0) return false;
+  p.jumpV = JUMP.speed;
+  return true;
+}
+
+// Height above the floor under the player, one step of constant gravity (exact for that, so a step of any size lands the same way).
+function stepJump(p, dt) {
+  if (!(p.jumpH > 0 || p.jumpV > 0) || !(dt > 0)) return;
+  const h = p.jumpH + p.jumpV * dt - 0.5 * JUMP.gravity * dt * dt;
+  if (h <= 0) { p.jumpH = 0; p.jumpV = 0; return; }
+  p.jumpH = h;
+  p.jumpV -= JUMP.gravity * dt;
 }
 
 // Advance the player by dt seconds. input: { forward, strafe, turn (-1..1), run }.
@@ -135,6 +166,7 @@ export function stepPlayer(world, p, input = {}, dt = 1 / 60) {
   const fwd = clamp(+input.forward || 0, -1, 1), str = clamp(+input.strafe || 0, -1, 1), turn = clamp(+input.turn || 0, -1, 1);
   if (!world.levels.length) return p;
   p.yaw = wrap(p.yaw + turn * rad(PLAYER.turnRate) * dt);
+  stepJump(p, dt);
   let mx = fwd, my = str;
   const mag = Math.hypot(mx, my);
   if (mag > 1) { mx /= mag; my /= mag; }
@@ -148,7 +180,7 @@ export function stepPlayer(world, p, input = {}, dt = 1 / 60) {
       p.x += (vx * dt) / n;
       p.y += (vy * dt) / n;
       clampBounds(world, p);
-      const level = world.levels[p.level];
+      const level = world.solid[p.level];
       if (resolve(level, p, world.radius)) p.collisions++;
       if (maxPenetration(level, p.x, p.y, world.radius) > EPS_PEN) { p.x = px; p.y = py; }
       updateStairs(world, p);
@@ -157,6 +189,77 @@ export function stepPlayer(world, p, input = {}, dt = 1 / 60) {
     updateStairs(world, p);
   }
   return p;
+}
+
+// ---- doors ----
+// A door that can be shut has a state in world.doors: closed (what it is set to) and t, how far the leaf stands open (1 open, 0 shut)
+// while it swings. A shut door blocks at once and an open one lets through at once; the swing is only the picture.
+const nearestOnGap = (d, x, y) => {
+  const [a, b] = d.gap, dx = b[0] - a[0], dy = b[1] - a[1];
+  const t = clamp(((x - a[0]) * dx + (y - a[1]) * dy) / (dx * dx + dy * dy || 1), 0, 1);
+  return [a[0] + t * dx, a[1] + t * dy];
+};
+const standsIn = (world, d, p) => pushOut(d.collider, p.x, p.y, world.radius + DOOR_MARGIN) !== null;
+// Walls between the player and the opening hide the door: at least one of a few points along it must be in plain sight.
+const seesDoor = (world, d, p) => DOOR_SAMPLES.some((f) => {
+  const x = d.gap[0][0] + (d.gap[1][0] - d.gap[0][0]) * f - p.x, y = d.gap[0][1] + (d.gap[1][1] - d.gap[0][1]) * f - p.y, len = Math.hypot(x, y);
+  return len < 1e-9 || freeDistance(world.fixed[p.level], p.x, p.y, x / len, y / len, len) >= len - 1e-6;
+});
+
+// The door that the space bar works on: the player stands in it, or it is within DOOR_REACH, within DOOR_CONE_DEG of where the player
+// looks and in plain sight. The nearest one wins (null when there is none).
+export function doorInReach(world, p) {
+  const cone = Math.cos(rad(DOOR_CONE_DEG));
+  let best = null, bestScore = Infinity;
+  for (const d of world.doors) {
+    if (d.level !== p.level) continue;
+    const inside = standsIn(world, d, p);
+    const q = nearestOnGap(d, p.x, p.y), dist = Math.hypot(q[0] - p.x, q[1] - p.y);
+    if (!inside) {
+      if (dist > DOOR_REACH) continue;
+      if (dist > 1e-9 && (q[0] - p.x) * Math.cos(p.yaw) + (q[1] - p.y) * Math.sin(p.yaw) < cone * dist) continue;
+      if (!seesDoor(world, d, p)) continue;
+    }
+    const score = inside ? -1 : dist;
+    if (score < bestScore) { best = d; bestScore = score; }
+  }
+  return best;
+}
+
+// What the space bar does at a door: shuts an open one and opens a shut one. Returns { id, action: 'close' | 'open' | 'blocked' }
+// ('blocked': the player stands in the doorway, so the door stays open), or null when no door is in reach.
+export function useDoor(world, p) {
+  const d = doorInReach(world, p);
+  if (!d) return null;
+  if (!d.closed && standsIn(world, d, p)) return { id: d.id, action: 'blocked' };
+  d.closed = !d.closed;
+  rebuildSolid(world, d.level);
+  return { id: d.id, action: d.closed ? 'close' : 'open' };
+}
+
+// The space bar: works the door in reach, else jumps. Returns { action: 'close' | 'open' | 'blocked' | 'jump' | 'none', id? } ('none':
+// the player is in the air and there is no door to work).
+export function useSpace(world, p) {
+  const door = useDoor(world, p);
+  return door ?? { action: jump(world, p) ? 'jump' : 'none' };
+}
+
+// Swings the leaves towards their state for dt seconds. Returns true when any leaf moved (the picture has to follow).
+export function stepDoors(world, dt) {
+  let moved = false;
+  for (const d of world.doors) {
+    const t = clamp(d.t + ((d.closed ? -1 : 1) * dt) / DOOR_SECONDS, 0, 1);
+    if (t !== d.t) { d.t = t; moved = true; }
+  }
+  return moved;
+}
+
+// Every door open and at rest again (leaving Walk, a new plan). Returns true when anything changed.
+export function openAllDoors(world) {
+  let changed = false;
+  for (const d of world.doors) if (d.closed || d.t !== 1) { d.closed = false; d.t = 1; changed = true; }
+  if (changed) world.levels.forEach((_, i) => rebuildSolid(world, i));
+  return changed;
 }
 
 // How far a ray from (x, y) along the unit vector (dx, dy) travels before it meets a collider of the level, at most max (slab test

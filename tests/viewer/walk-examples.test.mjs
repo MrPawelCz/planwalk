@@ -1,5 +1,7 @@
-// The bundled examples have to be walkable. The one-bedroom flat had 15 cm between its coffee table and its sofa, and the end of the sofa left
-// 34 cm at the door of the study, so the study could not be entered at all. Node only, no browser: the physics of Walk on the real examples.
+// The layout of the bundled examples: furniture stands so that a body 40 cm wide could walk between the pieces and up to every door, as if the
+// furniture were solid (it is not: Walk goes through it, but a sofa 15 cm from a coffee table looks wrong, and in v0.3.1, when furniture still
+// blocked, the study of the one-bedroom flat could not be entered at all). So every check here counts the footprints of the furniture as well as
+// the walls (maxPenetration over all the colliders of the model). Node only, no browser.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -52,7 +54,7 @@ function seeds(model) {
 }
 
 for (const file of EXAMPLES) {
-  test(`${file}: every room can be reached from where Walk starts`, () => {
+  test(`${file}: every room can be reached from where Walk starts, round the furniture`, () => {
     const m = modelOf(file), seedAt = seeds(m);
     for (const lv of m.levels) {
       const seed = seedAt.get(lv.index);
@@ -91,7 +93,7 @@ for (const file of EXAMPLES) {
     }
   });
 
-  test(`${file}: there is room to walk between a coffee table and a sofa`, () => {
+  test(`${file}: there is room between a coffee table and a sofa for a person to walk`, () => {
     const m = modelOf(file);
     for (const lv of m.levels) {
       const col = (id) => lv.colliders.find((c) => c.kind === 'furniture' && c.id === id);
@@ -123,7 +125,8 @@ function gapBetween(A, B) {
 }
 
 // The walk that was reported: along the front of the sofa, between it and the coffee table, round the end of the sofa and through the study door.
-test('flat-1: the player walks between the coffee table and the sofa and into the study', () => {
+// The player would walk through the furniture, so the route is checked against its footprints on every step.
+test('flat-1: the route between the coffee table and the sofa and into the study is clear of furniture and walls', () => {
   const m = modelOf('examples/flat-1.plan.json'), world = createWorld(m);
   const p = createPlayer(world, { level: 0, x: 2.9, y: 1.6, yawDeg: 0 });
   const goTo = ([tx, ty]) => {
@@ -131,6 +134,7 @@ test('flat-1: the player walks between the coffee table and the sofa and into th
       if (Math.hypot(tx - p.x, ty - p.y) < 0.1) return true;
       p.yaw = Math.atan2(ty - p.y, tx - p.x);
       stepPlayer(world, p, { forward: 1 }, 1 / 60);
+      assert.ok(maxPenetration(m.levels[0], p.x, p.y, R) <= 1e-3, `the route runs into a piece of furniture or a wall at (${p.x.toFixed(2)}, ${p.y.toFixed(2)})`);
     }
     return false;
   };
