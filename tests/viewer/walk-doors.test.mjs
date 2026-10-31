@@ -4,7 +4,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { validatePlan } from '../../src/core/validate.js';
-import { buildModel, leafPose, LEAF_OPEN_DEG, DOOR_SECONDS } from '../../viewer/src/geometry.js';
+import { buildModel, leafPose, LEAF_OPEN_DEG } from '../../viewer/src/geometry.js';
 import { createWorld, createPlayer, stepPlayer, doorInReach, useDoor, useSpace, stepDoors, openAllDoors, defaultSpawn } from '../../viewer/src/physics.js';
 import { twoRooms } from './walk-room.mjs';
 
@@ -132,13 +132,46 @@ test('the door never shuts on the player: standing in the doorway, or within a h
 
 test('the nearest door in reach is the one the space bar works', () => {
   const m = modelOf('examples/flat-1.plan.json'), w = createWorld(m);
-  // d-hall-living (x 0.6 to 1.5 at y = 3) and d-hall-bath (x = 2, y 4.2 to 5): standing in the hall at (1.5, 3.8) turned towards both
-  const near = (x, y, yaw) => doorInReach(w, at(w, x, y, yaw))?.id ?? null;
+  // d-hall-living (x 0.6 to 1.5 at y = 3) and d-hall-bath (x = 2, y 4.2 to 5) in the hall
+  const near = (x, y, yaw, world = w) => doorInReach(world, at(world, x, y, yaw))?.id ?? null;
   assert.equal(near(1.3, 3.7, -90), 'd-hall-living');
   assert.equal(near(1.5, 4.4, 0), 'd-hall-bath');
-  const between = at(w, 1.7, 3.6, 0);
-  between.yaw = Math.atan2(4.4 - 3.6, 2 - 1.7);
-  assert.equal(doorInReach(w, between)?.id, 'd-hall-bath', 'the one that is nearer, though the other is in the cone as well');
+  // From (0.7, 4.2), turned 67.5 degrees off the way to the bathroom door, both doors are in reach and in the cone (1.2 m and 1.3 m away): the
+  // nearer one wins, and with it taken out the other one is found, so it was a candidate too.
+  const without = (id) => ({ ...w, doors: w.doors.filter((d) => d.id !== id) });
+  assert.equal(near(0.7, 4.2, -67.5), 'd-hall-living');
+  assert.equal(near(0.7, 4.2, -67.5, without('d-hall-living')), 'd-hall-bath', 'the farther door was in reach as well');
+  assert.equal(near(0.7, 4.2, -67.5, without('d-hall-bath')), 'd-hall-living');
+});
+
+test('the cone ends between 65 and 75 degrees from the line to the door', () => {
+  const w = createWorld(twoRooms());
+  const door = (yawDeg) => doorInReach(w, at(w, 3.0, 1.45, yawDeg))?.id ?? null; // the nearest point of the opening is straight ahead at yaw 0
+  assert.deepEqual([door(65), door(-65)], ['d1', 'd1']);
+  assert.deepEqual([door(75), door(-75)], [null, null]);
+});
+
+test('furniture does not hide a door: it is seen past a wardrobe and the space bar works it', () => {
+  const w = createWorld(twoRooms({ blocker: true })), p = at(w, 3.0, 1.45, 0);
+  assert.ok(w.model.levels[0].furniture.some((f) => f.id === 'blk'), 'the wardrobe is in the model');
+  assert.equal(doorInReach(w, p)?.id, 'd1');
+  assert.equal(useSpace(w, p).action, 'close');
+});
+
+test('a door shuts on a player 23 cm from its face and not on one 21 cm from it (the circle is 20 cm and the margin 2 cm)', () => {
+  // the shut door fills the wall: its face lies 6 cm from the wall line x = 4, on either side
+  for (const [x, yaw] of [[4 - 0.06 - 0.21, 0], [4 + 0.06 + 0.21, 180]]) {
+    const w = createWorld(twoRooms()), p = at(w, x, 1.45, yaw);
+    assert.deepEqual(useDoor(w, p), { id: 'd1', action: 'blocked' }, `x = ${x.toFixed(2)}: just outside the circle, still too close`);
+    assert.equal(w.doors[0].closed, false);
+  }
+  for (const [x, yaw] of [[4 - 0.06 - 0.23, 0], [4 + 0.06 + 0.23, 180]]) {
+    const w = createWorld(twoRooms()), p = at(w, x, 1.45, yaw);
+    assert.deepEqual(useDoor(w, p), { id: 'd1', action: 'close' }, `x = ${x.toFixed(2)}: far enough`);
+    const before = [p.x, p.y];
+    stepPlayer(w, p, {}, 1 / 60);
+    assert.deepEqual([p.x, p.y, p.collisions], [...before, 0], 'the shut door does not push the player');
+  }
 });
 
 test('doors of the other level are not in reach', () => {
@@ -158,14 +191,14 @@ test('the leaf swings in 0.45 s, in steps of any size, and the door blocks as so
     let t = 0, seconds = 0;
     while (stepDoors(w, dt)) { seconds += dt; t = d.t; assert.ok(d.t >= 0 && d.t < 1); }
     assert.equal(d.t, 0);
-    assert.ok(Math.abs(seconds - DOOR_SECONDS) <= dt + 1e-9, `dt ${dt}: ${seconds.toFixed(3)} s`);
+    assert.ok(Math.abs(seconds - 0.45) <= dt + 1e-9, `dt ${dt}: ${seconds.toFixed(3)} s`);
     assert.ok(t >= 0);
     assert.equal(stepDoors(w, dt), false, 'at rest it does not move');
     useDoor(w, p);
     seconds = 0;
     while (stepDoors(w, dt)) seconds += dt;
     assert.equal(d.t, 1);
-    assert.ok(Math.abs(seconds - DOOR_SECONDS) <= dt + 1e-9);
+    assert.ok(Math.abs(seconds - 0.45) <= dt + 1e-9, `dt ${dt} (opening): ${seconds.toFixed(3)} s`);
   }
   // half way the leaf is turned half of 75 degrees: the swing of a leaf is the angle of the open pose times t
   const m = twoRooms(), o = m.levels[0].openings.find((q) => q.id === 'd1');

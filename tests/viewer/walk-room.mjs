@@ -7,7 +7,8 @@ export const planModel = (plan) => { const r = validatePlan(plan); assert.ok(r.n
 
 // Room A (x 0 to 4) and room B (x 4 to 8), 4 m deep, with the door d1 (y 1.0 to 1.9) and the passage p1 (y 2.6 to 3.6) in the wall x = 4.
 // divider: a wall across room B at y = 2.4 that hides the door from the south part of B. sill: the sill of the door (a high one cannot be walked through).
-export function twoRooms({ divider = false, sill } = {}) {
+// blocker: a narrow wardrobe (x 3.3 to 3.7, y 0.85 to 2.05) in the line of sight between a player at (3, 1.45) and the door.
+export function twoRooms({ divider = false, sill, blocker = false } = {}) {
   const walls = [
     { id: 'w1', from: [0, 0], to: [8, 0], kind: 'exterior' }, { id: 'w2', from: [8, 0], to: [8, 4], kind: 'exterior' },
     { id: 'w3', from: [8, 4], to: [0, 4], kind: 'exterior' }, { id: 'w4', from: [0, 4], to: [0, 0], kind: 'exterior' },
@@ -23,7 +24,8 @@ export function twoRooms({ divider = false, sill } = {}) {
       openings: [door, { id: 'p1', wall: 'w5', type: 'passage', offset: 2.6, width: 1.0 }],
       rooms: [{ id: 'a', name: 'A', polygon: [[0, 0], [4, 0], [4, 4], [0, 4]], floor: 'wood', ceiling: true }, { id: 'b', name: 'B', polygon: [[4, 0], [8, 0], [8, 4], [4, 4]], floor: 'tile', ceiling: true }],
       stairs: [],
-      furniture: [{ id: 'sofa', type: 'sofa', center: [2, 2], rotation: 0 }, { id: 'ward', type: 'wardrobe', center: [0.5, 0.45] }, { id: 'tbl', type: 'table-dining', center: [6, 2], rotation: 90 }],
+      furniture: [{ id: 'sofa', type: 'sofa', center: [2, 2], rotation: 0 }, { id: 'ward', type: 'wardrobe', center: [0.5, 0.45] }, { id: 'tbl', type: 'table-dining', center: [6, 2], rotation: 90 },
+        ...(blocker ? [{ id: 'blk', type: 'wardrobe', center: [3.5, 1.45], size: [0.4, 1.2], rotation: 0 }] : [])],
     }],
   });
 }
