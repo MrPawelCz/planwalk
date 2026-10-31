@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import { mat, floorMat, floorName, texScale } from './materials.js';
 import { buildFurniture, SCENE_MESHES } from './furniture.js';
-import { levelOffsets, modelExtent } from './geometry.js';
+import { levelOffsets, modelExtent, leafPose } from './geometry.js';
 import { boxGeometry, setBoxUV } from './uv.js';
 import { roomArea, formatArea } from './areas.js';
 
@@ -119,6 +119,7 @@ export class PlanScene {
     this.floors = [];
     this.labels = [];
     this.arcs = [];
+    this.leaves = new Map(); // `${level index}/${opening id}` -> { mesh, swing }: the door leaves that Walk can swing
     this.furnitureBudget = { left: SCENE_MESHES };
     this.levelGroups = model.levels.map((lv) => this._level(lv));
     this.levelGroups.forEach((g) => this.group.add(g));
@@ -177,7 +178,10 @@ export class PlanScene {
       const og = new THREE.Group();
       og.name = `opening:${o.id}`;
       og.userData.type = o.type;
-      for (const b of o.parts) this._box(og, b, 0);
+      for (const b of o.parts) {
+        const m = this._box(og, b, 0);
+        if (b === o.leaf && o.swing) this.leaves.set(`${lv.index}/${o.id}`, { mesh: m, swing: o.swing });
+      }
       g.add(og);
       if (o.arc) {
         const pts = [];
@@ -274,6 +278,18 @@ export class PlanScene {
     cap.scale.y = Math.max(1e-4, t);
     cap.visible = this.look === 'textured' && this.cutH != null && c.mesh.visible && t > 0.006;
   }
+
+  // Swings the leaf of a door to t (0 shut, 1 open, the pose it is built in). Its texture turns with it: the uv frame is the leaf's own.
+  setLeaf(level, id, t) {
+    const l = this.leaves.get(`${level}/${id}`);
+    if (!l) return;
+    const p = leafPose(l.swing, t);
+    l.mesh.position.x = p.cx;
+    l.mesh.position.z = p.cy;
+    l.mesh.rotation.y = -p.angle;
+  }
+  // doors: the door states of the physics world ({ level, id, t }); with open set every leaf goes to the open pose (the GLB export).
+  setDoors(doors, open = false) { for (const d of doors) this.setLeaf(d.level, d.id, open ? 1 : d.t); }
 
   setCeilings(on) { for (const c of this.ceilings) c.visible = on; }
   setLabels(on) { for (const l of this.labels) l.visible = on; }

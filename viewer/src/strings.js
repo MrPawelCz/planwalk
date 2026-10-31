@@ -14,7 +14,7 @@ export const STRINGS = {
     noWebgl: 'WebGL is not available in this browser, so the 3D view cannot start.',
     copyFix: 'Copy fix request', copied: 'Copied', issues: 'Issues', fix: 'Fix',
     pastePrompt: 'Paste the whole answer from the AI chat here (the JSON alone works too)',
-    walkHint: 'Click to look around. WASD or arrows move, Shift runs, Esc goes back.',
+    walkHint: 'Click to look around. WASD or arrows move, Shift runs, Space jumps or works a door, Esc goes back.',
     // counts: one form per plural category (English: one|other, Polish: one|few|many), see countText()
     errorsCount: '{n} error|{n} errors',
     warningsCount: '{n} warning|{n} warnings',
@@ -43,7 +43,7 @@ export const STRINGS = {
     noWebgl: 'W tej przeglądarce nie ma WebGL, więc widok 3D nie może się uruchomić.',
     copyFix: 'Kopiuj prośbę o poprawkę', copied: 'Skopiowano', issues: 'Problemy', fix: 'Jak poprawić',
     pastePrompt: 'Wklej tutaj całą odpowiedź z czatu z AI (sam JSON też wystarczy)',
-    walkHint: 'Kliknij, żeby się rozglądać. Strzałki lub WASD: ruch, Shift: bieg, Esc: powrót.',
+    walkHint: 'Kliknij, żeby się rozglądać. Strzałki lub WASD: ruch, Shift: bieg, spacja: skok lub drzwi, Esc: powrót.',
     errorsCount: '{n} błąd|{n} błędy|{n} błędów',
     warningsCount: '{n} ostrzeżenie|{n} ostrzeżenia|{n} ostrzeżeń',
     noteErrors: 'Błędy: coś w planie się nie zgadza. Opisy niżej są po angielsku, bo są pisane dla AI: skopiuj prośbę o poprawkę, wklej ją do czatu z AI i wczytaj poprawioną odpowiedź.',

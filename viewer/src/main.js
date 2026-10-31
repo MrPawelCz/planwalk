@@ -8,7 +8,7 @@ import { createNotices, fetchPlanText, readPlanFile, reportCrash, loadMessage, d
 import { buildModel, roomAt, modelExtent, modelRangeExtent, CUT_HEIGHT, PLAYER } from './geometry.js';
 import { PlanScene, Stage } from './scene.js';
 import { LOOKS, setTextureAnisotropy, withoutNormalMaps } from './materials.js';
-import { createWorld, createPlayer, teleport, stepPlayer, defaultSpawn } from './physics.js';
+import { createWorld, createPlayer, teleport, stepPlayer, stepDoors, openAllDoors, jump, useSpace, defaultSpawn } from './physics.js';
 import { createAbout, ABOUT_CSS } from './about.js';
 import { version as PW_VERSION } from '../../package.json'; // the one place the version lives; esbuild inlines just this field
 import { getLang, setLang } from './i18n.js';
@@ -67,7 +67,7 @@ button,select,summary{touch-action:manipulation}
 .pw-issues .e{color:#b3321f;font-weight:600}.pw-issues .w{color:#9a6a12;font-weight:600}
 .pw-issues em{display:block;color:#6a6358;font-style:normal}
 .pw-issues .pw-issue-note{margin:0 0 6px;color:#6a6358}
-.pw-hint{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);padding:5px 12px;background:rgba(40,36,30,.72);color:#fff;border-radius:999px;pointer-events:none}
+.pw-hint{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);width:max-content;max-width:calc(100% - 24px);box-sizing:border-box;padding:5px 12px;background:rgba(40,36,30,.72);color:#fff;border-radius:999px;pointer-events:none}
 .pw-mini{position:absolute;right:12px;bottom:12px;width:180px;height:180px;border:1px solid rgba(80,72,62,.3);border-radius:10px;background:rgba(255,255,255,.82)}
 .pw-dlg{border:1px solid rgba(80,72,62,.3);border-radius:12px;padding:14px 16px;max-width:min(560px,92vw);color:#37332d}
 .pw-dlg::backdrop{background:rgba(40,36,30,.35)}
@@ -549,6 +549,8 @@ function start() {
       persp.fov = 70; persp.updateProjectionMatrix();
       if (player.collisions === 0 && player.x === 0 && player.y === 0) spawn();
     } else if (was === 'walk') {
+      if (world && openAllDoors(world)) planScene.setDoors(world.doors); // the doors are open again for the other views and the next walk
+      if (player) { player.jumpH = 0; player.jumpV = 0; }
       persp.fov = 50; persp.updateProjectionMatrix();
       fitStage();
       frame();
@@ -579,10 +581,11 @@ function start() {
       updateLabels();
     }
     if (mode === 'walk') stepPlayer(world, player, effectiveInput(), dt);
+    if (stepDoors(world, dt)) planScene.setDoors(world.doors);
   }
 
   function poseWalkCamera() {
-    const cp = Math.cos(player.pitch), ey = player.floor + PLAYER.eye;
+    const cp = Math.cos(player.pitch), ey = player.floor + PLAYER.eye + player.jumpH;
     persp.position.set(player.x, ey, player.y);
     persp.lookAt(player.x + Math.cos(player.yaw) * cp, ey + Math.sin(player.pitch), player.y + Math.sin(player.yaw) * cp);
   }
@@ -596,7 +599,8 @@ function start() {
     const X = (x) => ox + (x - b.minX) * s, Y = (y) => oy + (y - b.minY) * s;
     ctx.clearRect(0, 0, S, S);
     ctx.fillStyle = '#6b655a';
-    for (const c of lv.colliders) {
+    // walls and stairs, and the doors that are shut (an open door is a gap, as before); furniture is walked through and not drawn
+    for (const c of [...lv.colliders, ...world.doors.filter((d) => d.level === player.level && d.closed).map((d) => d.collider)]) {
       if (c.kind === 'furniture' || c.kind === 'rail') continue;
       ctx.save();
       ctx.translate(X(c.cx), Y(c.cy));
@@ -671,7 +675,7 @@ function start() {
   // ---------- public API ----------
   function state() {
     let cam;
-    if (mode === 'walk' && player) cam = { x: player.x, y: player.floor + PLAYER.eye, z: player.y, yaw: deg(player.yaw), pitch: deg(player.pitch) };
+    if (mode === 'walk' && player) cam = { x: player.x, y: player.floor + PLAYER.eye + player.jumpH, z: player.y, yaw: deg(player.yaw), pitch: deg(player.pitch) };
     else {
       const c = mode === 'top' ? ortho : persp;
       const d = new THREE.Vector3();
@@ -686,6 +690,8 @@ function start() {
       room,
       counts: model ? { ...model.counts } : { levels: 0, walls: 0, openings: 0, rooms: 0, furniture: 0, stairs: 0 },
       collisions: player ? player.collisions : 0,
+      jump: player ? r3(player.jumpH) : 0,
+      doors: world ? world.doors.map((d) => ({ id: d.id, level: model.levels[d.level].id, closed: d.closed, open: r3(d.t) })) : [],
       issues: { errors: issues.errors.length, warnings: issues.warnings.length },
     };
   }
@@ -761,6 +767,7 @@ function start() {
     const keep = { cut: cutaway, lab: labels, ex: explodeV };
     planScene.setCut(null); planScene.setCeilings(true); planScene.setLabels(false); planScene.setArcs(false);
     planScene.setExplode(0); planScene.setLevelVisible(() => true);
+    planScene.setDoors(world.doors, true); // a door that Walk has shut is exported open, as drawn in every other view
     planScene.setMaterials(look);
     planScene.shareBoxes(true);
     const run = () => new GLTFExporter().parseAsync(planScene.group, { binary: true, onlyVisible: true });
@@ -770,6 +777,7 @@ function start() {
       planScene.shareBoxes(false);
       planScene.setMaterials(materials); // the look the user has now, which may have changed during the export
       planScene.setExplode(keep.ex);
+      planScene.setDoors(world.doors);
       applyVisuals();
     }
   }
@@ -804,7 +812,13 @@ function start() {
       if (pitchDegrees != null && Number.isFinite(+pitchDegrees)) player.pitch = clamp(rad(+pitchDegrees), -1.35, 1.35);
       render();
     },
-    walkInput(inp = {}) { apiIn.forward = +inp.forward || 0; apiIn.strafe = +inp.strafe || 0; apiIn.turn = +inp.turn || 0; apiIn.run = !!inp.run; },
+    // jump: true makes one jump from the floor (a held flag is not a held key: nothing repeats), like a tap on the space bar away from doors.
+    walkInput(inp = {}) {
+      apiIn.forward = +inp.forward || 0; apiIn.strafe = +inp.strafe || 0; apiIn.turn = +inp.turn || 0; apiIn.run = !!inp.run;
+      if (inp.jump && mode === 'walk' && model) jump(world, player);
+    },
+    // What the space bar does: shuts or opens the door in reach, else jumps. Returns { action: 'close' | 'open' | 'blocked' | 'jump' | 'none', id? }.
+    walkUse() { return mode === 'walk' && model ? useSpace(world, player) : { action: 'none' }; },
     advanceTime,
     // Turns the dollhouse or orbit camera around the model (degrees, positive turns clockwise seen from above).
     rotateView(degrees) {
@@ -855,10 +869,14 @@ function start() {
     if (mode !== 'walk') return;
     if (e.code === 'Escape') { setMode('dollhouse'); return; }
     if (KEYMAP[e.code]) { kb.add(KEYMAP[e.code]); e.preventDefault(); }
+    // The space bar is the jump and the door, never a click: after a click on Walk the focus stays on that button, and a space on a button
+    // would press it (on keyup) or scroll the page. Held down it does nothing more (a repeat is the same press).
+    if (e.code === 'Space' && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); if (!e.repeat) api.walkUse(); }
   });
   window.addEventListener('keyup', (e) => {
     if (e.key === 'Shift') shift = false;
     if (KEYMAP[e.code]) kb.delete(KEYMAP[e.code]);
+    if (e.code === 'Space' && mode === 'walk' && !typing(e)) e.preventDefault();
   });
   window.addEventListener('blur', () => { kb.clear(); shift = false; });
   window.addEventListener('resize', () => { size(); refreshFrame(); render(); });

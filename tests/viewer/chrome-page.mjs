@@ -87,8 +87,18 @@ export async function openPage({ query = '', hash = '', size = [960, 540], befor
       if (!(await waitFor(ready))) throw new Error('the viewer did not come up');
     };
     await navigate(`${pathToFileURL(viewerFile).href}${query}${hash}`);
+    // One key event of the real keyboard path (Input.dispatchKeyEvent): type 'keyDown' or 'keyUp'. text makes a keyDown a typed character,
+    // which is what lets a space on a focused button click it on the key up.
+    const key = (type, { code, key: k, vk, text, autoRepeat = false }) => send('Input.dispatchKeyEvent', { type, code, key: k, windowsVirtualKeyCode: vk, nativeVirtualKeyCode: vk, text: type === 'keyDown' ? text : undefined, autoRepeat });
+    // A real mouse click in the middle of the first element that matches selector (it takes the focus like a person's click does).
+    const clickAt = async (selector) => {
+      const [x, y] = await evaluate(`(() => { const r = document.querySelector(${JSON.stringify(selector)}).getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; })()`);
+      await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x, y });
+      await send('Input.dispatchMouseEvent', { type: 'mousePressed', x, y, button: 'left', buttons: 1, clickCount: 1 });
+      await send('Input.dispatchMouseEvent', { type: 'mouseReleased', x, y, button: 'left', buttons: 0, clickCount: 1 });
+    };
     return {
-      evaluate, waitFor, navigate, pageErrors, consoleErrors, close,
+      evaluate, waitFor, navigate, pageErrors, consoleErrors, close, key, clickAt,
       async screenshot(file, quality = 70) {
         const r = await send('Page.captureScreenshot', { format: 'jpeg', quality, fromSurface: true });
         writeFileSync(file, Buffer.from(r.data, 'base64'));
