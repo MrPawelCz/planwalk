@@ -14,7 +14,7 @@ export const STRINGS = {
     noWebgl: 'WebGL is not available in this browser, so the 3D view cannot start.',
     copyFix: 'Copy fix request', copied: 'Copied', issues: 'Issues', fix: 'Fix',
     pastePrompt: 'Paste the whole answer from the AI chat here (the JSON alone works too)',
-    walkHint: 'Click to look around. WASD or arrows move, Shift runs, Space jumps or works a door, Esc goes back.',
+    walkHint: 'Click to look around. WASD or arrows move, Shift runs, Space jumps or opens and shuts doors, Esc goes back.',
     // counts: one form per plural category (English: one|other, Polish: one|few|many), see countText()
     errorsCount: '{n} error|{n} errors',
     warningsCount: '{n} warning|{n} warnings',

@@ -862,7 +862,8 @@ function start() {
 
   // ---------- input ----------
   const KEYMAP = { KeyW: 'f+', ArrowUp: 'f+', KeyS: 'f-', ArrowDown: 'f-', KeyD: 's+', KeyA: 's-', ArrowRight: 't+', ArrowLeft: 't-' };
-  const typing = (e) => e.target && e.target.closest && e.target.closest('input,textarea,select,dialog');
+  // The Menu sheet of the compact layout is a div with role="dialog", not a dialog element, and its buttons need their space bar too.
+  const typing = (e) => e.target && e.target.closest && e.target.closest('input,textarea,select,dialog,[role="dialog"]');
   window.addEventListener('keydown', (e) => {
     if (typing(e)) return;
     if (e.key === 'Shift') shift = true;

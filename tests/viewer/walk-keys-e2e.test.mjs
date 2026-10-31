@@ -121,6 +121,20 @@ test('a text field keeps its spaces and Walk does not jump while one is focused'
   }
 });
 
+test('a button in the Menu sheet of the compact layout is pressed by the space bar, and Walk does not jump while it has the focus', { skip, timeout: 120000 }, async () => {
+  const p = await openPage({ size: [1100, 620] });
+  try {
+    await walkPage(p);
+    // The sheet is a div with role="dialog" (compact.js), not a dialog element; a stand-in of that shape is enough to see who takes the key.
+    await p.evaluate(`window.planwalk.walkTo(3.5, 1.6, 'L0', 0, 0); const d = document.createElement('div'); d.setAttribute('role', 'dialog'); const b = document.createElement('button'); b.id = 'probe'; b.textContent = 'Probe'; d.append(b); document.body.append(d); b.focus(); window.__clicks = 0`);
+    await press(p, 100);
+    assert.equal(await p.evaluate('window.__clicks'), 1, 'the space bar pressed the button');
+    assert.equal((await state(p)).jump, 0, 'no jump from the Menu sheet');
+  } finally {
+    p.close();
+  }
+});
+
 test('the space bar shuts and opens the door in front of the player, and a shut door stops the walk', { skip, timeout: 180000 }, async () => {
   const p = await openPage({ size: [1100, 620] });
   try {
