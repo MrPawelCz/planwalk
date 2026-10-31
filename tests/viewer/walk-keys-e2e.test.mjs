@@ -15,7 +15,9 @@ const WALK = '.pw-seg button:nth-child(4)';
 
 async function walkPage(p) {
   await p.evaluate(`window.planwalk.manualClock = true; window.planwalk.setLang('en'); window.planwalk.load(${JSON.stringify(plan)}).ok`);
-  await p.evaluate(`window.__clicks = 0; document.addEventListener('click', () => { window.__clicks++; }, true)`);
+  // The page's own listeners are older than these, so they have run by the time these look: defaultPrevented says whether the key press was taken.
+  await p.evaluate(`window.__clicks = 0; document.addEventListener('click', () => { window.__clicks++; }, true);
+    window.__space = []; for (const type of ['keydown', 'keyup']) window.addEventListener(type, (e) => { if (e.code === 'Space') window.__space.push(type + ':' + e.defaultPrevented); })`);
   await p.clickAt(WALK); // a real click: the focus stays on the Walk button
   assert.equal(await p.evaluate('window.planwalk.state().mode'), 'walk');
   assert.equal(await p.evaluate('document.activeElement && document.activeElement.textContent'), 'Walk', 'the Walk button has the focus');
@@ -55,6 +57,7 @@ test('the space bar jumps from the floor, once, and a click on Walk does not mak
     assert.equal(await p.evaluate('window.__clicks'), 0, 'the key up did not click the focused button');
     assert.equal((await state(p)).mode, 'walk');
     assert.equal(await p.evaluate('window.scrollY + document.scrollingElement.scrollTop'), 0, 'the page did not scroll');
+    assert.deepEqual(await p.evaluate('window.__space'), ['keydown:true', 'keyup:true'], 'both halves of the key press were taken (no scroll, no click)');
     // a second press in the air does nothing; a held key (auto repeat) never starts a new jump
     await p.key('keyDown', { ...SPACE, autoRepeat: true });
     await press(p);
