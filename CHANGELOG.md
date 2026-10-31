@@ -4,6 +4,8 @@ All notable changes to planwalk are listed here. The format follows [Keep a Chan
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-10-31
+
 ### Changed
 
 - Walk goes through furniture. Only walls, windows, stairs with their rails (and the steps of a stair that leaves the plan) and shut doors stop the player; a sofa, a table, a wardrobe, a fridge or a bathtub no longer do. Furniture is still drawn, the start of Walk still keeps clear of it, and the longest view that decides which way Walk starts to look still counts it as an obstacle (`docs/SPEC.md`, section 3, item 5).
@@ -131,7 +133,8 @@ First public version.
 - A benchmark harness in `eval/` (synthetic plan generator, four drawing styles, scorer) with the first results in `docs/BENCHMARK.md`.
 - Continuous integration (tests on Node 22), deployment of the viewer to GitHub Pages, issue templates, and the MIT licence with the third-party notices in `THIRD_PARTY_LICENSES.md`.
 
-[Unreleased]: https://github.com/MrPawelCz/planwalk/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/MrPawelCz/planwalk/compare/v0.3.2...HEAD
+[0.3.2]: https://github.com/MrPawelCz/planwalk/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/MrPawelCz/planwalk/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/MrPawelCz/planwalk/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/MrPawelCz/planwalk/compare/v0.1.1...v0.2.0
